@@ -13,6 +13,6 @@ Copyright (c) 2024, Open Free Energy
 
 
 #### Acknowledgements
- 
-Project based on the 
+
+Project based on the
 [Computational Molecular Science Python Cookiecutter](https://github.com/molssi/cookiecutter-cms) version 1.1.
