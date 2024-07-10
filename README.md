@@ -1,8 +1,8 @@
 openfe-gromacs
 ==============================
 [//]: # (Badges)
-[![GitHub Actions Build Status](https://github.com/REPLACE_WITH_OWNER_ACCOUNT/openfe_gromacs/workflows/CI/badge.svg)](https://github.com/REPLACE_WITH_OWNER_ACCOUNT/openfe_gromacs/actions?query=workflow%3ACI)
-[![codecov](https://codecov.io/gh/REPLACE_WITH_OWNER_ACCOUNT/openfe-gromacs/branch/main/graph/badge.svg)](https://codecov.io/gh/REPLACE_WITH_OWNER_ACCOUNT/openfe-gromacs/branch/main)
+[![GitHub Actions Build Status](https://github.com/OpenFreeEnergy/openfe_gromacs/workflows/CI/badge.svg)](https://github.com/OpenFreeEnergy/openfe_gromacs/actions?query=workflow%3ACI)
+[![codecov](https://codecov.io/gh/OpenFreeEnergy/openfe-gromacs/branch/main/graph/badge.svg)](https://codecov.io/gh/OpenFreeEnergy/openfe-gromacs/branch/main)
 
 
 Gromacs-based protocols for Open Free Energy
