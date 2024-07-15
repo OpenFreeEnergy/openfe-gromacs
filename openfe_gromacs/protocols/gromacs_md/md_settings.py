@@ -672,7 +672,7 @@ class EMSimulationSettings(SimulationSettings):
 
     emtol: FloatQuantity['kilojoule / (mole * nanometer)'] = 10.0 * unit.kilojoule / (unit.mole * unit.nanometer)
     """
-    The minimization is converged when the maximum force is smaller than this 
+    The minimization is converged when the maximum force is smaller than this
     value. Default 10.0 * unit.kilojoule / (unit.mole * unit.nanometer)
     """
     emstep: FloatQuantity['nanometer'] = 0.01 * unit.nanometer
