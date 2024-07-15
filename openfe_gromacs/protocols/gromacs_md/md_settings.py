@@ -25,6 +25,7 @@ try:
 except ImportError:
     from pydantic import validator  # type: ignore[assignment]
 
+
 class SimulationSettings(SettingsBaseModel):
     """
     Settings for simulations in Gromacs.
@@ -32,7 +33,7 @@ class SimulationSettings(SettingsBaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    ###Run control###
+    # # # Run control # # #
     integrator: Literal['md', 'md-vv', 'md-vv-avek', 'sd', 'steep'] = 'sd'
     """
     MD integrators and other algorithms (steep for energy minimization).
@@ -63,13 +64,13 @@ class SimulationSettings(SettingsBaseModel):
     Maximum number of steps to integrate or minimize, -1 is no maximum
     Default 0
     """
-    init-step: int = 0
+    init_step: int = 0
     """
     The starting step. The time at step i in a run is calculated as:
     t = tinit + dt * (init-step + i).
     Default 0
     """
-    simulation-part: int=0
+    simulation_part: int = 0
     """
     A simulation can consist of multiple parts, each of which has a part number.
      This option specifies what that number will be, which helps keep track of
@@ -77,13 +78,13 @@ class SimulationSettings(SettingsBaseModel):
      useful to set only when coping with a crashed simulation where files were
      lost. Default 0
     """
-    mass-repartition-factor: int = 1
+    mass_repartition_factor: int = 1
     """
     Scales the masses of the lightest atoms in the system by this factor to
     the mass mMin. All atoms with a mass lower than mMin also have their mass
     set to that mMin. Default 1 (no mass scaling)
     """
-    comm-mode: Literal['Linear', 'Angular', 'Linear-acceleration-correction', 'None'] = 'Linear'
+    comm_mode: Literal['Linear', 'Angular', 'Linear-acceleration-correction', 'None'] = 'Linear'
     """
     Settings for center of mass treatmeant
     Allowed values are:
@@ -99,35 +100,21 @@ class SimulationSettings(SettingsBaseModel):
     Frequency for center of mass motion removal in unit [steps].
     Default 100
     """
-    comm-grps: str
+    comm_grps: str
     """
     Group(s) for center of mass motion removal, default is the whole system.
     """
 
-    ###Langevin dynamics###
-    ld-seed: int = -1
+    # # # Langevin dynamics # # #
+    ld_seed: int = -1
     """
     Integer used to initialize random generator for thermal noise for
     stochastic and Brownian dynamics. When ld-seed is set to -1,
     a pseudo random seed is used. Default -1.
     """
 
-<<<<<<< HEAD
-=======
-    ### Energy minimization ###
-    emtol: FloatQuantity['kilojoule / (mole * nanometer)'] = 10.0 * unit.kilojoule / (unit.mole * unit.nanometer)
-    """
-    The minimization is converged when the maximum force is smaller than this
-    value. Default 10.0 * unit.kilojoule / (unit.mole * unit.nanometer)
-    """
-    emstep: FloatQuantity['nanometer'] = 0.01 * unit.nanometer
-    """
-    Initial step size. Default 0.01 * unit.nanometer
-    """
-
->>>>>>> 10d6f0963fe5c092695dbee628812d518a30d37a
-    ### Neighbor searching ###
-    cutoff-scheme: Literal['verlet'] = 'verlet'
+    # # # Neighbor searching # # #
+    cutoff_scheme: Literal['verlet'] = 'verlet'
     """
     Only allowed option:
     'verlet': Generate a pair list with buffering. The buffer size is
@@ -152,14 +139,14 @@ class SimulationSettings(SettingsBaseModel):
           This can be used in combination with walls.
     Default 'xyz'.
     """
-    verlet-buffer-tolerance: FloatQuantity['kilojoule / (mole * picosecond)'] = 0.005 * unit.kilojoule / (unit.mole * unit.picosecond)
+    verlet_buffer_tolerance: FloatQuantity['kilojoule / (mole * picosecond)'] = 0.005 * unit.kilojoule / (unit.mole * unit.picosecond)
     """"
     Used when performing a simulation with dynamics. This sets the maximum
     allowed error for pair interactions per particle caused by the Verlet
     buffer, which indirectly sets rlist.
     Default 0.005 * unit.kilojoule / (unit.mole * unit.picosecond)
     """
-    verlet-buffer-pressure-tolerance: FloatQuantity['bar'] = 0.5 * unit.bar
+    verlet_buffer_pressure_tolerance: FloatQuantity['bar'] = 0.5 * unit.bar
     """
     Used when performing a simulation with dynamics and only active when
     verlet-buffer-tolerance is positive. This sets the maximum tolerated error
@@ -171,11 +158,11 @@ class SimulationSettings(SettingsBaseModel):
     rlist: FloatQuantity['nanometer'] = 1 * unit.nanometer
     """
     Cut-off distance for the short-range neighbor list. With dynamics, this is
-    by default set by the verlet-buffer-tolerance and verlet-buffer-pressure-tolerance
-    options and the value of rlist is ignored.
+    by default set by the verlet-buffer-tolerance and 
+    verlet-buffer-pressure-tolerance options and the value of rlist is ignored.
     """
 
-    ###Electrostatics###
+    # # # Electrostatics # # #
     coulombtype: Literal['cut-off', 'ewald', 'PME', 'P3M-AD', 'Reaction-Field'] = 'PME'
     """
     Treatment of electrostatics
@@ -199,7 +186,7 @@ class SimulationSettings(SettingsBaseModel):
            infinity by setting epsilon-rf =0.
     Default 'PME'
     """
-    coulomb-modifier: Literal['Potential-shift', 'None'] = 'Potential-shift'
+    coulomb_modifier: Literal['Potential-shift', 'None'] = 'Potential-shift'
     """
     Allowed options are:
     'Potential-shift': Shift the Coulomb potential by a constant such that it
@@ -208,7 +195,7 @@ class SimulationSettings(SettingsBaseModel):
           comparing energies with those computed with other software.
     Default 'Potential-shift'
     """
-    rcoulomb-switch: FloatQuantity['nanometer'] = 0 * unit.nanometer
+    rcoulomb_switch: FloatQuantity['nanometer'] = 0 * unit.nanometer
     """
     Where to start switching the Coulomb potential, only relevant when force
     or potential switching is used.
@@ -220,17 +207,17 @@ class SimulationSettings(SettingsBaseModel):
     increased by the PME tuning in gmx mdrun along with the PME grid spacing.
     Default 1.2 * unit.nanometer
     """
-    epsilon-r: int = 1
+    epsilon_r: int = 1
     """
     The relative dielectric constant. A value of 0 means infinity. Default 1.
     """
-    epsilon-rf: int = 0
+    epsilon_rf: int = 0
     """
     The relative dielectric constant of the reaction field. This is only used
     with reaction-field electrostatics. A value of 0 means infinity. Default 0
     """
 
-    ###Van der Waals###
+    # # # Van der Waals # # #
     vdwtype: Literal['Cut-off', 'PME'] = 'Cut-off'
     """
     Treatment of vdW interactions. Allowed options are:
@@ -239,7 +226,7 @@ class SimulationSettings(SettingsBaseModel):
     'PME: Fast smooth Particle-mesh Ewald (SPME) for VdW interactions.
     Default 'Cut-off'.
     """
-    vdw-modifier: Literal['Potential-shift', 'None', 'Force-switch', 'Potential-switch'] = 'Potential-shift'
+    vdw_modifier: Literal['Potential-shift', 'None', 'Force-switch', 'Potential-switch'] = 'Potential-shift'
     """
     Allowed values are:
     'Potential-shift': Shift the Van der Waals potential by a constant such
@@ -257,7 +244,7 @@ class SimulationSettings(SettingsBaseModel):
         This option should only be used if the force field you are using
         requires this.
     """
-    rvdw-switch: FloatQuantity['nanometer'] = 0 * unit.nanometer
+    rvdw_switch: FloatQuantity['nanometer'] = 0 * unit.nanometer
     """"
     Where to start switching the LJ force and possibly the potential, only
     relevant when force or potential switching is used.
@@ -276,7 +263,7 @@ class SimulationSettings(SettingsBaseModel):
     Default 'EnerPres'
     """
 
-    ###Ewald###
+    # # # Ewald # # #
     fourierspacing: FloatQuantity['nanometer'] = 0.12 * unit.nanometer
     """
     For ordinary Ewald, the ratio of the box dimensions and the spacing
@@ -287,24 +274,24 @@ class SimulationSettings(SettingsBaseModel):
     entering a non-zero value for that fourier-nx direction.
     Default 0.12 * unit.nanometer
     """
-    pme-order: int = 4
+    pme_order: int = 4
     """
     The number of grid points along a dimension to which a charge is mapped.
     The actual order of the PME interpolation is one less, e.g. the default of
-    4 gives cubic interpolation. Supported values are 3 to 12 (max 8 for P3M-AD).
-    When running in parallel, it can be worth to switch to 5 and simultaneously
-    increase the grid spacing. Note that on the CPU only values 4 and 5 have
-    SIMD acceleration and GPUs only support the value 4.
+    4 gives cubic interpolation. Supported values are 3 to 12 (max 8 for 
+    P3M-AD). When running in parallel, it can be worth to switch to 5 and 
+    simultaneously increase the grid spacing. Note that on the CPU only values 
+    4 and 5 have SIMD acceleration and GPUs only support the value 4.
     Default 4.
     """
-    ewald-rtol: float = 1e-5
+    ewald_rtol: float = 1e-5
     """
     The relative strength of the Ewald-shifted direct potential at rcoulomb is
     given by ewald-rtol. Decreasing this will give a more accurate direct sum,
     but then you need more wave vectors for the reciprocal sum.
     Default 1e-5
     """
-    lj-pme-comb-rule: Literal['Geometric', 'Lorentz-Berthelot'] = 'Geometric'
+    lj_pme_comb_rule: Literal['Geometric', 'Lorentz-Berthelot'] = 'Geometric'
     """
     The combination rules used to combine VdW-parameters in the reciprocal part
     of LJ-PME. Geometric rules are much faster than Lorentz-Berthelot and
@@ -314,15 +301,16 @@ class SimulationSettings(SettingsBaseModel):
     'Lorentz-Berthelot': Apply Lorentz-Berthelot combination rules.
     Default 'Geometric'.
     """
-    ewald-geometry: Literal['3d', '3dc'] = '3d'
+    ewald_geometry: Literal['3d', '3dc'] = '3d'
     """
     Allowed values are:
     '3d': The Ewald sum is performed in all three dimensions.
     '3dc': The reciprocal sum is still performed in 3D, but a force and
-    potential correction applied in the z dimension to produce a pseudo-2D summation.
+    potential correction applied in the z dimension to produce a pseudo-2D 
+    summation. 
     Default '3d'.
     """
-    epsilon-surface: float = 0
+    epsilon_surface: float = 0
     """
     This controls the dipole correction to the Ewald summation in 3D.
     The default value of zero means it is turned off. Turn it on by setting it
@@ -332,7 +320,7 @@ class SimulationSettings(SettingsBaseModel):
     variant of the long range corrections. Default 0.
     """
 
-    ###Temperature coupling###
+    # # # Temperature coupling # # #
     tcoupl: Literal['no', 'berendsen', 'nose-hoover', 'andersen', 'andersen-massive', 'v-rescale'] = 'no'
     """
     Temperature coupling options. Note that tcoupl will be ignored when the
@@ -369,7 +357,7 @@ class SimulationSettings(SettingsBaseModel):
         The random seed is set with ld-seed. This thermostat works correctly
         even for tau-t =0. For NVT simulations the conserved energy quantity
         is written to the energy and log file.
-    Default 'no' (since for the default integrator, 'sd', this option is ignored).
+    Default 'no' (for the default integrator, 'sd', this option is ignored).
     """
     nsttcouple: int = -1
     """
@@ -382,22 +370,22 @@ class SimulationSettings(SettingsBaseModel):
     nsttcouple is set to 1.
     Default -1.
     """
-    tc-grps: str = 'system'
+    tc_grps: str = 'system'
     """
     Groups to couple to separate temperature baths. Default 'system'.
     """
-    tau-t: FloatQuantity['picosecond'] = 2.0 * unit.picosecond
+    tau_t: FloatQuantity['picosecond'] = 2.0 * unit.picosecond
     """"
     Time constant for coupling (one for each group in tc-grps), -1 means no
     temperature coupling. Default 2.0 * unit.picosecond.
     """
-    ref-t: FloatQuantity['Kelvin'] = 298.15 * unit.kelvin
+    ref_t: FloatQuantity['Kelvin'] = 298.15 * unit.kelvin
     """
     Reference temperature for coupling (one for each group in tc-grps).
     Default 298.15 * unit.kelvin
     """
 
-    ###Pressure coupling###
+    # # # Pressure coupling # # #
     pcoupl: Literal['no', 'berendsen', 'C-rescale', 'Parrinello-Rahman', 'MTTK'] = 'no'
     """
     Options for pressure coupling (barostat). Allowed values are:
@@ -417,14 +405,15 @@ class SimulationSettings(SettingsBaseModel):
         As for Nose-Hoover temperature coupling the time constant tau-p is the
         period of pressure fluctuations at equilibrium.
     'MTTK': Martyna-Tuckerman-Tobias-Klein implementation, only useable with
-        integrator=md-vv or integrator=md-vv-avek, very similar to Parrinello-Rahman.
-        As for Nose-Hoover temperature coupling the time constant tau-p is the
-        period of pressure fluctuations at equilibrium. This is probably a
-        better method when you want to apply pressure scaling during data
-        collection, but beware that you can get very large oscillations if you
-        are starting from a different pressure. This requires a constant ensemble
-        temperature for the system. Currently it only supports isotropic scaling,
-        and only works without constraints.
+        integrator=md-vv or integrator=md-vv-avek, very similar to 
+        Parrinello-Rahman. As for Nose-Hoover temperature coupling the time 
+        constant tau-p is the period of pressure fluctuations at equilibrium. 
+        This is probably a better method when you want to apply pressure 
+        scaling during data collection, but beware that you can get very large 
+        oscillations if you are starting from a different pressure. 
+        This requires a constant ensemble temperature for the system. 
+        Currently it only supports isotropic scaling, and only works without 
+        constraints.
     Default 'no'.
     """
     pcoupltype: Literal['isotropic', 'semiisotropic', 'anisotropic', 'surface-tension'] = 'isotropic'
@@ -458,14 +447,14 @@ class SimulationSettings(SettingsBaseModel):
     nstpcouple: int = -1
     """
     The frequency for coupling the pressure. The default value of -1 sets
-    nstpcouple equal to 100, or fewer steps if required for accurate integration
-    (5 steps per tau for first order coupling, 20 steps per tau for second order
-    coupling). Note that the default value is large in order to reduce the
-    overhead of the additional computation and communication required for
-    obtaining the virial and kinetic energy. For velocity Verlet integrators
-    nsttcouple is set to 1. Default -1.
+    nstpcouple equal to 100, or fewer steps if required for accurate 
+    integration (5 steps per tau for first order coupling, 20 steps per tau for 
+    second order coupling). Note that the default value is large in order to 
+    reduce the overhead of the additional computation and communication 
+    required for obtaining the virial and kinetic energy. For velocity Verlet 
+    integrators nsttcouple is set to 1. Default -1.
     """
-    tau-p: FloatQuantity['picosecond'] = 5 * unit.picosecond
+    tau_p: FloatQuantity['picosecond'] = 5 * unit.picosecond
     """
     The time constant for pressure coupling (one value for all directions).
     Default 5 * unit.picosecond.
@@ -476,12 +465,12 @@ class SimulationSettings(SettingsBaseModel):
     4.5e-5 bar-1. The number of required values is implied by pcoupltype.
     Default 4.5e-05 / unit.bar
     """
-    ref-p: FloatQuantity['bar'] = 1.01325 * unit.bar
+    ref_p: FloatQuantity['bar'] = 1.01325 * unit.bar
     """
     The reference pressure for coupling. The number of required values is
     implied by pcoupltype. Default 1.01325 * unit.bar.
     """
-    refcoord-scaling: Literal['no', 'all', 'com'] = 'no'
+    refcoord_scaling: Literal['no', 'all', 'com'] = 'no'
     """
     Allowed values are:
     'no': The reference coordinates for position restraints are not modified.
@@ -496,34 +485,34 @@ class SimulationSettings(SettingsBaseModel):
     Default 'no'.
     """
 
-    ###Velocity generation###
-    gen-vel: Literal['no', 'yes'] = 'yes'
+    # # # Velocity generation # # #
+    gen_vel: Literal['no', 'yes'] = 'yes'
     """
     Velocity generation. Allowed values are:
     'no': Do not generate velocities. The velocities are set to zero when there
         are no velocities in the input structure file.
-    'yes': Generate velocities in gmx grompp according to a Maxwell distribution
-        at temperature gen-temp, with random seed gen-seed. This is only
-        meaningful with integrator=md.
+    'yes': Generate velocities in gmx grompp according to a Maxwell 
+        distribution at temperature gen-temp, with random seed gen-seed. 
+        This is only meaningful with integrator=md.
     Default 'yes'.
     """
-    gen-temp: FloatQuantity['kelvin'] = 298.15 * unit.kelvin
+    gen_temp: FloatQuantity['kelvin'] = 298.15 * unit.kelvin
     """
     Temperature for Maxwell distribution. Default 298.15 * unit.kelvin.
     """
-    gen-seed: int = -1
+    gen_seed: int = -1
     """
     Used to initialize random generator for random velocities, when gen-seed is
     set to -1, a pseudo random seed is used. Default -1.
     """
 
-    ###Bonds###
+    # # # Bonds # # #
     constraints: Literal['none', 'h-bonds', 'all-bonds', 'h-angles', 'all-angles'] = 'h-bonds'
     """
     Controls which bonds in the topology will be converted to rigid holonomic
     constraints. Note that typical rigid water models do not have bonds, but
-    rather a specialized [settles] directive, so are not affected by this keyword.
-    Allowed values are:
+    rather a specialized [settles] directive, so are not affected by this 
+    keyword. Allowed values are:
     'none': No bonds converted to constraints.
     'h-bonds': Convert the bonds with H-atoms to constraints.
     'all-bonds': Convert all bonds to constraints.
@@ -533,7 +522,7 @@ class SimulationSettings(SettingsBaseModel):
          bond-constraints.
     Default 'h-bonds'
     """
-    constraint-algorithm: Literal['lincs', 'shake'] = 'lincs'
+    constraint_algorithm: Literal['lincs', 'shake'] = 'lincs'
     """
     Chooses which solver satisfies any non-SETTLE holonomic constraints.
     Allowed values are:
@@ -564,9 +553,9 @@ class SimulationSettings(SettingsBaseModel):
     'yes': Do not apply constraints to the start configuration and do not reset
     shells, useful for exact coninuation and reruns.
     """
-    shake-tol: float = 0.0001
+    shake_tol: float = 0.0001
     """ Relative tolerance for SHAKE. Default 0.0001. """
-    lincs-order: int = 12
+    lincs_order: int = 12
     """
     Highest order in the expansion of the constraint coupling matrix. When
     constraints form triangles, an additional expansion of the same order is
@@ -577,12 +566,12 @@ class SimulationSettings(SettingsBaseModel):
     Note that in single precision an order higher than 6 will often lead to
     worse accuracy due to amplification of rounding errors. Default 12.
     """
-    lincs-iter: int = 1
+    lincs_iter: int = 1
     """
     Number of iterations to correct for rotational lengthening in LINCS.
     Default 1.
     """
-    lincs-warnangle: FloatQuantity['deg'] = 30 * unit.degree
+    lincs_warnangle: FloatQuantity['deg'] = 30 * unit.degree
     """
     Maximum angle that a bond can rotate before LINCS will complain.
     Default 30 * unit.degree.
@@ -594,6 +583,7 @@ class SimulationSettings(SettingsBaseModel):
     'yes': Bonds are represented by a Morse potential.
     Default 'no'.
     """
+
 
 class OutputSettings(SettingsBaseModel):
     """"
@@ -641,18 +631,18 @@ class OutputSettings(SettingsBaseModel):
     nstcalcenergy are stored in the energy file, so gmx energy can report
     exact energy averages and fluctuations also when nstenergy > 1
     """
-    nstxout-compressed: int = 0
+    nstxout_compressed: int = 0
     """
     Number of steps that elapse between writing position coordinates using
     lossy compression (xtc file), 0 for not writing compressed coordinates
     output. Default 0.
     """
-    compressed-x-precision: int = 1000
+    compressed_x_precision: int = 1000
     """
     Precision with which to write to the compressed trajectory file.
     Default 1000.
     """
-    compressed-x-grps: str
+    compressed_x_grps: str
     """
     Group(s) to write to the compressed trajectory file, by default the whole
     system is written (if nstxout-compressed > 0).
@@ -662,6 +652,7 @@ class OutputSettings(SettingsBaseModel):
     Group(s) for which to write to write short-ranged non-bonded potential
     energies to the energy file (not supported on GPUs)
     """
+
 
 class EMSimulationSettings(SimulationSettings):
     """
@@ -680,31 +671,35 @@ class EMSimulationSettings(SimulationSettings):
     Initial step size. Default 0.01 * unit.nanometer
     """
 
+
 class EMOutputSettings(OutputSettings):
     """
     Output Settings for the energy minimization.
     """
+
 
 class NVTSimulationSettings(SimulationSettings):
     """
     Settings for MD simulation in the NVT ensemble.
     """
 
+
 class NVTOutputSettings(OutputSettings):
     """
     Output Settings for the MD simulation in the NVT ensemble.
     """
+
 
 class NPTSimulationSettings(SimulationSettings):
     """
     Settings for MD simulation in the NPT ensemble.
     """
 
+
 class NPTOutputSettings(OutputSettings):
     """
     Output Settings for the MD simulation in the NPT ensemble.
     """
-
 
 
 class GromacsMDProtocolSettings(Settings):
