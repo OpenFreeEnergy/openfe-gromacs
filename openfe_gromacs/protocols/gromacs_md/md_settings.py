@@ -26,14 +26,14 @@ try:
 except ImportError:
     from pydantic import validator  # type: ignore[assignment]
 
-class MDSimulationSettings(SettingsBaseModel):
+class SimulationSettings(SettingsBaseModel):
     """
-    Settings for MD simulations in Gromacs.
+    Settings for simulations in Gromacs.
     """
     class Config:
         arbitrary_types_allowed = True
 
-    ### Run control ###
+    ###Run control###
     integrator: Literal['md', 'md-vv', 'md-vv-avek', 'sd', 'steep'] = 'sd'
     """
     MD integrators and other algorithms (steep for energy minimization).
@@ -105,23 +105,12 @@ class MDSimulationSettings(SettingsBaseModel):
     Group(s) for center of mass motion removal, default is the whole system.
     """
 
-    ### Langevin dynamics ###
+    ###Langevin dynamics###
     ld-seed: int = -1
     """
     Integer used to initialize random generator for thermal noise for 
     stochastic and Brownian dynamics. When ld-seed is set to -1, 
     a pseudo random seed is used. Default -1.
-    """
-
-    ### Energy minimization ###
-    emtol: FloatQuantity['kilojoule / (mole * nanometer)'] = 10.0 * unit.kilojoule / (unit.mole * unit.nanometer)
-    """
-    The minimization is converged when the maximum force is smaller than this 
-    value. Default 10.0 * unit.kilojoule / (unit.mole * unit.nanometer)
-    """
-    emstep: FloatQuantity['nanometer'] = 0.01 * unit.nanometer
-    """
-    Initial step size. Default 0.01 * unit.nanometer
     """
 
     ### Neighbor searching ###
@@ -173,7 +162,7 @@ class MDSimulationSettings(SettingsBaseModel):
     options and the value of rlist is ignored.
     """
 
-    ### Electrostatics ##
+    ###Electrostatics###
     coulombtype: Literal['cut-off', 'ewald', 'PME', 'P3M-AD', 'Reaction-Field'] = 'PME'
     """
     Treatment of electrostatics
@@ -228,7 +217,7 @@ class MDSimulationSettings(SettingsBaseModel):
     with reaction-field electrostatics. A value of 0 means infinity. Default 0
     """
 
-    ### Van der Waals ###
+    ###Van der Waals###
     vdwtype: Literal['Cut-off', 'PME'] = 'Cut-off'
     """
     Treatment of vdW interactions. Allowed options are:
@@ -274,7 +263,7 @@ class MDSimulationSettings(SettingsBaseModel):
     Default 'EnerPres'
     """
 
-    ### Ewald ###
+    ###Ewald###
     fourierspacing: FloatQuantity['nanometer'] = 0.12 * unit.nanometer
     """
     For ordinary Ewald, the ratio of the box dimensions and the spacing 
@@ -330,7 +319,7 @@ class MDSimulationSettings(SettingsBaseModel):
     variant of the long range corrections. Default 0.
     """
 
-    ### Temerature coupling ###
+    ###Temperature coupling###
     tcoupl: Literal['no', 'berendsen', 'nose-hoover', 'andersen', 'andersen-massive', 'v-rescale'] = 'no'
     """
     Temperature coupling options. Note that tcoupl will be ignored when the 
@@ -395,7 +384,7 @@ class MDSimulationSettings(SettingsBaseModel):
     Default 298.15 * unit.kelvin
     """
 
-    ### Pressure coupling ###
+    ###Pressure coupling###
     pcoupl: Literal['no', 'berendsen', 'C-rescale', 'Parrinello-Rahman', 'MTTK'] = 'no'
     """
     Options for pressure coupling (barostat). Allowed values are:
@@ -494,7 +483,7 @@ class MDSimulationSettings(SettingsBaseModel):
     Default 'no'.
     """
 
-    ### Velocity generation ###
+    ###Velocity generation###
     gen-vel: Literal['no', 'yes'] = 'yes'
     """
     Velocity generation. Allowed values are:
@@ -515,7 +504,7 @@ class MDSimulationSettings(SettingsBaseModel):
     set to -1, a pseudo random seed is used. Default -1.
     """
 
-    ### Bonds ###
+    ###Bonds###
     constraints: Literal['none', 'h-bonds', 'all-bonds', 'h-angles', 'all-angles'] = 'h-bonds'
     """
     Controls which bonds in the topology will be converted to rigid holonomic 
@@ -593,7 +582,7 @@ class MDSimulationSettings(SettingsBaseModel):
     Default 'no'.
     """
 
-class MDOutputSettings(SettingsBaseModel):
+class OutputSettings(SettingsBaseModel):
     """"
     Output Settings for simulations run using Gromacs
     """
@@ -661,6 +650,49 @@ class MDOutputSettings(SettingsBaseModel):
     energies to the energy file (not supported on GPUs)
     """
 
+class EMSimulationSettings(SimulationSettings):
+    """
+    Settings for energy minimization.
+    """
+    integrator = 'steep'
+    nsteps = 5000
+
+    emtol: FloatQuantity['kilojoule / (mole * nanometer)'] = 10.0 * unit.kilojoule / (unit.mole * unit.nanometer)
+    """
+    The minimization is converged when the maximum force is smaller than this 
+    value. Default 10.0 * unit.kilojoule / (unit.mole * unit.nanometer)
+    """
+    emstep: FloatQuantity['nanometer'] = 0.01 * unit.nanometer
+    """
+    Initial step size. Default 0.01 * unit.nanometer
+    """
+
+class EMOutputSettings(OutputSettings):
+    """
+    Output Settings for the energy minimization.
+    """
+
+class NVTSimulationSettings(SimulationSettings):
+    """
+    Settings for MD simulation in the NVT ensemble.
+    """
+
+class NVTOutputSettings(OutputSettings):
+    """
+    Output Settings for the MD simulation in the NVT ensemble.
+    """
+
+class NPTSimulationSettings(SimulationSettings):
+    """
+    Settings for MD simulation in the NPT ensemble.
+    """
+
+class NPTOutputSettings(OutputSettings):
+    """
+    Output Settings for the MD simulation in the NPT ensemble.
+    """
+
+
 
 class GromacsMDProtocolSettings(Settings):
     class Config:
@@ -690,7 +722,11 @@ class GromacsMDProtocolSettings(Settings):
     integrator_settings: IntegratorSettings
 
     # Simulation run settings
-    simulation_settings: MDSimulationSettings
+    simulation_settings_em: EMSimulationSettings
+    simulation_settings_nvt: NVTSimulationSettings
+    simulation_settings_npt: NPTSimulationSettings
 
     # Simulations output settings
-    output_settings: MDOutputSettings
+    output_settings_em: EMOutputSettings
+    output_settings_nvt: NVTOutputSettings
+    output_settings_npt: NPTOutputSettings
