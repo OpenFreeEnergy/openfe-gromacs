@@ -603,6 +603,11 @@ class OutputSettings(SettingsBaseModel):
     Output Settings for simulations run using Gromacs
     """
 
+    forcefield_cache: Optional[str] = 'db.json'
+    """
+    Filename for caching small molecule residue templates so they can be
+    later reused.
+    """
     nstxout: int = 0
     """
     Number of steps that elapse between writing coordinates to the output
@@ -673,9 +678,6 @@ class EMSimulationSettings(SimulationSettings):
     Settings for energy minimization.
     """
 
-    integrator = "steep"
-    nsteps = 5000
-
     emtol: FloatQuantity["kilojoule / (mole * nanometer)"] = (
         10.0 * unit.kilojoule / (unit.mole * unit.nanometer)
     )
@@ -687,9 +689,6 @@ class EMSimulationSettings(SimulationSettings):
     """
     Initial step size. Default 0.01 * unit.nanometer
     """
-    tcoupl = "no"
-    pcoupl = "no"
-    gen_vel = "no"
 
 
 class EMOutputSettings(OutputSettings):
@@ -703,10 +702,6 @@ class NVTSimulationSettings(SimulationSettings):
     Settings for MD simulation in the NVT ensemble.
     """
 
-    nsteps = 50000  # 100ps
-    pcoupl = "no"
-    gen_vel = "yes"
-
 
 class NVTOutputSettings(OutputSettings):
     """
@@ -719,21 +714,12 @@ class NPTSimulationSettings(SimulationSettings):
     Settings for MD simulation in the NPT ensemble.
     """
 
-    pcoupl = "Parrinello-Rahman"
-    pcoupltype = "isotropic"
-    ref_p = 1.01325 * unit.bar
-    gen_vel = "no"  # If continuation from NVT simulation
-
 
 class NPTOutputSettings(OutputSettings):
     """
     Output Settings for the MD simulation in the NPT ensemble.
     """
 
-    nstxout = 5000
-    nstvout = 5000
-    nstfout = 5000
-    nstxout_compressed = 5000
 
 
 class GromacsMDProtocolSettings(Settings):
@@ -751,6 +737,10 @@ class GromacsMDProtocolSettings(Settings):
             errmsg = f"protocol_repeats must be a positive value, got {v}."
             raise ValueError(errmsg)
         return v
+
+    # File names for .gro and .top file
+    gro: str
+    top: str
 
     # Things for creating the systems
     forcefield_settings: OpenMMSystemGeneratorFFSettings
@@ -772,3 +762,8 @@ class GromacsMDProtocolSettings(Settings):
     output_settings_em: EMOutputSettings
     output_settings_nvt: NVTOutputSettings
     output_settings_npt: NPTOutputSettings
+    forcefield_cache: Optional[str] = 'db.json'
+    """
+    Filename for caching small molecule residue templates so they can be
+    later reused.
+    """
