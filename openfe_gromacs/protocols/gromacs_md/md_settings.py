@@ -603,7 +603,7 @@ class OutputSettings(SettingsBaseModel):
     Output Settings for simulations run using Gromacs
     """
 
-    forcefield_cache: Optional[str] = 'db.json'
+    forcefield_cache: Optional[str] = "db.json"
     """
     Filename for caching small molecule residue templates so they can be
     later reused.
@@ -721,7 +721,6 @@ class NPTOutputSettings(OutputSettings):
     """
 
 
-
 class GromacsMDProtocolSettings(Settings):
     class Config:
         arbitrary_types_allowed = True
@@ -762,7 +761,7 @@ class GromacsMDProtocolSettings(Settings):
     output_settings_em: EMOutputSettings
     output_settings_nvt: NVTOutputSettings
     output_settings_npt: NPTOutputSettings
-    forcefield_cache: Optional[str] = 'db.json'
+    forcefield_cache: Optional[str] = "db.json"
     """
     Filename for caching small molecule residue templates so they can be
     later reused.
