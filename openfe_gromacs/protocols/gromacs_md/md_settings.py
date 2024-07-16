@@ -687,9 +687,9 @@ class EMSimulationSettings(SimulationSettings):
     """
     Initial step size. Default 0.01 * unit.nanometer
     """
-    tcoupl = 'no'
-    pcoupl = 'no'
-    gen_vel = 'no'
+    tcoupl = "no"
+    pcoupl = "no"
+    gen_vel = "no"
 
 
 class EMOutputSettings(OutputSettings):
@@ -702,9 +702,10 @@ class NVTSimulationSettings(SimulationSettings):
     """
     Settings for MD simulation in the NVT ensemble.
     """
+
     nsteps = 50000  # 100ps
-    pcoupl = 'no'
-    gen_vel = 'yes'
+    pcoupl = "no"
+    gen_vel = "yes"
 
 
 class NVTOutputSettings(OutputSettings):
@@ -717,16 +718,18 @@ class NPTSimulationSettings(SimulationSettings):
     """
     Settings for MD simulation in the NPT ensemble.
     """
-    pcoupl = 'Parrinello-Rahman'
-    pcoupltype = 'isotropic'
+
+    pcoupl = "Parrinello-Rahman"
+    pcoupltype = "isotropic"
     ref_p = 1.01325 * unit.bar
-    gen_vel = 'no'  # If continuation from NVT simulation
+    gen_vel = "no"  # If continuation from NVT simulation
 
 
 class NPTOutputSettings(OutputSettings):
     """
     Output Settings for the MD simulation in the NPT ensemble.
     """
+
     nstxout = 5000
     nstvout = 5000
     nstfout = 5000
