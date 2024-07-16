@@ -7,7 +7,7 @@ This module implements the settings necessary to run MD simulations using
 :class:`openfe.protocols.gromacs_md.md_methods.py`
 
 """
-from typing import Literal
+from typing import Literal, Optional
 
 from gufe.settings import OpenMMSystemGeneratorFFSettings, SettingsBaseModel
 from openfe.protocols.openmm_utils.omm_settings import (
@@ -103,7 +103,7 @@ class SimulationSettings(SettingsBaseModel):
     Frequency for center of mass motion removal in unit [steps].
     Default 100
     """
-    comm_grps: str
+    comm_grps: Optional[str]
     """
     Group(s) for center of mass motion removal, default is the whole system.
     """
@@ -656,12 +656,12 @@ class OutputSettings(SettingsBaseModel):
     Precision with which to write to the compressed trajectory file.
     Default 1000.
     """
-    compressed_x_grps: str
+    compressed_x_grps: Optional[str]
     """
     Group(s) to write to the compressed trajectory file, by default the whole
     system is written (if nstxout-compressed > 0).
     """
-    energygrps: str
+    energygrps: Optional[str]
     """
     Group(s) for which to write to write short-ranged non-bonded potential
     energies to the energy file (not supported on GPUs)
@@ -687,6 +687,9 @@ class EMSimulationSettings(SimulationSettings):
     """
     Initial step size. Default 0.01 * unit.nanometer
     """
+    tcoupl = 'no'
+    pcoupl = 'no'
+    gen_vel = 'no'
 
 
 class EMOutputSettings(OutputSettings):
@@ -699,6 +702,9 @@ class NVTSimulationSettings(SimulationSettings):
     """
     Settings for MD simulation in the NVT ensemble.
     """
+    nsteps = 50000  # 100ps
+    pcoupl = 'no'
+    gen_vel = 'yes'
 
 
 class NVTOutputSettings(OutputSettings):
@@ -711,12 +717,20 @@ class NPTSimulationSettings(SimulationSettings):
     """
     Settings for MD simulation in the NPT ensemble.
     """
+    pcoupl = 'Parrinello-Rahman'
+    pcoupltype = 'isotropic'
+    ref_p = 1.01325 * unit.bar
+    gen_vel = 'no'  # If continuation from NVT simulation
 
 
 class NPTOutputSettings(OutputSettings):
     """
     Output Settings for the MD simulation in the NPT ensemble.
     """
+    nstxout = 5000
+    nstvout = 5000
+    nstfout = 5000
+    nstxout_compressed = 5000
 
 
 class GromacsMDProtocolSettings(Settings):
