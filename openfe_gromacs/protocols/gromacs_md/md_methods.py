@@ -87,6 +87,8 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
         return None
 
+    # TODO: Change this to return the actual outputs
+
     def get_traj_filename(self) -> list[pathlib.Path]:
         """
         Get a list of trajectory paths
@@ -398,7 +400,6 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         # settings_validation.validate_timestep(
         #     forcefield_settings.hydrogen_mass, timestep
         # )
-        print(forcefield_settings.constraints)
 
         solvent_comp, protein_comp, small_mols = system_validation.get_components(
             stateA
