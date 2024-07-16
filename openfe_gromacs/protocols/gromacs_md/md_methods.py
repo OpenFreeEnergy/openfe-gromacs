@@ -14,8 +14,8 @@ import logging
 import pathlib
 import uuid
 from collections import defaultdict
-from typing import Any, Optional
 from collections.abc import Iterable
+from typing import Any, Optional
 
 import gufe
 import openmm
@@ -25,15 +25,6 @@ from gufe import (
     SmallMoleculeComponent,
     SolventComponent,
     settings,
-)
-
-from openfe_gromacs.protocols.gromacs_md.md_settings import (
-    GromacsMDProtocolSettings,
-    OpenFFPartialChargeSettings,
-    OpenMMSolvationSettings, OpenMMEngineSettings,
-    IntegratorSettings, EMSimulationSettings,
-    NVTSimulationSettings, NPTSimulationSettings,
-    EMOutputSettings, NVTOutputSettings, NPTOutputSettings,
 )
 from openfe.protocols.openmm_utils import (
     charge_generation,
@@ -49,6 +40,20 @@ from openff.toolkit.topology import Molecule as OFFMolecule
 from openff.units import unit
 from openff.units.openmm import from_openmm, to_openmm
 from openmmtools import forces
+
+from openfe_gromacs.protocols.gromacs_md.md_settings import (
+    EMOutputSettings,
+    EMSimulationSettings,
+    GromacsMDProtocolSettings,
+    IntegratorSettings,
+    NPTOutputSettings,
+    NPTSimulationSettings,
+    NVTOutputSettings,
+    NVTSimulationSettings,
+    OpenFFPartialChargeSettings,
+    OpenMMEngineSettings,
+    OpenMMSolvationSettings,
+)
 
 logger = logging.getLogger(__name__)
 
