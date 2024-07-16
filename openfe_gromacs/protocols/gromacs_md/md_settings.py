@@ -603,7 +603,7 @@ class OutputSettings(SettingsBaseModel):
     Output Settings for simulations run using Gromacs
     """
 
-    forcefield_cache: Optional[str] = 'db.json'
+    forcefield_cache: Optional[str] = "db.json"
     """
     Filename for caching small molecule residue templates so they can be
     later reused.
