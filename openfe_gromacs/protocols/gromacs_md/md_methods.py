@@ -27,26 +27,13 @@ from gufe import (
     settings,
 )
 
-# from openfe.gromacs.protocols.gromacs_md.md_settings import (
-#     GromacsMDProtocolSettings,
-#     OpenFFPartialChargeSettings,
-#     OpenMMSolvationSettings, OpenMMEngineSettings,
-#     IntegratorSettings, EMSimulationSettings,
-#     NVTSimulationSettings, NPTSimulationSettings,
-#     EMOutputSettings, NVTOutputSettings, NPTOutputSettings,
-# )
-from md_settings import (
-    EMOutputSettings,
-    EMSimulationSettings,
+from openfe_gromacs.protocols.gromacs_md.md_settings import (
     GromacsMDProtocolSettings,
-    IntegratorSettings,
-    NPTOutputSettings,
-    NPTSimulationSettings,
-    NVTOutputSettings,
-    NVTSimulationSettings,
     OpenFFPartialChargeSettings,
-    OpenMMEngineSettings,
-    OpenMMSolvationSettings,
+    OpenMMSolvationSettings, OpenMMEngineSettings,
+    IntegratorSettings, EMSimulationSettings,
+    NVTSimulationSettings, NPTSimulationSettings,
+    EMOutputSettings, NVTOutputSettings, NPTOutputSettings,
 )
 from openfe.protocols.openmm_utils import (
     charge_generation,
