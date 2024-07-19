@@ -103,7 +103,7 @@ class SimulationSettings(SettingsBaseModel):
     Frequency for center of mass motion removal in unit [steps].
     Default 100
     """
-    comm_grps: Optional[str]
+    comm_grps: str = 'system'
     """
     Group(s) for center of mass motion removal, default is the whole system.
     """
@@ -608,6 +608,11 @@ class OutputSettings(SettingsBaseModel):
     Filename for caching small molecule residue templates so they can be
     later reused.
     """
+    mdp_file: str = 'em.mdp'
+    """
+    Filename for the mdp file for running simulations in Gromacs. 
+    Default 'em.mdp'
+    """
     nstxout: int = 0
     """
     Number of steps that elapse between writing coordinates to the output
@@ -661,12 +666,12 @@ class OutputSettings(SettingsBaseModel):
     Precision with which to write to the compressed trajectory file.
     Default 1000.
     """
-    compressed_x_grps: Optional[str]
+    compressed_x_grps: str = ''
     """
     Group(s) to write to the compressed trajectory file, by default the whole
     system is written (if nstxout-compressed > 0).
     """
-    energygrps: Optional[str]
+    energygrps: str = ''
     """
     Group(s) for which to write to write short-ranged non-bonded potential
     energies to the energy file (not supported on GPUs)

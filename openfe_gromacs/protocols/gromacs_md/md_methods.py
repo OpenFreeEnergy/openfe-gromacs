@@ -58,6 +58,25 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
 logger = logging.getLogger(__name__)
 
 
+def _dict2mdp(settings_dict: dict, shared_basepath):
+    """
+    Write out a Gromacs .mdp file given a settings dictionary
+    :param settings_dict: dict
+          Dictionary of settings
+    :param shared_basepath: Pathlike
+          Where to save the .mdp files 
+    """
+    filename = shared_basepath / dict['mdp_file']
+    settings_dict.pop('forcefield_cache')
+    settings_dict.pop('mdp_file')
+    with open(filename, 'w') as f:
+        for key, value in settings_dict.items():
+            if isinstance(value, pint.Quantity):
+                value = value.magnitude
+            f.write('%s = %s\n' % (key, value))
+
+
+
 class GromacsMDProtocolResult(gufe.ProtocolResult):
     """
     Dict-like container for the output of a Gromacs MDProtocol.
@@ -175,9 +194,14 @@ class GromacsMDProtocol(gufe.Protocol):
                 ref_p=1.01325 * unit.bar,
                 gen_vel="no",  # If continuation from NVT simulation
             ),
-            output_settings_em=EMOutputSettings(),
-            output_settings_nvt=NVTOutputSettings(),
+            output_settings_em=EMOutputSettings(
+                mdp_file='em.mdp',
+            ),
+            output_settings_nvt=NVTOutputSettings(
+                mdp_file='nvt.mdp',
+            ),
             output_settings_npt=NPTOutputSettings(
+                mdp_file='npt.mdp',
                 nstxout=5000,
                 nstvout=5000,
                 nstfout=5000,
@@ -332,6 +356,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 nagl_model=charge_settings.nagl_model,
             )
 
+
     def run(
         self, *, dry=False, verbose=True, scratch_basepath=None, shared_basepath=None
     ) -> dict[str, Any]:
@@ -370,8 +395,9 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
 
         # 0. General setup and settings dependency resolution step
 
-        # Extract relevant settings
+        # Extract relevant settingsprotocol_settings:
         protocol_settings: GromacsMDProtocolSettings = self._inputs["protocol"].settings
+
         stateA = self._inputs["stateA"]
 
         forcefield_settings: settings.OpenMMSystemGeneratorFFSettings = (
@@ -404,6 +430,17 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         solvent_comp, protein_comp, small_mols = system_validation.get_components(
             stateA
         )
+
+        # Write out .mdp files
+        if protocol_settings.simulation_settings_em.nsteps > 0:
+            settings_dict = sim_settings_em | output_settings_em
+            _dict2mdp(settings_dict, shared_basepath)
+        if protocol_settings.simulation_settings_nvt.nsteps > 0:
+            settings_dict = sim_settings_nvt | output_settings_nvt
+            _dict2mdp(settings_dict, shared_basepath)
+        if protocol_settings.simulation_settings_npt.nsteps > 0:
+            settings_dict = sim_settings_npt | output_settings_npt
+            _dict2mdp(settings_dict, shared_basepath)
 
         # 1. Create stateA system
         # Create a dictionary of OFFMol for each SMC for bookeeping
@@ -464,10 +501,14 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             )
             stateA_system.removeForce(barostat_idx)
 
-            water = OFFMolecule.from_smiles("O", name="water")
+            water = OFFMolecule.from_mapped_smiles("[O:1]([H:2])[H:3]")
             cl = OFFMolecule.from_smiles("[Cl-]", name="Cl")
             na = OFFMolecule.from_smiles("[Na+]", name="Na")
-            unique_molecules = [mol, water, cl, na]
+            unique_molecules = [water, cl, na]
+            # if protein_comp:
+            #     unique_molecules.append(protein_comp.to_openmm_topology())
+            for mol in smc_components.values():
+                unique_molecules.append(mol)
             topology = Topology.from_openmm(
                 stateA_topology, unique_molecules=unique_molecules
             )
@@ -481,11 +522,10 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             ):
                 for atom in molecule.atoms:
                     atom.metadata["residue_number"] = molecule_index + 1
-
-                if molecule.n_atoms == [*smc_components.values()][0].n_atoms:
-                    # this is probably UNK, but just leave it be
-                    for atom in molecule.atoms:
-                        atom.metadata["residue_name"] = "UNK"
+                if len([*smc_components.values()]) > 0:
+                    if molecule.n_atoms == [*smc_components.values()][0].n_atoms:
+                        for atom in molecule.atoms:
+                            atom.metadata["residue_name"] = "UNK"
                 # molecules don't know their residue metadata, so need to
                 # set on each atom
                 # https://github.com/openforcefield/openff-toolkit/issues/1554
