@@ -16,6 +16,7 @@ import uuid
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any, Optional
+import pint
 
 import gufe
 import openmm
@@ -66,7 +67,8 @@ def _dict2mdp(settings_dict: dict, shared_basepath):
     :param shared_basepath: Pathlike
           Where to save the .mdp files
     """
-    filename = shared_basepath / dict['mdp_file']
+    filename = shared_basepath / settings_dict['mdp_file']
+    print(filename)
     settings_dict.pop('forcefield_cache')
     settings_dict.pop('mdp_file')
     with open(filename, 'w') as f:
@@ -435,13 +437,13 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
 
         # Write out .mdp files
         if protocol_settings.simulation_settings_em.nsteps > 0:
-            settings_dict = sim_settings_em | output_settings_em
+            settings_dict = sim_settings_em.dict() | output_settings_em.dict()
             _dict2mdp(settings_dict, shared_basepath)
         if protocol_settings.simulation_settings_nvt.nsteps > 0:
-            settings_dict = sim_settings_nvt | output_settings_nvt
+            settings_dict = sim_settings_nvt.dict() | output_settings_nvt.dict()
             _dict2mdp(settings_dict, shared_basepath)
         if protocol_settings.simulation_settings_npt.nsteps > 0:
-            settings_dict = sim_settings_npt | output_settings_npt
+            settings_dict = sim_settings_npt.dict() | output_settings_npt.dict()
             _dict2mdp(settings_dict, shared_basepath)
 
         # 1. Create stateA system
