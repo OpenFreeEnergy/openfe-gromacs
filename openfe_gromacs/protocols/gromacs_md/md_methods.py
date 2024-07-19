@@ -64,13 +64,15 @@ def _dict2mdp(settings_dict: dict, shared_basepath):
     :param settings_dict: dict
           Dictionary of settings
     :param shared_basepath: Pathlike
-          Where to save the .mdp files 
+          Where to save the .mdp files
     """
     filename = shared_basepath / dict['mdp_file']
     settings_dict.pop('forcefield_cache')
     settings_dict.pop('mdp_file')
     with open(filename, 'w') as f:
         for key, value in settings_dict.items():
+            # Get rid of units
+            # ToDo: Add unit validation/conversion somewhere
             if isinstance(value, pint.Quantity):
                 value = value.magnitude
             f.write('%s = %s\n' % (key, value))
