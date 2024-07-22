@@ -68,7 +68,6 @@ def _dict2mdp(settings_dict: dict, shared_basepath):
           Where to save the .mdp files
     """
     filename = shared_basepath / settings_dict['mdp_file']
-    print(filename)
     settings_dict.pop('forcefield_cache')
     settings_dict.pop('mdp_file')
     with open(filename, 'w') as f:
@@ -78,7 +77,6 @@ def _dict2mdp(settings_dict: dict, shared_basepath):
             if isinstance(value, pint.Quantity):
                 value = value.magnitude
             f.write('%s = %s\n' % (key, value))
-
 
 
 class GromacsMDProtocolResult(gufe.ProtocolResult):
@@ -112,31 +110,31 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
     # TODO: Change this to return the actual outputs
 
-    def get_traj_filename(self) -> list[pathlib.Path]:
+    def get_gro_filename(self) -> list[pathlib.Path]:
         """
-        Get a list of trajectory paths
+        Get a list of paths to the .gro file
 
         Returns
         -------
         traj : list[pathlib.Path]
           list of paths (pathlib.Path) to the simulation trajectory
         """
-        traj = [pus[0].outputs["nc"] for pus in self.data.values()]
+        gro = [pus[0].outputs["system_gro"] for pus in self.data.values()]
 
-        return traj
+        return gro
 
-    def get_pdb_filename(self) -> list[pathlib.Path]:
+    def get_top_filename(self) -> list[pathlib.Path]:
         """
-        Get a list of paths to the pdb files of the pre-minimized system.
+        Get a list of paths to the .gro file
 
         Returns
         -------
-        pdbs : list[pathlib.Path]
-          list of paths (pathlib.Path) to the pdb files
+        traj : list[pathlib.Path]
+          list of paths (pathlib.Path) to the simulation trajectory
         """
-        pdbs = [pus[0].outputs["system_pdb"] for pus in self.data.values()]
+        top = [pus[0].outputs["system_top"] for pus in self.data.values()]
 
-        return pdbs
+        return top
 
 
 class GromacsMDProtocol(gufe.Protocol):
@@ -251,7 +249,7 @@ class GromacsMDProtocol(gufe.Protocol):
                     comp_name = "NoName"
                 else:
                     comp_name = comp.name
-                system_name += f" {comp_type}:{comp_name}"
+                system_name += f" {comp_type}: {comp_name}"
 
         # our DAG has no dependencies, so just list units
         n_repeats = self.settings.protocol_repeats
@@ -359,7 +357,6 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 generate_n_conformers=charge_settings.number_of_conformers,
                 nagl_model=charge_settings.nagl_model,
             )
-
 
     def run(
         self, *, dry=False, verbose=True, scratch_basepath=None, shared_basepath=None
@@ -543,8 +540,8 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                     for atom in molecule.atoms:
                         atom.metadata["residue_name"] = "Cl"
             # g. Save .gro and .top file of the entire system
-            stateA_interchange.to_gro(protocol_settings.gro)
-            stateA_interchange.to_top(protocol_settings.top)
+            stateA_interchange.to_gro(shared_basepath / protocol_settings.gro)
+            stateA_interchange.to_top(shared_basepath / protocol_settings.top)
 
         output = {
             "system_gro": shared_basepath / protocol_settings.gro,
