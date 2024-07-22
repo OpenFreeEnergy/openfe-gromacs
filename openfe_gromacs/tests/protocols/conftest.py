@@ -1,10 +1,8 @@
 # This code is part of OpenFE and is licensed under the MIT license.
 # For details, see https://github.com/OpenFreeEnergy/openfe
-import gzip
 from importlib import resources
 
 import openfe
-import pooch
 import pytest
 from openff.units import unit
 from rdkit import Chem
