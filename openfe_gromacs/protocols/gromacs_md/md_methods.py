@@ -16,10 +16,10 @@ import uuid
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any, Optional
-import pint
 
 import gufe
 import openmm
+import pint
 from gufe import (
     ChemicalSystem,
     ProteinComponent,
@@ -67,16 +67,16 @@ def _dict2mdp(settings_dict: dict, shared_basepath):
     :param shared_basepath: Pathlike
           Where to save the .mdp files
     """
-    filename = shared_basepath / settings_dict['mdp_file']
-    settings_dict.pop('forcefield_cache')
-    settings_dict.pop('mdp_file')
-    with open(filename, 'w') as f:
+    filename = shared_basepath / settings_dict["mdp_file"]
+    settings_dict.pop("forcefield_cache")
+    settings_dict.pop("mdp_file")
+    with open(filename, "w") as f:
         for key, value in settings_dict.items():
             # Get rid of units
             # ToDo: Add unit validation/conversion somewhere
             if isinstance(value, pint.Quantity):
                 value = value.magnitude
-            f.write('%s = %s\n' % (key, value))
+            f.write("{} = {}\n".format(key, value))
     return filename
 
 
@@ -212,13 +212,13 @@ class GromacsMDProtocol(gufe.Protocol):
                 gen_vel="no",  # If continuation from NVT simulation
             ),
             output_settings_em=EMOutputSettings(
-                mdp_file='em.mdp',
+                mdp_file="em.mdp",
             ),
             output_settings_nvt=NVTOutputSettings(
-                mdp_file='nvt.mdp',
+                mdp_file="nvt.mdp",
             ),
             output_settings_npt=NPTOutputSettings(
-                mdp_file='npt.mdp',
+                mdp_file="npt.mdp",
                 nstxout=5000,
                 nstvout=5000,
                 nstfout=5000,

@@ -63,7 +63,7 @@ def test_create_independent_repeat_ids(benzene_system):
     # Default protocol is 1 repeat, change to 3 repeats
     settings.protocol_repeats = 3
     protocol = GromacsMDProtocol(
-            settings=settings,
+        settings=settings,
     )
     dag1 = protocol.create(
         stateA=benzene_system,
@@ -79,14 +79,15 @@ def test_create_independent_repeat_ids(benzene_system):
     repeat_ids = set()
     u: GromacsMDSetupUnit
     for u in dag1.protocol_units:
-        repeat_ids.add(u.inputs['repeat_id'])
+        repeat_ids.add(u.inputs["repeat_id"])
     for u in dag2.protocol_units:
-        repeat_ids.add(u.inputs['repeat_id'])
+        repeat_ids.add(u.inputs["repeat_id"])
 
     assert len(repeat_ids) == 6
 
 
 # Add tests for vacuum simulations?
+
 
 @pytest.fixture
 def solvent_protocol_dag(benzene_system):
@@ -97,7 +98,8 @@ def solvent_protocol_dag(benzene_system):
     )
 
     return protocol.create(
-        stateA=benzene_system, stateB=benzene_system,
+        stateA=benzene_system,
+        stateB=benzene_system,
         mapping=None,
     )
 
@@ -105,11 +107,14 @@ def solvent_protocol_dag(benzene_system):
 def test_unit_tagging(solvent_protocol_dag, tmpdir):
     # test that executing the Units includes correct generation and repeat info
     dag_units = solvent_protocol_dag.protocol_units
-    with mock.patch('openfe_gromacs.protocols.gromacs_md.md_methods.GromacsMDSetupUnit.run',
-                    return_value={'system_gro': 'system.gro',
-                                  'system_top': 'system.top',
-                                  'mdp_files': ['em.mdp', 'nvt.mdp', 'npt.mdp'],
-                                  }):
+    with mock.patch(
+        "openfe_gromacs.protocols.gromacs_md.md_methods.GromacsMDSetupUnit.run",
+        return_value={
+            "system_gro": "system.gro",
+            "system_top": "system.top",
+            "mdp_files": ["em.mdp", "nvt.mdp", "npt.mdp"],
+        },
+    ):
         results = []
         for u in dag_units:
             ret = u.execute(context=gufe.Context(tmpdir, tmpdir))
@@ -118,30 +123,32 @@ def test_unit_tagging(solvent_protocol_dag, tmpdir):
     repeats = set()
     for ret in results:
         assert isinstance(ret, gufe.ProtocolUnitResult)
-        assert ret.outputs['generation'] == 0
-        repeats.add(ret.outputs['repeat_id'])
+        assert ret.outputs["generation"] == 0
+        repeats.add(ret.outputs["repeat_id"])
     # repeats are random ints, so check we got 3 individual numbers
     assert len(repeats) == 2
 
 
 def test_gather(solvent_protocol_dag, tmpdir):
     # check .gather behaves as expected
-    with mock.patch('openfe_gromacs.protocols.gromacs_md.md_methods.GromacsMDSetupUnit.run',
-                    return_value={'system_gro': 'system.gro',
-                                  'system_top': 'system.top',
-                                  'mdp_files': ['em.mdp', 'nvt.mdp',
-                                                'npt.mdp'],
-                                  }):
-        dagres = gufe.protocols.execute_DAG(solvent_protocol_dag,
-                                            shared_basedir=tmpdir,
-                                            scratch_basedir=tmpdir,
-                                            keep_shared=True)
+    with mock.patch(
+        "openfe_gromacs.protocols.gromacs_md.md_methods.GromacsMDSetupUnit.run",
+        return_value={
+            "system_gro": "system.gro",
+            "system_top": "system.top",
+            "mdp_files": ["em.mdp", "nvt.mdp", "npt.mdp"],
+        },
+    ):
+        dagres = gufe.protocols.execute_DAG(
+            solvent_protocol_dag,
+            shared_basedir=tmpdir,
+            scratch_basedir=tmpdir,
+            keep_shared=True,
+        )
 
     settings = GromacsMDProtocol.default_settings()
     settings.protocol_repeats = 2
-    prot = GromacsMDProtocol(
-        settings=settings
-    )
+    prot = GromacsMDProtocol(settings=settings)
 
     res = prot.gather([dagres])
 
