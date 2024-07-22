@@ -76,7 +76,7 @@ def _dict2mdp(settings_dict: dict, shared_basepath):
             # ToDo: Add unit validation/conversion somewhere
             if isinstance(value, pint.Quantity):
                 value = value.magnitude
-            f.write("{} = {}\n".format(key, value))
+            f.write(f"{key} = {value}\n")
     return filename
 
 
