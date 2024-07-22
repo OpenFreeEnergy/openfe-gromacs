@@ -77,6 +77,7 @@ def _dict2mdp(settings_dict: dict, shared_basepath):
             if isinstance(value, pint.Quantity):
                 value = value.magnitude
             f.write('%s = %s\n' % (key, value))
+    return filename
 
 
 class GromacsMDProtocolResult(gufe.ProtocolResult):
@@ -135,6 +136,20 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         top = [pus[0].outputs["system_top"] for pus in self.data.values()]
 
         return top
+
+    def get_mdp_filenames(self) -> list[list[pathlib.Path]]:
+        """
+        Get a list of paths to the .mdp files
+
+        Returns
+        -------
+        mdps : list[list[pathlib.Path]]
+          list of paths (pathlib.Path) to the mdp files for energy minimization,
+          NVT and NPT MD runs
+        """
+        mdps = [pus[0].outputs["mdp_files"] for pus in self.data.values()]
+
+        return mdps
 
 
 class GromacsMDProtocol(gufe.Protocol):
@@ -226,6 +241,7 @@ class GromacsMDProtocol(gufe.Protocol):
             raise NotImplementedError("Can't extend simulations yet")
 
         # Validate solvent component
+        # TODO: Maybe only allow PME as nonbonded_method since Interchange requires PME?
         nonbond = self.settings.forcefield_settings.nonbonded_method
         # TODO: Add check that there has to be solvent since
         #  Gromacs doesn't support vacuum MD
@@ -433,15 +449,19 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         )
 
         # Write out .mdp files
+        mdps = []
         if protocol_settings.simulation_settings_em.nsteps > 0:
             settings_dict = sim_settings_em.dict() | output_settings_em.dict()
-            _dict2mdp(settings_dict, shared_basepath)
+            mdp = _dict2mdp(settings_dict, shared_basepath)
+            mdps.append(mdp)
         if protocol_settings.simulation_settings_nvt.nsteps > 0:
             settings_dict = sim_settings_nvt.dict() | output_settings_nvt.dict()
-            _dict2mdp(settings_dict, shared_basepath)
+            mdp = _dict2mdp(settings_dict, shared_basepath)
+            mdps.append(mdp)
         if protocol_settings.simulation_settings_npt.nsteps > 0:
             settings_dict = sim_settings_npt.dict() | output_settings_npt.dict()
-            _dict2mdp(settings_dict, shared_basepath)
+            mdp = _dict2mdp(settings_dict, shared_basepath)
+            mdps.append(mdp)
 
         # 1. Create stateA system
         # Create a dictionary of OFFMol for each SMC for bookeeping
@@ -546,6 +566,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         output = {
             "system_gro": shared_basepath / protocol_settings.gro,
             "system_top": shared_basepath / protocol_settings.top,
+            "mdp_files": mdps,
         }
 
         return output
