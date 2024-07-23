@@ -122,14 +122,14 @@ def ethane():
     return SmallMoleculeComponent(mol_from_smiles("CC"))
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def benzene_modifications():
     files = {}
-    with importlib.resources.files('openfe.tests.data') as d:
-        fn = str(d / 'benzene_modifications.sdf')
+    with importlib.resources.files("openfe.tests.data") as d:
+        fn = str(d / "benzene_modifications.sdf")
         supp = Chem.SDMolSupplier(str(fn), removeHs=False)
         for rdmol in supp:
-            files[rdmol.GetProp('_Name')] = SmallMoleculeComponent(rdmol)
+            files[rdmol.GetProp("_Name")] = SmallMoleculeComponent(rdmol)
     return files
 
 

@@ -1,6 +1,7 @@
 # This code is part of OpenFE and is licensed under the MIT license.
 # For details, see https://github.com/OpenFreeEnergy/openfe-gromacs
 from unittest import mock
+
 import gmxapi as gmx
 import gufe
 import pytest
@@ -162,11 +163,12 @@ def test_grompp_on_output(solvent_protocol_dag, tmpdir):
     gro = res.get_gro_filename()
     print(gro)
     assert gro
-    grompp_input_files = {'-f': res.get_mdp_filenames()[0],
-                          '-c': res.get_gro_filename(),
-                          '-p': res.get_top_filename()}
+    grompp_input_files = {
+        "-f": res.get_mdp_filenames()[0],
+        "-c": res.get_gro_filename(),
+        "-p": res.get_top_filename(),
+    }
 
     grompp = gmx.commandline_operation(
-        'gmx', 'grompp',
-        input_files=grompp_input_files,
-        output_files={'-o': 'em.tpr'})
+        "gmx", "grompp", input_files=grompp_input_files, output_files={"-o": "em.tpr"}
+    )
