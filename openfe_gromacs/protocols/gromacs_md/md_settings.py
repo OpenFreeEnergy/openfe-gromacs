@@ -597,6 +597,64 @@ class SimulationSettings(SettingsBaseModel):
     Default 'no'.
     """
 
+    @validator(
+        "tinit",
+        "nsteps",
+        "init_step",
+        "simulation_part",
+        "nstcomm",
+        "nstlist",
+        "rlist",
+        "rcoulomb_switch",
+        "rcoulomb",
+        "epsilon_r",
+        "epsilon_rf",
+        "rvdw_switch",
+        "rvdw",
+        "fourierspacing",
+        "ewald_rtol",
+        "epsilon_surface",
+        "tau_t",
+        "ref_t",
+        "tau_p",
+        "compressibility",
+        "gen_temp",
+        "shake_tol",
+        "lincs_order",
+        "lincs_iter",
+        "lincs_warnangle",
+    )
+    def must_be_positive_or_zero(cls, v):
+        if v < 0:
+            errmsg = (
+                "Settings tinit, nsteps, init_step, simulation_part, "
+                "nstcomm, nstlist, rlist, rcoulomb_switch, rcoulomb, "
+                "epsilon_r, epsilon_rf, rvdw_switch, rvdw, "
+                "fourierspacing, ewald_rtol, epsilon_surface, tau_t, "
+                "ref_t, tau_p, compressibility, gen_temp, shake_tol, "
+                "lincs_order, lincs_iter, and lincs_warnangle must be"
+                f" zero or positive values, got {v}."
+            )
+            raise ValueError(errmsg)
+        return v
+
+    @validator("dt", "mass_repartition_factor")
+    def must_be_positive(cls, v):
+        if v <= 0:
+            errmsg = (
+                "timestep dt, and mass_repartition_factor "
+                f"must be positive values, got {v}."
+            )
+            raise ValueError(errmsg)
+        return v
+
+    @validator("pme_order")
+    def must_be_between_3_12(cls, v):
+        if not 3 <= v <= 12:
+            errmsg = "pme_order " f"must be between 3 and 12, got {v}."
+            raise ValueError(errmsg)
+        return v
+
 
 class OutputSettings(SettingsBaseModel):
     """ "
@@ -690,6 +748,15 @@ class EMSimulationSettings(SimulationSettings):
     Initial step size. Default 0.01 * unit.nanometer
     """
 
+    @validator('integrator')
+    def is_steep(cls, v):
+        # EM should have 'steep' integrator
+        if v != 'steep':
+            errmsg = ("For energy minimization, only the integrator=steep "
+                      f"is supported, got integrator={v}.")
+            raise ValueError(errmsg)
+        return v
+    
 
 class EMOutputSettings(OutputSettings):
     """
