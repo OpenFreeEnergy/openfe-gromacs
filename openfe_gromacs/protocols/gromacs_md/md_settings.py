@@ -748,15 +748,17 @@ class EMSimulationSettings(SimulationSettings):
     Initial step size. Default 0.01 * unit.nanometer
     """
 
-    @validator('integrator')
+    @validator("integrator")
     def is_steep(cls, v):
         # EM should have 'steep' integrator
-        if v != 'steep':
-            errmsg = ("For energy minimization, only the integrator=steep "
-                      f"is supported, got integrator={v}.")
+        if v != "steep":
+            errmsg = (
+                "For energy minimization, only the integrator=steep "
+                f"is supported, got integrator={v}."
+            )
             raise ValueError(errmsg)
         return v
-    
+
 
 class EMOutputSettings(OutputSettings):
     """
