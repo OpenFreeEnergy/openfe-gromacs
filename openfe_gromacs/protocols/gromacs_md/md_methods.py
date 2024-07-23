@@ -192,6 +192,7 @@ class GromacsMDProtocol(gufe.Protocol):
             solvation_settings=OpenMMSolvationSettings(),
             engine_settings=OpenMMEngineSettings(),
             integrator_settings=IntegratorSettings(),
+            # TODO: Add validator that EM does not have an actual integrator
             simulation_settings_em=EMSimulationSettings(
                 integrator="steep",
                 nsteps=5000,
@@ -199,11 +200,13 @@ class GromacsMDProtocol(gufe.Protocol):
                 pcoupl="no",
                 gen_vel="no",
             ),
+            # TODO: Add validator that MD needs an integrator, no barostat
             simulation_settings_nvt=NVTSimulationSettings(
                 nsteps=50000,  # 100ps
                 pcoupl="no",
                 gen_vel="yes",
             ),
+            # TODO: Add validator that NPT settings need a barostat
             simulation_settings_npt=NPTSimulationSettings(
                 nsteps=500000,  # 1ns
                 pcoupl="Parrinello-Rahman",

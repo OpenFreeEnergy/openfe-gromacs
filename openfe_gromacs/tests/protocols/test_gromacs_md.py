@@ -1,7 +1,7 @@
 # This code is part of OpenFE and is licensed under the MIT license.
 # For details, see https://github.com/OpenFreeEnergy/openfe-gromacs
 from unittest import mock
-
+import gmxapi as gmx
 import gufe
 import pytest
 
@@ -108,7 +108,7 @@ def test_unit_tagging(solvent_protocol_dag, tmpdir):
         assert isinstance(ret, gufe.ProtocolUnitResult)
         assert ret.outputs["generation"] == 0
         repeats.add(ret.outputs["repeat_id"])
-    # repeats are random ints, so check we got 3 individual numbers
+    # repeats are random ints, so check we got 2 individual numbers
     assert len(repeats) == 2
 
 
@@ -136,3 +136,37 @@ def test_gather(solvent_protocol_dag, tmpdir):
     res = prot.gather([dagres])
 
     assert isinstance(res, GromacsMDProtocolResult)
+
+
+def test_grompp_on_output(solvent_protocol_dag, tmpdir):
+    with mock.patch(
+        "openfe_gromacs.protocols.gromacs_md.md_methods.GromacsMDSetupUnit.run",
+        return_value={
+            "system_gro": "system.gro",
+            "system_top": "system.top",
+            "mdp_files": ["em.mdp", "nvt.mdp", "npt.mdp"],
+        },
+    ):
+        dagres = gufe.protocols.execute_DAG(
+            solvent_protocol_dag,
+            shared_basedir=tmpdir,
+            scratch_basedir=tmpdir,
+            keep_shared=True,
+        )
+
+    settings = GromacsMDProtocol.default_settings()
+    settings.protocol_repeats = 2
+    prot = GromacsMDProtocol(settings=settings)
+
+    res = prot.gather([dagres])
+    gro = res.get_gro_filename()
+    print(gro)
+    assert gro
+    grompp_input_files = {'-f': res.get_mdp_filenames()[0],
+                          '-c': res.get_gro_filename(),
+                          '-p': res.get_top_filename()}
+
+    grompp = gmx.commandline_operation(
+        'gmx', 'grompp',
+        input_files=grompp_input_files,
+        output_files={'-o': 'em.tpr'})
