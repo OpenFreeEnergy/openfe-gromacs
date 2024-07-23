@@ -710,18 +710,18 @@ class OutputSettings(SettingsBaseModel):
     energies to the energy file (not supported on GPUs)
     """
 
-    # @validator('langevin_collision_rate', 'n_restart_attempts')
-    # def must_be_positive_or_zero(cls, v):
-    #     if v < 0:
-    #         errmsg = ("langevin_collision_rate, and n_restart_attempts must be"
-    #                   f" zero or positive values, got {v}.")
-    #         raise ValueError(errmsg)
-    #     return v
 
 
 class EMSimulationSettings(SimulationSettings):
     """
-    Settings for energy minimization.
+    Settings for ener@validator('integrator')
+    def is_steep(cls, v):
+        # EM should have 'steep' integrator
+        if v != 'steep':
+            errmsg = ("For energy minimization, only the integrator=steep "
+                      f"is supported, got integrator={v}.")
+            raise ValueError(errmsg)
+        return vgy minimization.
     """
 
     emtol: FloatQuantity["kilojoule / (mole * nanometer)"] = (
@@ -736,14 +736,7 @@ class EMSimulationSettings(SimulationSettings):
     Initial step size. Default 0.01 * unit.nanometer
     """
 
-    @validator('integrator')
-    def is_steep(cls, v):
-        # EM should have 'steep' integrator
-        if v != 'steep':
-            errmsg = ("For energy minimization, only the integrator=steep "
-                      f"is supported, got integrator={v}.")
-            raise ValueError(errmsg)
-        return v
+
 
 
 class EMOutputSettings(OutputSettings):
