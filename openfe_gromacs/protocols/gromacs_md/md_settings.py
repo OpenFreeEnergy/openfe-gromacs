@@ -736,7 +736,6 @@ class OutputSettings(SettingsBaseModel):
     """
 
 
-
 class EMSimulationSettings(SimulationSettings):
     """
     Settings for ener@validator('integrator')
