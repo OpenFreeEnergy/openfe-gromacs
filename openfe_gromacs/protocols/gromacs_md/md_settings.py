@@ -399,25 +399,27 @@ class SimulationSettings(SettingsBaseModel):
             raise ValueError(errmsg)
         return v
 
-    @validator('dt')
+    @validator("dt")
     def is_time(cls, v):
         if not v.is_compatible_with(unit.picosecond):
-            raise ValueError("dt must be in time units "
-                             "(i.e. picoseconds)")
+            raise ValueError("dt must be in time units " "(i.e. picoseconds)")
 
-    @validator('rlist', 'rcoulomb', 'rvdw')
+    @validator("rlist", "rcoulomb", "rvdw")
     def is_distance(cls, v):
         if not v.is_compatible_with(unit.nanometer):
-            raise ValueError("rlist, rcoulomb, and rvdw must be in distance "
-                             "units (i.e. nanometers)")
+            raise ValueError(
+                "rlist, rcoulomb, and rvdw must be in distance "
+                "units (i.e. nanometers)"
+            )
 
-    @validator('ref_t', 'gen_temp')
+    @validator("ref_t", "gen_temp")
     def is_temperature(cls, v):
         if not v.is_compatible_with(unit.kelvin):
-            raise ValueError("ref_t and gen_temp must be in temperature units"
-                             " (i.e. kelvin)")
+            raise ValueError(
+                "ref_t and gen_temp must be in temperature units" " (i.e. kelvin)"
+            )
 
-    @validator('ref_p')
+    @validator("ref_p")
     def is_pressure(cls, v):
         if not v.is_compatible_with(unit.bar):
             raise ValueError("ref_p must be in pressure units (i.e. bar)")
