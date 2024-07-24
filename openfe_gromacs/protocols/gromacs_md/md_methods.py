@@ -101,14 +101,23 @@ def _dict2mdp(settings_dict: dict, shared_basepath):
           Where to save the .mdp files
     """
     filename = shared_basepath / settings_dict["mdp_file"]
+    # Remove non-mdp settings from the dictionary
     settings_dict.pop("forcefield_cache")
     settings_dict.pop("mdp_file")
     with open(filename, "w") as f:
         for key, value in settings_dict.items():
-            # Get rid of units
-            # ToDo: Add unit validation/conversion somewhere
+            # First convert units to units in the mdp file, then remove units
             if isinstance(value, pint.Quantity):
+                if value.is_compatible_with(unit.nanometer):
+                    value = value.to(unit.nanometer)
+                if value.is_compatible_with(unit.picosecond):
+                    value = value.to(unit.picosecond)
+                if value.is_compatible_with(unit.kelvin):
+                    value = value.to(unit.kelvin)
+                if value.is_compatible_with(unit.bar):
+                    value = value.to(unit.bar)
                 value = value.magnitude
+            # Write out all the setting, value pairs
             f.write(f"{key} = {value}\n")
     return filename
 
