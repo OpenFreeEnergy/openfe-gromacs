@@ -59,6 +59,30 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
 logger = logging.getLogger(__name__)
 
 
+def _pre_defined_settings():
+    return {
+        'tinit': 0 * unit.picosecond,
+        'init_step': 0,
+        'simulation_part': 0,
+        'verlet_buffer_tolerance': 0.005 * unit.kilojoule / (unit.mole * unit.picosecond),
+        'verlet_buffer_pressure_tolerance': 0.5 * unit.bar,
+        'coulomb_modifier': 'Potential-shift',
+        'epsilon_r': 1,
+        'epsilon_rf': 0,
+        'fourierspacing': 0.12 * unit.nanometer,
+        'lj_pme_comb_rule': "Geometric",
+        'ewald_geometry': "3d",
+        'epsilon_surface': 0,
+        'nsttcouple': -1,
+        'tc_grps': "system",
+        'tau_t': 2.0 * unit.picosecond,
+        'pcoupltype': "isotropic",
+        'nstpcouple': -1,
+        'tau_p': 5 * unit.picosecond,
+        'compressibility': 4.5e-05 / unit.bar,
+        'morse': "no",
+    }
+
 def _dict2mdp(settings_dict: dict, shared_basepath):
     """
     Write out a Gromacs .mdp file given a settings dictionary
