@@ -416,7 +416,7 @@ class SimulationSettings(SettingsBaseModel):
     def is_temperature(cls, v):
         if not v.is_compatible_with(unit.kelvin):
             raise ValueError(
-                "ref_t and gen_temp must be in temperature units" " (i.e. kelvin)"
+                "ref_t and gen_temp must be in temperature units (i.e. kelvin)"
             )
 
     @validator("ref_p")
@@ -528,10 +528,9 @@ class OutputSettings(SettingsBaseModel):
     def must_be_positive_or_zero(cls, v):
         if v < 0:
             errmsg = (
-                "nstxout, nstvout, nstfout, nstlog, nstcalcenergy, "
-                "nstenergy, nstxout_compressed, and "
-                "compressed_x_precision must be zero or positive values,"
-                f" got {v}."
+                "nstxout, nstvout, nstfout, nstlog, nstcalcenergy, nstenergy, "
+                "nstxout_compressed, and compressed_x_precision must be zero "
+                f"or positive values, got {v}."
             )
             raise ValueError(errmsg)
         return v
