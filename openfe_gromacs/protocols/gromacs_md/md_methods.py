@@ -59,11 +59,13 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
 logger = logging.getLogger(__name__)
 
 
-def _pre_defined_settings():
-    return {
+pre_defined_settings = {
         "tinit": 0 * unit.picosecond,
         "init_step": 0,
         "simulation_part": 0,
+        "comm_mode": "Linear",
+        "nstcomm": 100,
+        "comm_grps": "system",
         "verlet_buffer_tolerance": 0.005
         * unit.kilojoule
         / (unit.mole * unit.picosecond),
@@ -85,6 +87,10 @@ def _pre_defined_settings():
         "morse": "no",
     }
 
+pre_defined_settings_em = {
+    "emtol": 10.0 * unit.kilojoule / (unit.mole * unit.nanometer),
+    "emstep": 0.01 * unit.nanometer,
+}
 
 def _dict2mdp(settings_dict: dict, shared_basepath):
     """
@@ -219,7 +225,6 @@ class GromacsMDProtocol(gufe.Protocol):
             solvation_settings=OpenMMSolvationSettings(),
             engine_settings=OpenMMEngineSettings(),
             integrator_settings=IntegratorSettings(),
-            # TODO: Add validator that EM does not have an actual integrator
             simulation_settings_em=EMSimulationSettings(
                 integrator="steep",
                 nsteps=5000,
@@ -227,17 +232,14 @@ class GromacsMDProtocol(gufe.Protocol):
                 pcoupl="no",
                 gen_vel="no",
             ),
-            # TODO: Add validator that MD needs an integrator, no barostat
             simulation_settings_nvt=NVTSimulationSettings(
                 nsteps=50000,  # 100ps
                 pcoupl="no",
                 gen_vel="yes",
             ),
-            # TODO: Add validator that NPT settings need a barostat
             simulation_settings_npt=NPTSimulationSettings(
                 nsteps=500000,  # 1ns
                 pcoupl="Parrinello-Rahman",
-                pcoupltype="isotropic",
                 ref_p=1.01325 * unit.bar,
                 gen_vel="no",  # If continuation from NVT simulation
             ),
@@ -481,15 +483,18 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         # Write out .mdp files
         mdps = []
         if protocol_settings.simulation_settings_em.nsteps > 0:
-            settings_dict = sim_settings_em.dict() | output_settings_em.dict()
+            settings_dict = sim_settings_em.dict() | output_settings_em.dict()\
+                            | pre_defined_settings | pre_defined_settings_em
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
         if protocol_settings.simulation_settings_nvt.nsteps > 0:
-            settings_dict = sim_settings_nvt.dict() | output_settings_nvt.dict()
+            settings_dict = sim_settings_nvt.dict() | output_settings_nvt.dict()\
+                            | pre_defined_settings
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
         if protocol_settings.simulation_settings_npt.nsteps > 0:
-            settings_dict = sim_settings_npt.dict() | output_settings_npt.dict()
+            settings_dict = sim_settings_npt.dict() | output_settings_npt.dict()\
+                            | pre_defined_settings
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
 

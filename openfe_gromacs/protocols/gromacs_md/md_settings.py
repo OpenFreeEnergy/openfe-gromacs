@@ -60,28 +60,6 @@ class SimulationSettings(SettingsBaseModel):
     the mass mMin. All atoms with a mass lower than mMin also have their mass
     set to that mMin. Default 1 (no mass scaling)
     """
-    comm_mode: Literal[
-        "Linear", "Angular", "Linear-acceleration-correction", "None"
-    ] = "Linear"
-    """
-    Settings for center of mass treatmeant
-    Allowed values are:
-    'Linear': Remove center of mass translational velocity
-    'Angular': Remove center of mass translational and rotational velocity
-    'Linear-acceleration-correction': Remove center of mass translational
-    velocity. Correct the center of mass position assuming linear acceleration
-    over nstcomm steps.
-    'None': No restriction on the center of mass motion
-    """
-    nstcomm: int = 100
-    """
-    Frequency for center of mass motion removal in unit [steps].
-    Default 100
-    """
-    comm_grps: str = "system"
-    """
-    Group(s) for center of mass motion removal, default is the whole system.
-    """
 
     # # # Langevin dynamics # # #
     ld_seed: int = -1
@@ -387,26 +365,13 @@ class SimulationSettings(SettingsBaseModel):
     """
 
     @validator(
-        "tinit",
         "nsteps",
-        "init_step",
-        "simulation_part",
-        "nstcomm",
         "nstlist",
         "rlist",
-        "rcoulomb_switch",
         "rcoulomb",
-        "epsilon_r",
-        "epsilon_rf",
-        "rvdw_switch",
         "rvdw",
-        "fourierspacing",
         "ewald_rtol",
-        "epsilon_surface",
-        "tau_t",
         "ref_t",
-        "tau_p",
-        "compressibility",
         "gen_temp",
         "shake_tol",
         "lincs_order",
@@ -416,13 +381,9 @@ class SimulationSettings(SettingsBaseModel):
     def must_be_positive_or_zero(cls, v):
         if v < 0:
             errmsg = (
-                "Settings tinit, nsteps, init_step, simulation_part, "
-                "nstcomm, nstlist, rlist, rcoulomb_switch, rcoulomb, "
-                "epsilon_r, epsilon_rf, rvdw_switch, rvdw, "
-                "fourierspacing, ewald_rtol, epsilon_surface, tau_t, "
-                "ref_t, tau_p, compressibility, gen_temp, shake_tol, "
-                "lincs_order, lincs_iter, and lincs_warnangle must be"
-                f" zero or positive values, got {v}."
+                "Settings nsteps, nstlist, rlist, rcoulomb, rvdw, ewald_rtol, "
+                "ref_t, gen_temp, shake_tol, lincs_order, lincs_iter, and "
+                f"lincs_warnangle must be zero or positive values, got {v}."
             )
             raise ValueError(errmsg)
         return v
@@ -527,27 +488,9 @@ class OutputSettings(SettingsBaseModel):
 
 class EMSimulationSettings(SimulationSettings):
     """
-    Settings for ener@validator('integrator')
-    def is_steep(cls, v):
-        # EM should have 'steep' integrator
-        if v != 'steep':
-            errmsg = ("For energy minimization, only the integrator=steep "
-                      f"is supported, got integrator={v}.")
-            raise ValueError(errmsg)
-        return vgy minimization.
+    Settings for energy minimization.
     """
 
-    emtol: FloatQuantity["kilojoule / (mole * nanometer)"] = (
-        10.0 * unit.kilojoule / (unit.mole * unit.nanometer)
-    )
-    """
-    The minimization is converged when the maximum force is smaller than this
-    value. Default 10.0 * unit.kilojoule / (unit.mole * unit.nanometer)
-    """
-    emstep: FloatQuantity["nanometer"] = 0.01 * unit.nanometer
-    """
-    Initial step size. Default 0.01 * unit.nanometer
-    """
 
     @validator("integrator")
     def is_steep(cls, v):
@@ -583,6 +526,17 @@ class NVTSimulationSettings(SimulationSettings):
             raise ValueError(errmsg)
         return v
 
+    @validator("pcoupl")
+    def has_no_barostat(cls, v):
+        # NVT cannot have a barostat
+        if v != "no":
+            errmsg = (
+                "NVT settings cannot have a barostat, "
+                f"got pcoupl={v}."
+            )
+            raise ValueError(errmsg)
+        return v
+
 
 class NVTOutputSettings(OutputSettings):
     """
@@ -602,6 +556,17 @@ class NPTSimulationSettings(SimulationSettings):
             errmsg = (
                 "Molecular Dynamics settings need an MD integrator, "
                 f"not integrator={v}."
+            )
+            raise ValueError(errmsg)
+        return v
+
+    @validator("pcoupl")
+    def has_barostat(cls, v):
+        # NPT needs a barostat
+        if v == "no":
+            errmsg = (
+                "NPT settings need a barostat, "
+                f"got pcoupl={v}."
             )
             raise ValueError(errmsg)
         return v
