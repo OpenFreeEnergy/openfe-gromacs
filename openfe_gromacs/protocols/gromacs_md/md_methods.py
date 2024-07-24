@@ -223,7 +223,7 @@ class GromacsMDProtocol(gufe.Protocol):
         """
         return GromacsMDProtocolSettings(
             forcefield_settings=settings.OpenMMSystemGeneratorFFSettings(
-                nonbonded_method='PME',
+                nonbonded_method="PME",
                 constraints=None,
             ),
             thermo_settings=settings.ThermoSettings(
@@ -480,7 +480,6 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         output_settings_npt: NPTOutputSettings = protocol_settings.output_settings_npt
         integrator_settings = protocol_settings.integrator_settings
 
-
         solvent_comp, protein_comp, small_mols = system_validation.get_components(
             stateA
         )
@@ -524,20 +523,24 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
 
         # b. Validate that in the forcefield settings PME and no constraints
         # are specified which is needed for Interchange to work properly
-        if forcefield_settings.nonbonded_method != 'PME':
-            errmsg = ("Nonbonded method PME is required for input generation, "
-                      " even though a different nonbonded method may be "
-                      "specified within Gromacs. Got nonbonded_method "
-                      f"{forcefield_settings.nonbonded_method}.")
+        if forcefield_settings.nonbonded_method != "PME":
+            errmsg = (
+                "Nonbonded method PME is required for input generation, "
+                " even though a different nonbonded method may be "
+                "specified within Gromacs. Got nonbonded_method "
+                f"{forcefield_settings.nonbonded_method}."
+            )
             raise ValueError(errmsg)
         if forcefield_settings.constraints:
-            errmsg = ("No constraints are allowed in this step of creating the"
-                      " Gromacs input files since Interchange removes "
-                      "constrained bonds. Got constraints "
-                      f"{forcefield_settings.constraints}."
-                      "The constraints to be used within Gromacs can be"
-                      "specified in the simulation settings, e.g. "
-                      f"{sim_settings_em.constraints}.")
+            errmsg = (
+                "No constraints are allowed in this step of creating the"
+                " Gromacs input files since Interchange removes "
+                "constrained bonds. Got constraints "
+                f"{forcefield_settings.constraints}."
+                "The constraints to be used within Gromacs can be"
+                "specified in the simulation settings, e.g. "
+                f"{sim_settings_em.constraints}."
+            )
             raise ValueError(errmsg)
 
         # b. get a system generator
