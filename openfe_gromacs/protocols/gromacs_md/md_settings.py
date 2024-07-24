@@ -424,12 +424,14 @@ class SimulationSettings(SettingsBaseModel):
         if not v.is_compatible_with(unit.bar):
             raise ValueError("ref_p must be in pressure units (i.e. bar)")
 
-    @validator('integrator')
+    @validator("integrator")
     def supported_integrator(cls, v):
-        supported = ['md', 'sd', 'steep']
+        supported = ["md", "sd", "steep"]
         if v.lower() not in supported:
-            errmsg = ("Only the following sampler_method values are "
-                      f"supported: {supported}, got {v}")
+            errmsg = (
+                "Only the following sampler_method values are "
+                f"supported: {supported}, got {v}"
+            )
             raise ValueError(errmsg)
         return v
 
@@ -513,17 +515,26 @@ class OutputSettings(SettingsBaseModel):
     energies to the energy file (not supported on GPUs)
     """
 
-    @validator('nstxout', 'nstvout', 'nstfout', 'nstlog', 'nstcalcenergy',
-               'nstenergy', 'nstxout_compressed', 'compressed_x_precision')
+    @validator(
+        "nstxout",
+        "nstvout",
+        "nstfout",
+        "nstlog",
+        "nstcalcenergy",
+        "nstenergy",
+        "nstxout_compressed",
+        "compressed_x_precision",
+    )
     def must_be_positive_or_zero(cls, v):
         if v < 0:
-            errmsg = ("nstxout, nstvout, nstfout, nstlog, nstcalcenergy, "
-                      "nstenergy, nstxout_compressed, and "
-                      "compressed_x_precision must be zero or positive values,"
-                      f" got {v}.")
+            errmsg = (
+                "nstxout, nstvout, nstfout, nstlog, nstcalcenergy, "
+                "nstenergy, nstxout_compressed, and "
+                "compressed_x_precision must be zero or positive values,"
+                f" got {v}."
+            )
             raise ValueError(errmsg)
         return v
-
 
 
 class EMSimulationSettings(SimulationSettings):
