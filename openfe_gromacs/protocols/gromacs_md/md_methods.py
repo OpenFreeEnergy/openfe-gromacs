@@ -484,7 +484,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             stateA
         )
 
-        # Write out .mdp files
+        # 1. Write out .mdp files
         mdps = []
         if protocol_settings.simulation_settings_em.nsteps > 0:
             settings_dict = (
@@ -512,8 +512,8 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
 
-        # 1. Create stateA system
-        # Create a dictionary of OFFMol for each SMC for bookeeping
+        # 2. Create stateA system
+        # Create a dictionary of OFFMol for each SMC for bookkeeping
         smc_components: dict[SmallMoleculeComponent, OFFMolecule]
 
         smc_components = {i: i.to_openff() for i in small_mols}
@@ -525,25 +525,24 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         # are specified which is needed for Interchange to work properly
         if forcefield_settings.nonbonded_method != "PME":
             errmsg = (
-                "Nonbonded method PME is required for input generation, "
-                " even though a different nonbonded method may be "
-                "specified within Gromacs. Got nonbonded_method "
-                f"{forcefield_settings.nonbonded_method}."
+                "Nonbonded method PME is required for input generation. Got "
+                f"nonbonded_method  {forcefield_settings.nonbonded_method}."
+                "A different nonbonded method may be used to run the actual"
+                "MD simulation in Gromacs using the simulation_settings, e.g."
+                "`sim_settings_em.coulombtype`."
             )
             raise ValueError(errmsg)
         if forcefield_settings.constraints:
             errmsg = (
-                "No constraints are allowed in this step of creating the"
-                " Gromacs input files since Interchange removes "
-                "constrained bonds. Got constraints "
-                f"{forcefield_settings.constraints}."
-                "The constraints to be used within Gromacs can be"
-                "specified in the simulation settings, e.g. "
-                f"{sim_settings_em.constraints}."
+                "No constraints are allowed in this step of creating the "
+                " Gromacs input files since Interchange removes constrained "
+                f"bonds. Got constraints {forcefield_settings.constraints}."
+                "The constraints to be used within Gromacs can be specified in"
+                "the simulation settings, e.g. `sim_settings_em.constraints`."
             )
             raise ValueError(errmsg)
 
-        # b. get a system generator
+        # c. get a system generator
         if output_settings_em.forcefield_cache is not None:
             ffcache = shared_basepath / output_settings_em.forcefield_cache
         else:
@@ -567,7 +566,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                     mol.to_topology().to_openmm(), molecules=[mol]
                 )
 
-            # c. get OpenMM Modeller + a resids dictionary for each component
+            # d. get OpenMM Modeller + a resids dictionary for each component
             stateA_modeller, comp_resids = system_creation.get_omm_modeller(
                 protein_comp=protein_comp,
                 solvent_comp=solvent_comp,
@@ -576,18 +575,18 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 solvent_settings=solvation_settings,
             )
 
-            # d. get topology & positions
+            # e. get topology & positions
             # Note: roundtrip positions to remove vec3 issues
             stateA_topology = stateA_modeller.getTopology()
             stateA_positions = to_openmm(from_openmm(stateA_modeller.getPositions()))
 
-            # e. create the stateA System
+            # f. create the stateA System
             stateA_system = system_generator.create_system(
                 stateA_topology,
                 molecules=[s.to_openff() for s in small_mols],
             )
 
-            # f. Create interchange object
+            # 3. Create the Interchange object
             barostat_idx, barostat = forces.find_forces(
                 stateA_system, ".*Barostat.*", only_one=True
             )
@@ -596,17 +595,20 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             water = OFFMolecule.from_mapped_smiles("[O:1]([H:2])[H:3]")
             cl = OFFMolecule.from_smiles("[Cl-]", name="Cl")
             na = OFFMolecule.from_smiles("[Na+]", name="Na")
-            unique_molecules = [water, cl, na]
-            # if protein_comp:
-            #     unique_molecules.append(protein_comp.to_openmm_topology())
-            for mol in smc_components.values():
-                unique_molecules.append(mol)
-            topology = Topology.from_openmm(
-                stateA_topology, unique_molecules=unique_molecules
-            )
+
+            # For now we will be using the OpenMM Topology, not OpenFF
+            # unique_molecules = [water, cl, na]
+            #
+            # for mol in smc_components.values():
+            #     unique_molecules.append(mol)
+            # topology = Topology.from_openmm(
+            #     stateA_topology, unique_molecules=unique_molecules
+            # )
 
             stateA_interchange = Interchange.from_openmm(
-                topology=topology, system=stateA_system, positions=stateA_positions
+                topology=stateA_topology,
+                system=stateA_system,
+                positions=stateA_positions,
             )
 
             for molecule_index, molecule in enumerate(
@@ -630,7 +632,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 elif molecule.is_isomorphic_with(cl):
                     for atom in molecule.atoms:
                         atom.metadata["residue_name"] = "Cl"
-            # g. Save .gro and .top file of the entire system
+            # 4. Save .gro and .top file of the entire system
             stateA_interchange.to_gro(shared_basepath / protocol_settings.gro)
             stateA_interchange.to_top(shared_basepath / protocol_settings.top)
 
