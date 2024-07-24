@@ -424,6 +424,15 @@ class SimulationSettings(SettingsBaseModel):
         if not v.is_compatible_with(unit.bar):
             raise ValueError("ref_p must be in pressure units (i.e. bar)")
 
+    @validator('integrator')
+    def supported_integrator(cls, v):
+        supported = ['md', 'sd', 'steep']
+        if v.lower() not in supported:
+            errmsg = ("Only the following sampler_method values are "
+                      f"supported: {supported}, got {v}")
+            raise ValueError(errmsg)
+        return v
+
 
 class OutputSettings(SettingsBaseModel):
     """ "
@@ -504,6 +513,18 @@ class OutputSettings(SettingsBaseModel):
     energies to the energy file (not supported on GPUs)
     """
 
+    @validator('nstxout', 'nstvout', 'nstfout', 'nstlog', 'nstcalcenergy',
+               'nstenergy', 'nstxout_compressed', 'compressed_x_precision')
+    def must_be_positive_or_zero(cls, v):
+        if v < 0:
+            errmsg = ("nstxout, nstvout, nstfout, nstlog, nstcalcenergy, "
+                      "nstenergy, nstxout_compressed, and "
+                      "compressed_x_precision must be zero or positive values,"
+                      f" got {v}.")
+            raise ValueError(errmsg)
+        return v
+
+
 
 class EMSimulationSettings(SimulationSettings):
     """
@@ -548,7 +569,7 @@ class NVTSimulationSettings(SimulationSettings):
     def has_no_barostat(cls, v):
         # NVT cannot have a barostat
         if v != "no":
-            errmsg = "NVT settings cannot have a barostat, " f"got pcoupl={v}."
+            errmsg = f"NVT settings cannot have a barostat, got pcoupl={v}."
             raise ValueError(errmsg)
         return v
 
@@ -579,7 +600,7 @@ class NPTSimulationSettings(SimulationSettings):
     def has_barostat(cls, v):
         # NPT needs a barostat
         if v == "no":
-            errmsg = "NPT settings need a barostat, " f"got pcoupl={v}."
+            errmsg = f"NPT settings need a barostat, got pcoupl={v}."
             raise ValueError(errmsg)
         return v
 
@@ -630,8 +651,3 @@ class GromacsMDProtocolSettings(Settings):
     output_settings_em: EMOutputSettings
     output_settings_nvt: NVTOutputSettings
     output_settings_npt: NPTOutputSettings
-    forcefield_cache: Optional[str] = "db.json"
-    """
-    Filename for caching small molecule residue templates so they can be
-    later reused.
-    """
