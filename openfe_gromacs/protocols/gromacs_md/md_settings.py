@@ -35,77 +35,30 @@ class SimulationSettings(SettingsBaseModel):
         arbitrary_types_allowed = True
 
     # # # Run control # # #
-    integrator: Literal["md", "md-vv", "md-vv-avek", "sd", "steep"] = "sd"
+    integrator: Literal["md", "sd", "steep"] = "sd"
     """
     MD integrators and other algorithms (steep for energy minimization).
     Allowed values are:
     'md': a leap-frog integrator
-    'md-vv': a velocity Verlet integrator
-    'md-vv-avek': A velocity Verlet algorithm identical to integrator=md-vv,
-                  except that the kinetic energy is determined as the average
-                  of the two half step kinetic energies as in the
-                  integrator=md integrator, and this thus more accurate.
     'sd': A leap-frog stochastic dynamics integrator. Note that when using this
           integrator the parameters tcoupl and nsttcouple are ignored.
     'steep': A steepest descent algorithm for energy minimization.
     """
-    tinit: FloatQuantity["picosecond"] = 0 * unit.picosecond
-    """
-    Starting time for the MD run.
-    This only makes sense for time-based integrators.
-    Default 0 * unit.picosecond
-    """
-    dt: FloatQuantity["picosecond"] = 0.001 * unit.picosecond
+    dt: FloatQuantity["picosecond"] = 0.002 * unit.picosecond
     """
     Time step for integration (only makes sense for time-based integrators).
-    Default 0.001 * unit.picosecond
+    Default 0.002 * unit.picosecond
     """
     nsteps: int = 0
     """
     Maximum number of steps to integrate or minimize, -1 is no maximum
     Default 0
     """
-    init_step: int = 0
-    """
-    The starting step. The time at step i in a run is calculated as:
-    t = tinit + dt * (init-step + i).
-    Default 0
-    """
-    simulation_part: int = 0
-    """
-    A simulation can consist of multiple parts, each of which has a part number.
-     This option specifies what that number will be, which helps keep track of
-     parts that are logically the same simulation. This option is generally
-     useful to set only when coping with a crashed simulation where files were
-     lost. Default 0
-    """
     mass_repartition_factor: int = 1
     """
     Scales the masses of the lightest atoms in the system by this factor to
     the mass mMin. All atoms with a mass lower than mMin also have their mass
     set to that mMin. Default 1 (no mass scaling)
-    """
-    comm_mode: Literal[
-        "Linear", "Angular", "Linear-acceleration-correction", "None"
-    ] = "Linear"
-    """
-    Settings for center of mass treatmeant
-    Allowed values are:
-    'Linear': Remove center of mass translational velocity
-    'Angular': Remove center of mass translational and rotational velocity
-    'Linear-acceleration-correction': Remove center of mass translational
-    velocity. Correct the center of mass position assuming linear acceleration
-    over nstcomm steps.
-    'None': No restriction on the center of mass motion
-    """
-    nstcomm: int = 100
-    """
-    Frequency for center of mass motion removal in unit [steps].
-    Default 100
-    """
-    comm_grps: Optional[str]
-    """
-    Group(s) for center of mass motion removal, default is the whole system.
     """
 
     # # # Langevin dynamics # # #
@@ -142,24 +95,6 @@ class SimulationSettings(SettingsBaseModel):
           This can be used in combination with walls.
     Default 'xyz'.
     """
-    verlet_buffer_tolerance: FloatQuantity["kilojoule / (mole * picosecond)"] = (
-        0.005 * unit.kilojoule / (unit.mole * unit.picosecond)
-    )
-    """"
-    Used when performing a simulation with dynamics. This sets the maximum
-    allowed error for pair interactions per particle caused by the Verlet
-    buffer, which indirectly sets rlist.
-    Default 0.005 * unit.kilojoule / (unit.mole * unit.picosecond)
-    """
-    verlet_buffer_pressure_tolerance: FloatQuantity["bar"] = 0.5 * unit.bar
-    """
-    Used when performing a simulation with dynamics and only active when
-    verlet-buffer-tolerance is positive. This sets the maximum tolerated error
-    in the average pressure due to missing Lennard-Jones interactions of
-    particle pairs that are not in the pair list, but come within rvdw range
-    as the pair list ages.
-    Default 0.5 * unit.bar
-    """
     rlist: FloatQuantity["nanometer"] = 1 * unit.nanometer
     """
     Cut-off distance for the short-range neighbor list. With dynamics, this is
@@ -191,35 +126,11 @@ class SimulationSettings(SettingsBaseModel):
            infinity by setting epsilon-rf =0.
     Default 'PME'
     """
-    coulomb_modifier: Literal["Potential-shift", "None"] = "Potential-shift"
-    """
-    Allowed options are:
-    'Potential-shift': Shift the Coulomb potential by a constant such that it
-          is zero at the cut-off.
-    'None': Use an unmodified Coulomb potential. This can be useful when
-          comparing energies with those computed with other software.
-    Default 'Potential-shift'
-    """
-    rcoulomb_switch: FloatQuantity["nanometer"] = 0 * unit.nanometer
-    """
-    Where to start switching the Coulomb potential, only relevant when force
-    or potential switching is used.
-    Default 0 * unit.nanometer
-    """
     rcoulomb: FloatQuantity["nanometer"] = 1.2 * unit.nanometer
     """"
     The distance for the Coulomb cut-off. Note that with PME this value can be
     increased by the PME tuning in gmx mdrun along with the PME grid spacing.
     Default 1.2 * unit.nanometer
-    """
-    epsilon_r: int = 1
-    """
-    The relative dielectric constant. A value of 0 means infinity. Default 1.
-    """
-    epsilon_rf: int = 0
-    """
-    The relative dielectric constant of the reaction field. This is only used
-    with reaction-field electrostatics. A value of 0 means infinity. Default 0
     """
 
     # # # Van der Waals # # #
@@ -231,31 +142,13 @@ class SimulationSettings(SettingsBaseModel):
     'PME: Fast smooth Particle-mesh Ewald (SPME) for VdW interactions.
     Default 'Cut-off'.
     """
-    vdw_modifier: Literal[
-        "Potential-shift", "None", "Force-switch", "Potential-switch"
-    ] = "Potential-shift"
+    vdw_modifier: Literal["Potential-shift", "None"] = "Potential-shift"
     """
     Allowed values are:
     'Potential-shift': Shift the Van der Waals potential by a constant such
         that it is zero at the cut-off.
     'None': Use an unmodified Van der Waals potential. This can be useful when
         comparing energies with those computed with other software.
-    'Force-switch': Smoothly switches the forces to zero between rvdw-switch
-        and rvdw. This shifts the potential shift over the whole range and
-        switches it to zero at the cut-off. Note that this is more expensive
-        to calculate than a plain cut-off and it is not required for energy
-        conservation, since Potential-shift conserves energy just as well.
-    'Potential-switch': Smoothly switches the potential to zero between
-        rvdw-switch and rvdw. Note that this introduces articifically large
-        forces in the switching region and is much more expensive to calculate.
-        This option should only be used if the force field you are using
-        requires this.
-    """
-    rvdw_switch: FloatQuantity["nanometer"] = 0 * unit.nanometer
-    """"
-    Where to start switching the LJ force and possibly the potential, only
-    relevant when force or potential switching is used.
-    Default 0 * unit.nanometer
     """
     rvdw: FloatQuantity["nanometer"] = 1.0 * unit.nanometer
     """
@@ -271,16 +164,6 @@ class SimulationSettings(SettingsBaseModel):
     """
 
     # # # Ewald # # #
-    fourierspacing: FloatQuantity["nanometer"] = 0.12 * unit.nanometer
-    """
-    For ordinary Ewald, the ratio of the box dimensions and the spacing
-    determines a lower bound for the number of wave vectors to use in each
-    (signed) direction. For PME and P3M, that ratio determines a lower bound
-    for the number of Fourier-space grid points that will be used along that
-    axis. In all cases, the number for each direction can be overridden by
-    entering a non-zero value for that fourier-nx direction.
-    Default 0.12 * unit.nanometer
-    """
     pme_order: int = 4
     """
     The number of grid points along a dimension to which a charge is mapped.
@@ -297,34 +180,6 @@ class SimulationSettings(SettingsBaseModel):
     given by ewald-rtol. Decreasing this will give a more accurate direct sum,
     but then you need more wave vectors for the reciprocal sum.
     Default 1e-5
-    """
-    lj_pme_comb_rule: Literal["Geometric", "Lorentz-Berthelot"] = "Geometric"
-    """
-    The combination rules used to combine VdW-parameters in the reciprocal part
-    of LJ-PME. Geometric rules are much faster than Lorentz-Berthelot and
-    usually the recommended choice, even when the rest of the force field uses
-    the Lorentz-Berthelot rules. Allowed values are:
-    'Geometric': Apply geometric combination rules.
-    'Lorentz-Berthelot': Apply Lorentz-Berthelot combination rules.
-    Default 'Geometric'.
-    """
-    ewald_geometry: Literal["3d", "3dc"] = "3d"
-    """
-    Allowed values are:
-    '3d': The Ewald sum is performed in all three dimensions.
-    '3dc': The reciprocal sum is still performed in 3D, but a force and
-    potential correction applied in the z dimension to produce a pseudo-2D
-    summation.
-    Default '3d'.
-    """
-    epsilon_surface: float = 0
-    """
-    This controls the dipole correction to the Ewald summation in 3D.
-    The default value of zero means it is turned off. Turn it on by setting it
-    to the value of the relative permittivity of the imaginary surface around
-    your infinite system. Be careful - you shouldn’t use this if you have free
-    mobile charges in your system. This value does not affect the slab 3DC
-    variant of the long range corrections. Default 0.
     """
 
     # # # Temperature coupling # # #
@@ -368,34 +223,14 @@ class SimulationSettings(SettingsBaseModel):
         is written to the energy and log file.
     Default 'no' (for the default integrator, 'sd', this option is ignored).
     """
-    nsttcouple: int = -1
-    """
-    The frequency for coupling the temperature. The default value of -1 sets
-    nsttcouple equal to 100, or fewer steps if required for accurate
-    integration (5 steps per tau for first order coupling, 20 steps per tau for
-    second order coupling). Note that the default value is large in order to
-    reduce the overhead of the additional computation and communication
-    required for obtaining the kinetic energy. For velocity Verlet integrators
-    nsttcouple is set to 1.
-    Default -1.
-    """
-    tc_grps: str = "system"
-    """
-    Groups to couple to separate temperature baths. Default 'system'.
-    """
-    tau_t: FloatQuantity["picosecond"] = 2.0 * unit.picosecond
-    """"
-    Time constant for coupling (one for each group in tc-grps), -1 means no
-    temperature coupling. Default 2.0 * unit.picosecond.
-    """
-    ref_t: FloatQuantity["Kelvin"] = 298.15 * unit.kelvin
+    ref_t: FloatQuantity["kelvin"] = 298.15 * unit.kelvin
     """
     Reference temperature for coupling (one for each group in tc-grps).
     Default 298.15 * unit.kelvin
     """
 
     # # # Pressure coupling # # #
-    pcoupl: Literal["no", "berendsen", "C-rescale", "Parrinello-Rahman", "MTTK"] = "no"
+    pcoupl: Literal["no", "berendsen", "C-rescale", "Parrinello-Rahman"] = "no"
     """
     Options for pressure coupling (barostat). Allowed values are:
     'no': No pressure coupling. This means a fixed box size.
@@ -413,68 +248,7 @@ class SimulationSettings(SettingsBaseModel):
         for the atoms is coupled to this. No instantaneous scaling takes place.
         As for Nose-Hoover temperature coupling the time constant tau-p is the
         period of pressure fluctuations at equilibrium.
-    'MTTK': Martyna-Tuckerman-Tobias-Klein implementation, only useable with
-        integrator=md-vv or integrator=md-vv-avek, very similar to
-        Parrinello-Rahman. As for Nose-Hoover temperature coupling the time
-        constant tau-p is the period of pressure fluctuations at equilibrium.
-        This is probably a better method when you want to apply pressure
-        scaling during data collection, but beware that you can get very large
-        oscillations if you are starting from a different pressure.
-        This requires a constant ensemble temperature for the system.
-        Currently it only supports isotropic scaling, and only works without
-        constraints.
     Default 'no'.
-    """
-    pcoupltype: Literal[
-        "isotropic", "semiisotropic", "anisotropic", "surface-tension"
-    ] = "isotropic"
-    """
-    Specifies the kind of isotropy of the pressure coupling used. Each kind
-    takes one or more values for compressibility and ref-p. Only a single value
-    is permitted for tau-p. Allowed values are:
-    'isotropic': sotropic pressure coupling with time constant tau-p. One value
-        each for compressibility and ref-p is required.
-    'semiisotropic': Pressure coupling which is isotropic in the x and y
-        direction, but different in the z direction. This can be useful for
-        membrane simulations. Two values each for compressibility and ref-p are
-        required, for x/y and z directions respectively.
-    'anisotropic': Same as before, but 6 values are needed for xx, yy, zz,
-        xy/yx, xz/zx and yz/zy components, respectively. When the off-diagonal
-        compressibilities are set to zero, a rectangular box will stay
-        rectangular. Beware that anisotropic scaling can lead to extreme
-        deformation of the simulation box.
-    'surface-tension': Surface tension coupling for surfaces parallel to the
-        xy-plane. Uses normal pressure coupling for the z-direction, while the
-        surface tension is coupled to the x/y dimensions of the box. The first
-        ref-p value is the reference surface tension times the number of
-        surfaces bar nm, the second value is the reference z-pressure bar.
-        The two compressibility values are the compressibility in the x/y and z
-        direction respectively. The value for the z-compressibility should be
-        reasonably accurate since it influences the convergence of the
-        surface-tension, it can also be set to zero to have a box with constant
-        height.
-    Default 'isotropic'
-    """
-    nstpcouple: int = -1
-    """
-    The frequency for coupling the pressure. The default value of -1 sets
-    nstpcouple equal to 100, or fewer steps if required for accurate
-    integration (5 steps per tau for first order coupling, 20 steps per tau for
-    second order coupling). Note that the default value is large in order to
-    reduce the overhead of the additional computation and communication
-    required for obtaining the virial and kinetic energy. For velocity Verlet
-    integrators nsttcouple is set to 1. Default -1.
-    """
-    tau_p: FloatQuantity["picosecond"] = 5 * unit.picosecond
-    """
-    The time constant for pressure coupling (one value for all directions).
-    Default 5 * unit.picosecond.
-    """
-    compressibility: FloatQuantity["1/bar"] = 4.5e-05 / unit.bar
-    """
-    The compressibility. For water at 1 atm and 300 K the compressibility is
-    4.5e-5 bar-1. The number of required values is implied by pcoupltype.
-    Default 4.5e-05 / unit.bar
     """
     ref_p: FloatQuantity["bar"] = 1.01325 * unit.bar
     """
@@ -584,56 +358,26 @@ class SimulationSettings(SettingsBaseModel):
     Number of iterations to correct for rotational lengthening in LINCS.
     Default 1.
     """
-    lincs_warnangle: FloatQuantity["deg"] = 30 * unit.degree
-    """
-    Maximum angle that a bond can rotate before LINCS will complain.
-    Default 30 * unit.degree.
-    """
-    morse: Literal["no", "yes"] = "no"
-    """
-    Allowed options are:
-    'no': Bonds are represented by a harmonic potential.
-    'yes': Bonds are represented by a Morse potential.
-    Default 'no'.
-    """
 
     @validator(
-        "tinit",
         "nsteps",
-        "init_step",
-        "simulation_part",
-        "nstcomm",
         "nstlist",
         "rlist",
-        "rcoulomb_switch",
         "rcoulomb",
-        "epsilon_r",
-        "epsilon_rf",
-        "rvdw_switch",
         "rvdw",
-        "fourierspacing",
         "ewald_rtol",
-        "epsilon_surface",
-        "tau_t",
         "ref_t",
-        "tau_p",
-        "compressibility",
         "gen_temp",
         "shake_tol",
         "lincs_order",
         "lincs_iter",
-        "lincs_warnangle",
     )
     def must_be_positive_or_zero(cls, v):
         if v < 0:
             errmsg = (
-                "Settings tinit, nsteps, init_step, simulation_part, "
-                "nstcomm, nstlist, rlist, rcoulomb_switch, rcoulomb, "
-                "epsilon_r, epsilon_rf, rvdw_switch, rvdw, "
-                "fourierspacing, ewald_rtol, epsilon_surface, tau_t, "
-                "ref_t, tau_p, compressibility, gen_temp, shake_tol, "
-                "lincs_order, lincs_iter, and lincs_warnangle must be"
-                f" zero or positive values, got {v}."
+                "Settings nsteps, nstlist, rlist, rcoulomb, rvdw, ewald_rtol, "
+                "ref_t, gen_temp, shake_tol, lincs_order, and lincs_iter"
+                f" must be zero or positive values, got {v}."
             )
             raise ValueError(errmsg)
         return v
@@ -655,6 +399,42 @@ class SimulationSettings(SettingsBaseModel):
             raise ValueError(errmsg)
         return v
 
+    @validator("dt")
+    def is_time(cls, v):
+        if not v.is_compatible_with(unit.picosecond):
+            raise ValueError("dt must be in time units " "(i.e. picoseconds)")
+
+    @validator("rlist", "rcoulomb", "rvdw")
+    def is_distance(cls, v):
+        if not v.is_compatible_with(unit.nanometer):
+            raise ValueError(
+                "rlist, rcoulomb, and rvdw must be in distance "
+                "units (i.e. nanometers)"
+            )
+
+    @validator("ref_t", "gen_temp")
+    def is_temperature(cls, v):
+        if not v.is_compatible_with(unit.kelvin):
+            raise ValueError(
+                "ref_t and gen_temp must be in temperature units" " (i.e. kelvin)"
+            )
+
+    @validator("ref_p")
+    def is_pressure(cls, v):
+        if not v.is_compatible_with(unit.bar):
+            raise ValueError("ref_p must be in pressure units (i.e. bar)")
+
+    @validator("integrator")
+    def supported_integrator(cls, v):
+        supported = ["md", "sd", "steep"]
+        if v.lower() not in supported:
+            errmsg = (
+                "Only the following sampler_method values are "
+                f"supported: {supported}, got {v}"
+            )
+            raise ValueError(errmsg)
+        return v
+
 
 class OutputSettings(SettingsBaseModel):
     """ "
@@ -665,6 +445,11 @@ class OutputSettings(SettingsBaseModel):
     """
     Filename for caching small molecule residue templates so they can be
     later reused.
+    """
+    mdp_file: str = "em.mdp"
+    """
+    Filename for the mdp file for running simulations in Gromacs.
+    Default 'em.mdp'
     """
     nstxout: int = 0
     """
@@ -719,33 +504,42 @@ class OutputSettings(SettingsBaseModel):
     Precision with which to write to the compressed trajectory file.
     Default 1000.
     """
-    compressed_x_grps: Optional[str]
+    compressed_x_grps: str = ""
     """
     Group(s) to write to the compressed trajectory file, by default the whole
     system is written (if nstxout-compressed > 0).
     """
-    energygrps: Optional[str]
+    energygrps: str = ""
     """
     Group(s) for which to write to write short-ranged non-bonded potential
     energies to the energy file (not supported on GPUs)
     """
 
+    @validator(
+        "nstxout",
+        "nstvout",
+        "nstfout",
+        "nstlog",
+        "nstcalcenergy",
+        "nstenergy",
+        "nstxout_compressed",
+        "compressed_x_precision",
+    )
+    def must_be_positive_or_zero(cls, v):
+        if v < 0:
+            errmsg = (
+                "nstxout, nstvout, nstfout, nstlog, nstcalcenergy, "
+                "nstenergy, nstxout_compressed, and "
+                "compressed_x_precision must be zero or positive values,"
+                f" got {v}."
+            )
+            raise ValueError(errmsg)
+        return v
+
 
 class EMSimulationSettings(SimulationSettings):
     """
     Settings for energy minimization.
-    """
-
-    emtol: FloatQuantity["kilojoule / (mole * nanometer)"] = (
-        10.0 * unit.kilojoule / (unit.mole * unit.nanometer)
-    )
-    """
-    The minimization is converged when the maximum force is smaller than this
-    value. Default 10.0 * unit.kilojoule / (unit.mole * unit.nanometer)
-    """
-    emstep: FloatQuantity["nanometer"] = 0.01 * unit.nanometer
-    """
-    Initial step size. Default 0.01 * unit.nanometer
     """
 
     @validator("integrator")
@@ -771,6 +565,25 @@ class NVTSimulationSettings(SimulationSettings):
     Settings for MD simulation in the NVT ensemble.
     """
 
+    @validator("integrator")
+    def is_not_steep(cls, v):
+        # needs an MD integrator
+        if v == "steep":
+            errmsg = (
+                "Molecular Dynamics settings need an MD integrator, "
+                f"not integrator={v}."
+            )
+            raise ValueError(errmsg)
+        return v
+
+    @validator("pcoupl")
+    def has_no_barostat(cls, v):
+        # NVT cannot have a barostat
+        if v != "no":
+            errmsg = f"NVT settings cannot have a barostat, got pcoupl={v}."
+            raise ValueError(errmsg)
+        return v
+
 
 class NVTOutputSettings(OutputSettings):
     """
@@ -782,6 +595,25 @@ class NPTSimulationSettings(SimulationSettings):
     """
     Settings for MD simulation in the NPT ensemble.
     """
+
+    @validator("integrator")
+    def is_not_steep(cls, v):
+        # needs an MD integrator
+        if v == "steep":
+            errmsg = (
+                "Molecular Dynamics settings need an MD integrator, "
+                f"not integrator={v}."
+            )
+            raise ValueError(errmsg)
+        return v
+
+    @validator("pcoupl")
+    def has_barostat(cls, v):
+        # NPT needs a barostat
+        if v == "no":
+            errmsg = f"NPT settings need a barostat, got pcoupl={v}."
+            raise ValueError(errmsg)
+        return v
 
 
 class NPTOutputSettings(OutputSettings):
