@@ -358,11 +358,6 @@ class SimulationSettings(SettingsBaseModel):
     Number of iterations to correct for rotational lengthening in LINCS.
     Default 1.
     """
-    lincs_warnangle: FloatQuantity["deg"] = 30 * unit.degree
-    """
-    Maximum angle that a bond can rotate before LINCS will complain.
-    Default 30 * unit.degree.
-    """
 
     @validator(
         "nsteps",
@@ -376,14 +371,13 @@ class SimulationSettings(SettingsBaseModel):
         "shake_tol",
         "lincs_order",
         "lincs_iter",
-        "lincs_warnangle",
     )
     def must_be_positive_or_zero(cls, v):
         if v < 0:
             errmsg = (
                 "Settings nsteps, nstlist, rlist, rcoulomb, rvdw, ewald_rtol, "
-                "ref_t, gen_temp, shake_tol, lincs_order, lincs_iter, and "
-                f"lincs_warnangle must be zero or positive values, got {v}."
+                "ref_t, gen_temp, shake_tol, lincs_order, and lincs_iter"
+                f" must be zero or positive values, got {v}."
             )
             raise ValueError(errmsg)
         return v
@@ -404,6 +398,29 @@ class SimulationSettings(SettingsBaseModel):
             errmsg = "pme_order " f"must be between 3 and 12, got {v}."
             raise ValueError(errmsg)
         return v
+
+    @validator('dt')
+    def is_time(cls, v):
+        if not v.is_compatible_with(unit.picosecond):
+            raise ValueError("dt must be in time units "
+                             "(i.e. picoseconds)")
+
+    @validator('rlist', 'rcoulomb', 'rvdw')
+    def is_distance(cls, v):
+        if not v.is_compatible_with(unit.nanometer):
+            raise ValueError("rlist, rcoulomb, and rvdw must be in distance "
+                             "units (i.e. nanometers)")
+
+    @validator('ref_t', 'gen_temp')
+    def is_temperature(cls, v):
+        if not v.is_compatible_with(unit.kelvin):
+            raise ValueError("ref_t and gen_temp must be in temperature units"
+                             " (i.e. kelvin)")
+
+    @validator('ref_p')
+    def is_pressure(cls, v):
+        if not v.is_compatible_with(unit.bar):
+            raise ValueError("ref_p must be in pressure units (i.e. bar)")
 
 
 class OutputSettings(SettingsBaseModel):

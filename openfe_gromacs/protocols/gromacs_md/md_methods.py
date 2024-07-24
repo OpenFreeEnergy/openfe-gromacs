@@ -82,6 +82,7 @@ pre_defined_settings = {
     "nstpcouple": -1,
     "tau_p": 5 * unit.picosecond,
     "compressibility": 4.5e-05 / unit.bar,
+    "lincs_warnangle": 30 * unit.degree,
     "morse": "no",
 }
 
