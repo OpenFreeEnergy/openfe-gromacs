@@ -18,7 +18,6 @@ from collections.abc import Iterable
 from typing import Any, Optional
 
 import gufe
-import openmm
 import pint
 from gufe import (
     ChemicalSystem,
