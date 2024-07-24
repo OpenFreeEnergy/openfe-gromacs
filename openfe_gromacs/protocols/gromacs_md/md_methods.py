@@ -60,37 +60,36 @@ logger = logging.getLogger(__name__)
 
 
 pre_defined_settings = {
-        "tinit": 0 * unit.picosecond,
-        "init_step": 0,
-        "simulation_part": 0,
-        "comm_mode": "Linear",
-        "nstcomm": 100,
-        "comm_grps": "system",
-        "verlet_buffer_tolerance": 0.005
-        * unit.kilojoule
-        / (unit.mole * unit.picosecond),
-        "verlet_buffer_pressure_tolerance": 0.5 * unit.bar,
-        "coulomb_modifier": "Potential-shift",
-        "epsilon_r": 1,
-        "epsilon_rf": 0,
-        "fourierspacing": 0.12 * unit.nanometer,
-        "lj_pme_comb_rule": "Geometric",
-        "ewald_geometry": "3d",
-        "epsilon_surface": 0,
-        "nsttcouple": -1,
-        "tc_grps": "system",
-        "tau_t": 2.0 * unit.picosecond,
-        "pcoupltype": "isotropic",
-        "nstpcouple": -1,
-        "tau_p": 5 * unit.picosecond,
-        "compressibility": 4.5e-05 / unit.bar,
-        "morse": "no",
-    }
+    "tinit": 0 * unit.picosecond,
+    "init_step": 0,
+    "simulation_part": 0,
+    "comm_mode": "Linear",
+    "nstcomm": 100,
+    "comm_grps": "system",
+    "verlet_buffer_tolerance": 0.005 * unit.kilojoule / (unit.mole * unit.picosecond),
+    "verlet_buffer_pressure_tolerance": 0.5 * unit.bar,
+    "coulomb_modifier": "Potential-shift",
+    "epsilon_r": 1,
+    "epsilon_rf": 0,
+    "fourierspacing": 0.12 * unit.nanometer,
+    "lj_pme_comb_rule": "Geometric",
+    "ewald_geometry": "3d",
+    "epsilon_surface": 0,
+    "nsttcouple": -1,
+    "tc_grps": "system",
+    "tau_t": 2.0 * unit.picosecond,
+    "pcoupltype": "isotropic",
+    "nstpcouple": -1,
+    "tau_p": 5 * unit.picosecond,
+    "compressibility": 4.5e-05 / unit.bar,
+    "morse": "no",
+}
 
 pre_defined_settings_em = {
     "emtol": 10.0 * unit.kilojoule / (unit.mole * unit.nanometer),
     "emstep": 0.01 * unit.nanometer,
 }
+
 
 def _dict2mdp(settings_dict: dict, shared_basepath):
     """
@@ -483,18 +482,28 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         # Write out .mdp files
         mdps = []
         if protocol_settings.simulation_settings_em.nsteps > 0:
-            settings_dict = sim_settings_em.dict() | output_settings_em.dict()\
-                            | pre_defined_settings | pre_defined_settings_em
+            settings_dict = (
+                sim_settings_em.dict()
+                | output_settings_em.dict()
+                | pre_defined_settings
+                | pre_defined_settings_em
+            )
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
         if protocol_settings.simulation_settings_nvt.nsteps > 0:
-            settings_dict = sim_settings_nvt.dict() | output_settings_nvt.dict()\
-                            | pre_defined_settings
+            settings_dict = (
+                sim_settings_nvt.dict()
+                | output_settings_nvt.dict()
+                | pre_defined_settings
+            )
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
         if protocol_settings.simulation_settings_npt.nsteps > 0:
-            settings_dict = sim_settings_npt.dict() | output_settings_npt.dict()\
-                            | pre_defined_settings
+            settings_dict = (
+                sim_settings_npt.dict()
+                | output_settings_npt.dict()
+                | pre_defined_settings
+            )
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
 

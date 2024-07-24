@@ -491,7 +491,6 @@ class EMSimulationSettings(SimulationSettings):
     Settings for energy minimization.
     """
 
-
     @validator("integrator")
     def is_steep(cls, v):
         # EM should have 'steep' integrator
@@ -530,10 +529,7 @@ class NVTSimulationSettings(SimulationSettings):
     def has_no_barostat(cls, v):
         # NVT cannot have a barostat
         if v != "no":
-            errmsg = (
-                "NVT settings cannot have a barostat, "
-                f"got pcoupl={v}."
-            )
+            errmsg = "NVT settings cannot have a barostat, " f"got pcoupl={v}."
             raise ValueError(errmsg)
         return v
 
@@ -564,10 +560,7 @@ class NPTSimulationSettings(SimulationSettings):
     def has_barostat(cls, v):
         # NPT needs a barostat
         if v == "no":
-            errmsg = (
-                "NPT settings need a barostat, "
-                f"got pcoupl={v}."
-            )
+            errmsg = "NPT settings need a barostat, " f"got pcoupl={v}."
             raise ValueError(errmsg)
         return v
 
