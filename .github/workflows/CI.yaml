@@ -64,12 +64,19 @@ jobs:
             python=${{ matrix.python-version }}
           init-shell: bash
 
+      - name: Install gmxapi
+        run: |
+          # gmxapi needs to be pointed to where gromacs lives
+          # we also need to tell it where to find our compilers
+          export CMAKE_ARGS="-Dgmxapi_ROOT=$CONDA_PREFIX -C $CONDA_PREFIX/share/cmake/gromacs/gromacs-hints.cmake -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_C_COMPILER=$(which gcc)"
+          pip install gmxapi
+
       - name: Install package
         run: python -m pip install . --no-deps
 
       - name: Run tests
         run: |
-          pytest -v --cov=openfe_gromacs --cov-report=xml --color=yes openfe_gromacs/tests/
+          pytest -n logical -v --cov=openfe_gromacs --cov-report=xml --color=yes openfe_gromacs/tests/
 
       - name: CodeCov
         uses: codecov/codecov-action@v3
