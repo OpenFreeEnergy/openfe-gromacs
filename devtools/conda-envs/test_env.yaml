@@ -15,7 +15,7 @@ dependencies:
   - pytest-cov
   - pydantic >1
   - codecov
-  
+
   - duecredit<0.10
   - numpy
   - networkx
