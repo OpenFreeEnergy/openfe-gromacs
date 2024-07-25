@@ -13,7 +13,6 @@ dependencies:
   - pytest
   - pytest-cov
   - codecov
-
-    # Pip-only installs
-  #- pip:
-  #  - codecov
+  - pip:
+    - sphinx-toolbox
+    - git+https://github.com/OpenFreeEnergy/gufe@main
