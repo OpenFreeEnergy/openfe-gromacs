@@ -40,7 +40,8 @@ jobs:
       - name: "Setup Micromamba"
         uses: mamba-org/setup-micromamba@v1
         with:
-          environment-file: devtools/conda-envs/test_env.yaml
+          #environment-file: devtools/conda-envs/test_env.yaml
+          environment-file: environment.yaml
           environment-name: test
           cache-environment: true
           cache-downloads: true
