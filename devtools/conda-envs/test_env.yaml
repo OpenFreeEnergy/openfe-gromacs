@@ -1,8 +1,7 @@
 name: test
 channels:
-
+  - jaimergp/label/unsupported-cudatoolkit-shim
   - conda-forge
-
   - defaults
 dependencies:
     # Base depends
