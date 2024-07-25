@@ -21,7 +21,6 @@ dependencies:
   - openff-units==0.2.0
   - pint<0.22
   - openff-models>=0.0.5
-  - openfe
   - click
   - typing-extensions
   - openmm !=8.1.0
@@ -41,3 +40,4 @@ dependencies:
     - sphinx-toolbox
     - openff-nagl-models>=0.1.2
     - git+https://github.com/OpenFreeEnergy/gufe@main
+    - git+https://github.com/OpenFreeEnergy/openfe@main
