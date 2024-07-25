@@ -13,17 +13,32 @@ on:
     #   (from https://help.github.com/en/actions/reference/events-that-trigger-workflows#scheduled-events-schedule)
     - cron: "0 0 * * 0"
 
+# This will cancel the workflow if we make another push,
+# we want this so that if we make 3 commits, we only
+# run our workflow on the last commit, instead of running
+# it 3 times.
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+      
 defaults:
   run:
-    shell: bash -l {0}
+    # This shell command is a safer default so if bash hits
+    # and error, it will stop
+    shell: bash -leo pipefail {0}
 
 jobs:
   test:
     name: Test on ${{ matrix.os }}, Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
+      # We want every job in our matrix to run, so we don't
+      # want to fail fast
+      fail-fast: false
       matrix:
-        os: [macOS-latest, ubuntu-latest, windows-latest]
+        # We don't really support windows so we don't need
+        # to test it
+        os: [macOS-latest, ubuntu-latest]
         python-version: ["3.10", "3.11", "3.12"]
 
     steps:
