@@ -480,9 +480,19 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         output_settings_npt: NPTOutputSettings = protocol_settings.output_settings_npt
         integrator_settings = protocol_settings.integrator_settings
 
+
         solvent_comp, protein_comp, small_mols = system_validation.get_components(
             stateA
         )
+
+        # Raise an error when no SolventComponent is provided as this Protocol
+        # currently does not support vacuum simulations
+        if not solvent_comp:
+            errmsg = (
+                "No SolventComponent provided. This protocol currently does"
+                "not support vacuum simulations."
+            )
+            raise ValueError(errmsg)
 
         # 1. Write out .mdp files
         mdps = []
