@@ -11,8 +11,29 @@ dependencies:
 
     # Testing
   - pytest
+  - pytest-xdist
   - pytest-cov
+  - pydantic >1
   - codecov
+  
+  - duecredit<0.10
+  - numpy
+  - networkx
+  - rdkit
+  - packaging
+  - openff-toolkit>=0.13.0
+  - openff-nagl-base >=0.3.3
+  - openff-units==0.2.0
+  - pint<0.22
+  - openff-models>=0.0.5
+  - openmm !=8.1.0
+  - openmmtools
+  - openmmforcefields
+  - pymbar<4.0
+  # docs
+  - autodoc-pydantic<2.0
+  - pydata-sphinx-theme
+  - sphinx-click
   - pip:
     - sphinx-toolbox
     - git+https://github.com/OpenFreeEnergy/gufe@main
