@@ -480,7 +480,6 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         output_settings_npt: NPTOutputSettings = protocol_settings.output_settings_npt
         integrator_settings = protocol_settings.integrator_settings
 
-
         solvent_comp, protein_comp, small_mols = system_validation.get_components(
             stateA
         )
