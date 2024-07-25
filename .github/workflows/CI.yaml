@@ -20,7 +20,6 @@ jobs:
     strategy:
       matrix:
         os: [macOS-latest, ubuntu-latest, windows-latest]
-        pydantic-version: [">1"]
         python-version: [3.9, "3.10", "3.11"]
         ommff-version: [">0.13"]
 
@@ -46,9 +45,7 @@ jobs:
           cache-downloads-key: downloads-${{ steps.date.outputs.date }}
           create-args: >-
             python=${{ matrix.python-version }}
-            pydantic=${{ matrix.pydantic-version }}
             openmmforcefields=${{ matrix.ommff-version }}
-          init-shell: bash
 
       - name: "Install GUFE from main@HEAD"
         run: python -m pip install --no-deps git+https://github.com/OpenFreeEnergy/gufe@main
