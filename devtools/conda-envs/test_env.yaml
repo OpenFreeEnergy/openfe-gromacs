@@ -27,10 +27,10 @@ dependencies:
   - openff-models>=0.0.5
   - click
   - typing-extensions
+  - ambertools >=22.0
   - openmm !=8.1.0
   - openmmtools
   - openmmforcefields
-  - perses
   - pooch
   - py3dmol
   - plugcli
