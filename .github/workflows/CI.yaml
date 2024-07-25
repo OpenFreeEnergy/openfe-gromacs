@@ -68,7 +68,7 @@ jobs:
         run: |
           # gmxapi needs to be pointed to where gromacs lives
           # we also need to tell it where to find our compilers
-          export CMAKE_ARGS="-Dgmxapi_ROOT=$CONDA_PREFIX -C $CONDA_PREFIX/share/cmake/gromacs/gromacs-hints.cmake -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_C_COMPILER=$(which gcc)"
+          export CMAKE_ARGS="-Dgmxapi_ROOT=$CONDA_PREFIX -C $CONDA_PREFIX/share/cmake/gromacs/gromacs-hints.cmake -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC"
           pip install gmxapi
 
       - name: Install package
