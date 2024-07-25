@@ -7,7 +7,10 @@ dependencies:
     # Base depends
   - python
   - pip
-
+  - openff-toolkit-base >=0.16
+  - openff-units
+  - openff-models
+  - ambertools =23
     # Testing
   - pytest
   - pytest-xdist
