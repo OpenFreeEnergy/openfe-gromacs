@@ -20,7 +20,7 @@ on:
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: true
-      
+
 defaults:
   run:
     # This shell command is a safer default so if bash hits
