@@ -25,9 +25,17 @@ dependencies:
   - openff-units==0.2.0
   - pint<0.22
   - openff-models>=0.0.5
+  - click
+  - typing-extensions
   - openmm !=8.1.0
   - openmmtools
   - openmmforcefields
+  - perses
+  - pooch
+  - py3dmol
+  - plugcli
+  - tqdm
+  - pygraphviz
   - pymbar<4.0
   # docs
   - autodoc-pydantic<2.0
