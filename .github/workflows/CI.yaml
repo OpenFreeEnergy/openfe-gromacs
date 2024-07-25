@@ -39,6 +39,7 @@ jobs:
         with:
           environment-file: devtools/conda-envs/test_env.yaml
           environment-name: test
+          generate-run-shell: false
           cache-environment: true
           cache-downloads: true
           cache-environment-key: environment-${{ steps.date.outputs.date }}
