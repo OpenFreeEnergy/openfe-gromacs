@@ -20,7 +20,7 @@ dependencies:
   - networkx
   - rdkit
   - packaging
-  - openff-nagl-base >=0.3.3
+  - openfe
   - openff-units==0.2.0
   - pint<0.22
   - openff-models>=0.0.5
