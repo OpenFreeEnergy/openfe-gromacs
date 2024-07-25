@@ -30,7 +30,6 @@ dependencies:
   - ambertools >=22.0
   - openmm !=8.1.0
   - openmmtools
-  - openmmforcefields
   - pooch
   - py3dmol
   - plugcli
