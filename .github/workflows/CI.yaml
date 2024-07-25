@@ -13,6 +13,10 @@ on:
     #   (from https://help.github.com/en/actions/reference/events-that-trigger-workflows#scheduled-events-schedule)
     - cron: "0 0 * * 0"
 
+defaults:
+  run:
+    shell: bash -l {0}
+
 jobs:
   test:
     name: Test on ${{ matrix.os }}, Python ${{ matrix.python-version }}
@@ -21,7 +25,6 @@ jobs:
       matrix:
         os: [macOS-latest, ubuntu-latest, windows-latest]
         python-version: [3.9, "3.10", "3.11"]
-        ommff-version: [">0.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -39,28 +42,21 @@ jobs:
         with:
           environment-file: devtools/conda-envs/test_env.yaml
           environment-name: test
-          generate-run-shell: false
           cache-environment: true
           cache-downloads: true
-          cache-environment-key: environment-${{ steps.date.outputs.date }}
-          cache-downloads-key: downloads-${{ steps.date.outputs.date }}
           create-args: >-
             python=${{ matrix.python-version }}
-            openmmforcefields=${{ matrix.ommff-version }}
+          init-shell: bash
 
       - name: "Install GUFE from main@HEAD"
         run: python -m pip install --no-deps git+https://github.com/OpenFreeEnergy/gufe@main
 
       - name: Install package
-        # conda setup requires this special shell
-        shell: bash -l {0}
         run: |
           python -m pip install . --no-deps
           micromamba list
 
       - name: Run tests
-        # conda setup requires this special shell
-        shell: bash -l {0}
         run: |
           pytest -v --cov=openfe_gromacs --cov-report=xml --color=yes openfe_gromacs/tests/
 
