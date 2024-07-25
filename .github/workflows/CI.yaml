@@ -64,9 +64,6 @@ jobs:
             python=${{ matrix.python-version }}
           init-shell: bash
 
-      - name: Install AmberTools and RDKit
-        run: micromamba install rdkit "ambertools =23" "lammps >=2023.08.02" "jax >=0.3" "jaxlib >=0.3" -c conda-forge
-
       - name: Install package
         run: python -m pip install . --no-deps
 
