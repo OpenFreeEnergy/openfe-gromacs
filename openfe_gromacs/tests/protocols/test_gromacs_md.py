@@ -186,8 +186,8 @@ def test_gather(solvent_protocol_dag, tmpdir):
     assert isinstance(res, GromacsMDProtocolResult)
 
 
-def test_dry_run_ffcache_none(benzene_system, tmpdir):
-
+def test_dry_run_ffcache_none(benzene_system, monkeypatch, tmpdir):
+    monkeypatch.setenv("INTERCHANGE_EXPERIMENTAL", "1")
     settings = GromacsMDProtocol.default_settings()
     settings.output_settings_em.forcefield_cache = None
 
@@ -208,10 +208,11 @@ def test_dry_run_ffcache_none(benzene_system, tmpdir):
         dag_unit.run(dry=True)
 
 
-def test_dry_many_molecules_solvent(benzene_many_solv_system, tmpdir):
+def test_dry_many_molecules_solvent(benzene_many_solv_system, monkeypatch, tmpdir):
     """
     A basic test flushing "will it work if you pass multiple molecules"
     """
+    monkeypatch.setenv("INTERCHANGE_EXPERIMENTAL", "1")
     settings = GromacsMDProtocol.default_settings()
 
     protocol = GromacsMDProtocol(
