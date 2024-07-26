@@ -1,14 +1,15 @@
 # This code is part of OpenFE and is licensed under the MIT license.
 # For details, see https://github.com/OpenFreeEnergy/openfe-gromacs
+import gzip
 from importlib import resources
 
 import openfe
-import openfe_gromacs
 import pytest
-import gzip
 from openff.units import unit
 from rdkit import Chem
 from rdkit.Geometry import Point3D
+
+import openfe_gromacs
 
 
 @pytest.fixture
@@ -162,8 +163,8 @@ def md_json() -> str:
 
     generated with gen-serialized-results.py
     """
-    d = resources.files('openfe_gromacs.tests.data')
+    d = resources.files("openfe_gromacs.tests.data")
     fname = "MDProtocol_json_results.gz"
 
-    with gzip.open((d / fname).as_posix(), 'r') as f:  # type: ignore
+    with gzip.open((d / fname).as_posix(), "r") as f:  # type: ignore
         return f.read().decode()  # type: ignore

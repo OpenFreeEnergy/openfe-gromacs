@@ -1,13 +1,14 @@
 # This code is part of OpenFE and is licensed under the MIT license.
 # For details, see https://github.com/OpenFreeEnergy/openfe-gromacs
-from unittest import mock
 import json
+import pathlib
+from unittest import mock
+
 import gmxapi as gmx
 import gufe
-import openfe_gromacs
 import pytest
-import pathlib
 
+import openfe_gromacs
 from openfe_gromacs.protocols.gromacs_md.md_methods import (
     GromacsMDProtocol,
     GromacsMDProtocolResult,
@@ -74,9 +75,9 @@ def test_create_independent_repeat_ids(benzene_system):
 
 def test_no_SolventComponent(benzene_vacuum_system, tmpdir):
     settings = GromacsMDProtocol.default_settings()
-    settings.forcefield_settings.nonbonded_method = 'nocutoff'
+    settings.forcefield_settings.nonbonded_method = "nocutoff"
     p = GromacsMDProtocol(
-            settings=settings,
+        settings=settings,
     )
 
     dag = p.create(
@@ -94,10 +95,10 @@ def test_no_SolventComponent(benzene_vacuum_system, tmpdir):
 
 def test_no_constraints(benzene_system, tmpdir):
     settings = GromacsMDProtocol.default_settings()
-    settings.forcefield_settings.constraints = 'hbonds'
+    settings.forcefield_settings.constraints = "hbonds"
 
     p = GromacsMDProtocol(
-            settings=settings,
+        settings=settings,
     )
 
     dag = p.create(
@@ -184,14 +185,14 @@ class TestProtocolResult:
     def protocolresult(self, md_json):
         d = json.loads(md_json, cls=gufe.tokenization.JSON_HANDLER.decoder)
 
-        pr = openfe_gromacs.ProtocolResult.from_dict(d['protocol_result'])
+        pr = openfe_gromacs.ProtocolResult.from_dict(d["protocol_result"])
 
         return pr
 
     def test_reload_protocol_result(self, md_json):
         d = json.loads(md_json, cls=gufe.tokenization.JSON_HANDLER.decoder)
 
-        pr = GromacsMDProtocolResult.from_dict(d['protocol_result'])
+        pr = GromacsMDProtocolResult.from_dict(d["protocol_result"])
 
         assert pr
 
@@ -199,7 +200,6 @@ class TestProtocolResult:
         est = protocolresult.get_estimate()
 
         assert est is None
-
 
     def test_get_uncertainty(self, protocolresult):
         est = protocolresult.get_uncertainty()

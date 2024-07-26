@@ -1,20 +1,21 @@
 from gufe import (
+    AlchemicalNetwork,
     ChemicalSystem,
     Component,
+    LigandAtomMapping,
+    NonTransformation,
     ProteinComponent,
     SmallMoleculeComponent,
     SolventComponent,
     Transformation,
-    NonTransformation,
-    AlchemicalNetwork,
-    LigandAtomMapping,
 )
 from gufe.protocols import (
     Protocol,
     ProtocolDAG,
-    ProtocolUnit,
-    ProtocolUnitResult, ProtocolUnitFailure,
     ProtocolDAGResult,
     ProtocolResult,
+    ProtocolUnit,
+    ProtocolUnitFailure,
+    ProtocolUnitResult,
     execute_DAG,
 )

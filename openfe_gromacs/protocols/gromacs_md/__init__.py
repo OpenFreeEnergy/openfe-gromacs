@@ -7,8 +7,8 @@ Run MD simulation using OpenMM and OpenMMTools.
 
 from .md_methods import (
     GromacsMDProtocol,
-    GromacsMDProtocolSettings,
     GromacsMDProtocolResult,
+    GromacsMDProtocolSettings,
     GromacsMDSetupUnit,
 )
 
