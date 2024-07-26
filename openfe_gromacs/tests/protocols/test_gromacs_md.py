@@ -7,6 +7,7 @@ from unittest import mock
 import gmxapi as gmx
 import gufe
 import pytest
+import sys
 
 import openfe_gromacs
 from openfe_gromacs.protocols.gromacs_md.md_methods import (
@@ -14,7 +15,9 @@ from openfe_gromacs.protocols.gromacs_md.md_methods import (
     GromacsMDProtocolResult,
     GromacsMDSetupUnit,
 )
-
+from openfe.protocols.openmm_utils.charge_generation import (
+    HAS_NAGL, HAS_OPENEYE, HAS_ESPALOMA
+)
 
 def test_create_default_settings():
     settings = GromacsMDProtocol.default_settings()
@@ -178,6 +181,50 @@ def test_gather(solvent_protocol_dag, tmpdir):
     res = prot.gather([dagres])
 
     assert isinstance(res, GromacsMDProtocolResult)
+
+def test_dry_run_ffcache_none(benzene_system, tmpdir):
+
+    settings = GromacsMDProtocol.default_settings()
+    settings.output_settings_em.forcefield_cache = None
+
+    protocol = GromacsMDProtocol(
+            settings=settings,
+    )
+    assert protocol.settings.output_settings_em.forcefield_cache is None
+
+    # create DAG from protocol and take first (and only) work unit from within
+    dag = protocol.create(
+        stateA=benzene_system,
+        stateB=benzene_system,
+        mapping=None,
+    )
+    dag_unit = list(dag.protocol_units)[0]
+
+    with tmpdir.as_cwd():
+        dag_unit.run(dry=True)
+
+def test_dry_many_molecules_solvent(
+    benzene_many_solv_system, tmpdir
+):
+    """
+    A basic test flushing "will it work if you pass multiple molecules"
+    """
+    settings = GromacsMDProtocol.default_settings()
+
+    protocol = GromacsMDProtocol(
+            settings=settings,
+    )
+
+    # create DAG from protocol and take first (and only) work unit from within
+    dag = protocol.create(
+        stateA=benzene_many_solv_system,
+        stateB=benzene_many_solv_system,
+        mapping=None,
+    )
+    unit = list(dag.protocol_units)[0]
+
+    with tmpdir.as_cwd():
+        system = unit.run(dry=True)
 
 
 class TestProtocolResult:
