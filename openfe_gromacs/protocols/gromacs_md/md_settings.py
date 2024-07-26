@@ -395,14 +395,14 @@ class SimulationSettings(SettingsBaseModel):
     @validator("pme_order")
     def must_be_between_3_12(cls, v):
         if not 3 <= v <= 12:
-            errmsg = "pme_order " f"must be between 3 and 12, got {v}."
+            errmsg = f"pme_order must be between 3 and 12, got {v}."
             raise ValueError(errmsg)
         return v
 
     @validator("dt")
     def is_time(cls, v):
         if not v.is_compatible_with(unit.picosecond):
-            raise ValueError("dt must be in time units " "(i.e. picoseconds)")
+            raise ValueError("dt must be in time units (i.e. picoseconds)")
 
     @validator("rlist", "rcoulomb", "rvdw")
     def is_distance(cls, v):
