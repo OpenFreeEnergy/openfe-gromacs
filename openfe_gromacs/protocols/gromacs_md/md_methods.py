@@ -276,9 +276,6 @@ class GromacsMDProtocol(gufe.Protocol):
         mapping: dict[str, gufe.ComponentMapping] | None = None,
         extends: gufe.ProtocolDAGResult | None = None,
     ) -> list[gufe.ProtocolUnit]:
-        # TODO: Extensions?
-        if extends:
-            raise NotImplementedError("Can't extend simulations yet")
 
         # Validate solvent component
         # TODO: Maybe only allow PME as nonbonded_method since Interchange requires PME?
