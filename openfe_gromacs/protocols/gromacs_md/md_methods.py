@@ -1,7 +1,7 @@
 # This code is part of OpenFE and is licensed under the MIT license.
 # For details, see https://github.com/OpenFreeEnergy/openfe
 
-"""Gromacs MD Protocol --- :mod:`openfe.gromacs.protocols.gromacs_md.md_methods`
+"""Gromacs MD Protocol --- :mod:`openfe_gromacs.protocols.gromacs_md.md_methods`
 ================================================================================
 
 This module implements the necessary methodology tools to run an MD
@@ -249,7 +249,6 @@ class GromacsMDProtocol(gufe.Protocol):
             simulation_settings_npt=NPTSimulationSettings(
                 nsteps=500000,  # 1ns
                 pcoupl="Parrinello-Rahman",
-                ref_p=1.01325 * unit.bar,
                 gen_vel="no",  # If continuation from NVT simulation
             ),
             output_settings_em=EMOutputSettings(
@@ -530,21 +529,12 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         # a. assign partial charges to smcs
         self._assign_partial_charges(charge_settings, smc_components)
 
-        # b. Validate that in the forcefield settings PME and no constraints
-        # are specified which is needed for Interchange to work properly
-        if forcefield_settings.nonbonded_method != "PME":
-            errmsg = (
-                "Nonbonded method PME is required for input generation. Got "
-                f"nonbonded_method  {forcefield_settings.nonbonded_method}."
-                "A different nonbonded method may be used to run the actual"
-                "MD simulation in Gromacs using the simulation_settings, e.g."
-                "`sim_settings_em.coulombtype`."
-            )
-            raise ValueError(errmsg)
+        # b. Validate that no constraints are specified which is needed
+        #    for Interchange to work properly
         if forcefield_settings.constraints:
             errmsg = (
                 "No constraints are allowed in this step of creating the "
-                " Gromacs input files since Interchange removes constrained "
+                "Gromacs input files since Interchange removes constrained "
                 f"bonds. Got constraints {forcefield_settings.constraints}."
                 "The constraints to be used within Gromacs can be specified in"
                 "the simulation settings, e.g. `sim_settings_em.constraints`."

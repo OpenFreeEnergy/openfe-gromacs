@@ -1,10 +1,12 @@
 # This code is part of OpenFE and is licensed under the MIT license.
 # For details, see https://github.com/OpenFreeEnergy/openfe-gromacs
 from unittest import mock
-
+import json
 import gmxapi as gmx
 import gufe
+import openfe_gromacs
 import pytest
+import pathlib
 
 from openfe_gromacs.protocols.gromacs_md.md_methods import (
     GromacsMDProtocol,
@@ -70,7 +72,45 @@ def test_create_independent_repeat_ids(benzene_system):
     assert len(repeat_ids) == 6
 
 
-# Add tests for vacuum simulations?
+def test_no_SolventComponent(benzene_vacuum_system, tmpdir):
+    settings = GromacsMDProtocol.default_settings()
+    settings.forcefield_settings.nonbonded_method = 'nocutoff'
+    p = GromacsMDProtocol(
+            settings=settings,
+    )
+
+    dag = p.create(
+        stateA=benzene_vacuum_system,
+        stateB=benzene_vacuum_system,
+        mapping=None,
+    )
+    dag_unit = list(dag.protocol_units)[0]
+
+    errmsg = "No SolventComponent provided. This protocol currently"
+    with tmpdir.as_cwd():
+        with pytest.raises(ValueError, match=errmsg):
+            dag_unit.run(dry=True)
+
+
+def test_no_constraints(benzene_system, tmpdir):
+    settings = GromacsMDProtocol.default_settings()
+    settings.forcefield_settings.constraints = 'hbonds'
+
+    p = GromacsMDProtocol(
+            settings=settings,
+    )
+
+    dag = p.create(
+        stateA=benzene_system,
+        stateB=benzene_system,
+        mapping=None,
+    )
+    dag_unit = list(dag.protocol_units)[0]
+
+    errmsg = "No constraints are allowed in this step of creating the Gromacs"
+    with tmpdir.as_cwd():
+        with pytest.raises(ValueError, match=errmsg):
+            dag_unit.run(dry=True)
 
 
 @pytest.fixture
@@ -139,6 +179,53 @@ def test_gather(solvent_protocol_dag, tmpdir):
     assert isinstance(res, GromacsMDProtocolResult)
 
 
+class TestProtocolResult:
+    @pytest.fixture()
+    def protocolresult(self, md_json):
+        d = json.loads(md_json, cls=gufe.tokenization.JSON_HANDLER.decoder)
+
+        pr = openfe_gromacs.ProtocolResult.from_dict(d['protocol_result'])
+
+        return pr
+
+    def test_reload_protocol_result(self, md_json):
+        d = json.loads(md_json, cls=gufe.tokenization.JSON_HANDLER.decoder)
+
+        pr = GromacsMDProtocolResult.from_dict(d['protocol_result'])
+
+        assert pr
+
+    def test_get_estimate(self, protocolresult):
+        est = protocolresult.get_estimate()
+
+        assert est is None
+
+
+    def test_get_uncertainty(self, protocolresult):
+        est = protocolresult.get_uncertainty()
+
+        assert est is None
+
+    def test_get_gro_filename(self, protocolresult):
+        gro = protocolresult.get_gro_filename()
+
+        assert isinstance(gro, list)
+        assert isinstance(gro[0], pathlib.Path)
+
+    def test_get_top_filename(self, protocolresult):
+        top = protocolresult.get_top_filename()
+
+        assert isinstance(top, list)
+        assert isinstance(top[0], pathlib.Path)
+
+    def test_get_mdp_filenames(self, protocolresult):
+        mdps = protocolresult.get_mdp_filenames()
+
+        assert isinstance(mdps, list)
+        assert isinstance(mdps[0], list)
+        assert isinstance(mdps[0][0], pathlib.Path)
+
+
 def test_grompp_on_output(solvent_protocol_dag, tmpdir):
     with mock.patch(
         "openfe_gromacs.protocols.gromacs_md.md_methods.GromacsMDSetupUnit.run",
@@ -161,7 +248,6 @@ def test_grompp_on_output(solvent_protocol_dag, tmpdir):
 
     res = prot.gather([dagres])
     gro = res.get_gro_filename()
-    print(gro)
     assert gro
     grompp_input_files = {
         "-f": res.get_mdp_filenames()[0],
