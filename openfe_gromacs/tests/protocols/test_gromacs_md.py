@@ -2,12 +2,17 @@
 # For details, see https://github.com/OpenFreeEnergy/openfe-gromacs
 import json
 import pathlib
+import sys
 from unittest import mock
 
 import gmxapi as gmx
 import gufe
 import pytest
-import sys
+from openfe.protocols.openmm_utils.charge_generation import (
+    HAS_ESPALOMA,
+    HAS_NAGL,
+    HAS_OPENEYE,
+)
 
 import openfe_gromacs
 from openfe_gromacs.protocols.gromacs_md.md_methods import (
@@ -15,9 +20,7 @@ from openfe_gromacs.protocols.gromacs_md.md_methods import (
     GromacsMDProtocolResult,
     GromacsMDSetupUnit,
 )
-from openfe.protocols.openmm_utils.charge_generation import (
-    HAS_NAGL, HAS_OPENEYE, HAS_ESPALOMA
-)
+
 
 def test_create_default_settings():
     settings = GromacsMDProtocol.default_settings()
@@ -182,13 +185,14 @@ def test_gather(solvent_protocol_dag, tmpdir):
 
     assert isinstance(res, GromacsMDProtocolResult)
 
+
 def test_dry_run_ffcache_none(benzene_system, tmpdir):
 
     settings = GromacsMDProtocol.default_settings()
     settings.output_settings_em.forcefield_cache = None
 
     protocol = GromacsMDProtocol(
-            settings=settings,
+        settings=settings,
     )
     assert protocol.settings.output_settings_em.forcefield_cache is None
 
@@ -203,16 +207,15 @@ def test_dry_run_ffcache_none(benzene_system, tmpdir):
     with tmpdir.as_cwd():
         dag_unit.run(dry=True)
 
-def test_dry_many_molecules_solvent(
-    benzene_many_solv_system, tmpdir
-):
+
+def test_dry_many_molecules_solvent(benzene_many_solv_system, tmpdir):
     """
     A basic test flushing "will it work if you pass multiple molecules"
     """
     settings = GromacsMDProtocol.default_settings()
 
     protocol = GromacsMDProtocol(
-            settings=settings,
+        settings=settings,
     )
 
     # create DAG from protocol and take first (and only) work unit from within
