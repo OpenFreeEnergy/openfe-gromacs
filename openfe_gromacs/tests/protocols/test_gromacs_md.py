@@ -3,6 +3,7 @@
 import json
 import pathlib
 from unittest import mock
+
 import gufe
 import pytest
 
