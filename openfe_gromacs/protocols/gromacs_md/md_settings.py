@@ -9,6 +9,7 @@ This module implements the settings necessary to run MD simulations using
 """
 from typing import Literal, Optional
 
+import pint
 from gufe.settings import OpenMMSystemGeneratorFFSettings, SettingsBaseModel
 from openfe.protocols.openmm_utils.omm_settings import (
     IntegratorSettings,
@@ -403,6 +404,7 @@ class SimulationSettings(SettingsBaseModel):
     def is_time(cls, v):
         if not v.is_compatible_with(unit.picosecond):
             raise ValueError("dt must be in time units (i.e. picoseconds)")
+        return v
 
     @validator("rlist", "rcoulomb", "rvdw")
     def is_distance(cls, v):
@@ -411,6 +413,7 @@ class SimulationSettings(SettingsBaseModel):
                 "rlist, rcoulomb, and rvdw must be in distance "
                 "units (i.e. nanometers)"
             )
+        return v
 
     @validator("ref_t", "gen_temp")
     def is_temperature(cls, v):
@@ -418,11 +421,13 @@ class SimulationSettings(SettingsBaseModel):
             raise ValueError(
                 "ref_t and gen_temp must be in temperature units (i.e. kelvin)"
             )
+        return v
 
     @validator("ref_p")
     def is_pressure(cls, v):
         if not v.is_compatible_with(unit.bar):
             raise ValueError("ref_p must be in pressure units (i.e. bar)")
+        return v
 
     @validator("integrator")
     def supported_integrator(cls, v):
@@ -450,6 +455,11 @@ class OutputSettings(SettingsBaseModel):
     """
     Filename for the mdp file for running simulations in Gromacs.
     Default 'em.mdp'
+    """
+    tpr_file: str = 'em.tpr'
+    """
+    Filename for the tpr file for running simulations in Gromacs.
+    Default 'em.tpr'
     """
     nstxout: int = 0
     """
