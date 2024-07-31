@@ -11,13 +11,14 @@ simulation using OpenMM tools and Gromacs.
 from __future__ import annotations
 
 import logging
+import os
 import pathlib
+import subprocess
 import uuid
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any, Optional
-import os
-import subprocess
+
 import gmxapi as gmx
 import gufe
 import pint
@@ -670,6 +671,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
     Protocol unit for running plain MD simulations (NonTransformation)
     in Gromacs.
     """
+
     def _run_gromacs(self, mdp, gro, top, tpr, deffnm, shared_basebath):
         assert os.path.exists(gro)
         assert os.path.exists(top)
@@ -764,7 +766,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 if str(x).split("/")[1] == output_settings_em.mdp_file
             ]
             tpr = ctx.shared / output_settings_em.tpr_file
-            deffnm = str(output_settings_em.tpr_file.split('.')[0])
+            deffnm = str(output_settings_em.tpr_file.split(".")[0])
             assert len(mdp) == 1
             self._run_gromacs(mdp[0], input_gro, input_top, tpr, deffnm, ctx.shared)
 
@@ -777,10 +779,9 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 if str(x).split("/")[1] == output_settings_nvt.mdp_file
             ]
             tpr = ctx.shared / output_settings_nvt.tpr_file
-            deffnm = str(output_settings_nvt.tpr_file.split('.')[0])
+            deffnm = str(output_settings_nvt.tpr_file.split(".")[0])
             assert len(mdp) == 1
-            self._run_gromacs(mdp[0], input_gro, input_top, tpr, deffnm,
-                              ctx.shared)
+            self._run_gromacs(mdp[0], input_gro, input_top, tpr, deffnm, ctx.shared)
 
         # Run NPT
         print("Running NPT")
@@ -791,10 +792,9 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 if str(x).split("/")[1] == output_settings_npt.mdp_file
             ]
             tpr = ctx.shared / output_settings_npt.tpr_file
-            deffnm = str(output_settings_npt.tpr_file.split('.')[0])
+            deffnm = str(output_settings_npt.tpr_file.split(".")[0])
             assert len(mdp) == 1
-            self._run_gromacs(mdp[0], input_gro, input_top, tpr, deffnm,
-                              ctx.shared)
+            self._run_gromacs(mdp[0], input_gro, input_top, tpr, deffnm, ctx.shared)
 
         return {
             "repeat_id": self._inputs["repeat_id"],
