@@ -17,6 +17,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any, Optional
 
+import gmxapi as gmx
 import gufe
 import pint
 from gufe import (
@@ -54,7 +55,6 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
     OpenMMEngineSettings,
     OpenMMSolvationSettings,
 )
-import gmxapi as gmx
 
 logger = logging.getLogger(__name__)
 
@@ -210,7 +210,6 @@ class GromacsMDProtocol(gufe.Protocol):
     result_cls = GromacsMDProtocolResult
     _settings: GromacsMDProtocolSettings
 
-
     @classmethod
     def _default_settings(cls):
         """A dictionary of initial settings for this creating this Protocol
@@ -313,12 +312,12 @@ class GromacsMDProtocol(gufe.Protocol):
         # our DAG has no dependencies, so just list units
         n_repeats = self.settings.protocol_repeats
         setup = GromacsMDSetupUnit(
-                protocol=self,
-                stateA=stateA,
-                generation=0,
-                repeat_id=int(uuid.uuid4()),
-                name=f"{system_name}",
-            )
+            protocol=self,
+            stateA=stateA,
+            generation=0,
+            repeat_id=int(uuid.uuid4()),
+            name=f"{system_name}",
+        )
         run = [
             GromacsMDRunUnit(
                 protocol=self,
@@ -670,6 +669,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
     Protocol unit for running plain MD simulations (NonTransformation)
     in Gromacs.
     """
+
     def _execute(
         self,
         ctx: gufe.Context,
@@ -677,7 +677,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         protocol,
         setup,
         **kwargs,
-        ) -> dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute the simulation part of the Gromacs MD protocol.
 
@@ -700,11 +700,10 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         log_system_probe(logging.INFO, paths=[ctx.scratch])
 
         if ctx.shared is None:
-             # use cwd
+            # use cwd
             shared_basepath = pathlib.Path(".")
         else:
             shared_basepath = ctx.shared
-
 
         # ToDo: Figure out how to specify the order in which to run things
 
@@ -712,48 +711,60 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         # e.g. number of threads,...
         # ToDo: Add output settings, e.g. name of output files
         protocol_settings: GromacsMDProtocolSettings = self._inputs["protocol"].settings
-        sim_settings_em: EMSimulationSettings = \
-            protocol_settings.simulation_settings_em
+        sim_settings_em: EMSimulationSettings = protocol_settings.simulation_settings_em
         sim_settings_nvt: NVTSimulationSettings = (
             protocol_settings.simulation_settings_nvt
         )
         sim_settings_npt: NPTSimulationSettings = (
             protocol_settings.simulation_settings_npt
         )
-        output_settings_em: EMOutputSettings = \
-            protocol_settings.output_settings_em
-        output_settings_nvt: NVTOutputSettings = \
-            protocol_settings.output_settings_nvt
-        output_settings_npt: NPTOutputSettings = \
-            protocol_settings.output_settings_npt
+        output_settings_em: EMOutputSettings = protocol_settings.output_settings_em
+        output_settings_nvt: NVTOutputSettings = protocol_settings.output_settings_nvt
+        output_settings_npt: NPTOutputSettings = protocol_settings.output_settings_npt
 
         input_gro = setup.outputs["system_gro"]
         input_top = setup.outputs["system_top"]
         mdp_files = setup.outputs["mdp_files"]
 
         # Run energy minimization
-        print('Running EM')
+        print("Running EM")
         import os
         import subprocess
+
         # EM
         if sim_settings_em.nsteps > 0:
-            mdp = [x for x in mdp_files if str(x).split('/')[1] == output_settings_em.mdp_file]
+            mdp = [
+                x
+                for x in mdp_files
+                if str(x).split("/")[1] == output_settings_em.mdp_file
+            ]
             tpr = ctx.shared / output_settings_em.tpr_file
             assert len(mdp) == 1
             assert os.path.exists(input_gro)
             assert os.path.exists(input_top)
             assert os.path.exists(mdp[0])
 
-
-            p = subprocess.Popen(['gmx', 'grompp', '-f', mdp[0],
-                                  '-c', input_gro, '-p', input_top,
-                                  '-o', tpr],
-                                 stdin=subprocess.PIPE)
+            p = subprocess.Popen(
+                [
+                    "gmx",
+                    "grompp",
+                    "-f",
+                    mdp[0],
+                    "-c",
+                    input_gro,
+                    "-p",
+                    input_top,
+                    "-o",
+                    tpr,
+                ],
+                stdin=subprocess.PIPE,
+            )
             p.wait()
-            p = subprocess.Popen(['gmx', 'mdrun', '-s', tpr.name,
-                                  '-deffnm', 'em'],
-                                 stdin=subprocess.PIPE,
-                                 cwd=ctx.shared)
+            p = subprocess.Popen(
+                ["gmx", "mdrun", "-s", tpr.name, "-deffnm", "em"],
+                stdin=subprocess.PIPE,
+                cwd=ctx.shared,
+            )
             p.wait()
 
         return {

@@ -456,7 +456,7 @@ class OutputSettings(SettingsBaseModel):
     Filename for the mdp file for running simulations in Gromacs.
     Default 'em.mdp'
     """
-    tpr_file: str = 'em.tpr'
+    tpr_file: str = "em.tpr"
     """
     Filename for the tpr file for running simulations in Gromacs.
     Default 'em.tpr'
