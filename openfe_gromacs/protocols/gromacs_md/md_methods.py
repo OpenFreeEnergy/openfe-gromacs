@@ -16,7 +16,8 @@ import uuid
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any, Optional
-
+import os
+import subprocess
 import gmxapi as gmx
 import gufe
 import pint
@@ -669,6 +670,34 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
     Protocol unit for running plain MD simulations (NonTransformation)
     in Gromacs.
     """
+    def _run_gromacs(self, mdp, gro, top, tpr, deffnm, shared_basebath):
+        assert os.path.exists(gro)
+        assert os.path.exists(top)
+        assert os.path.exists(mdp)
+        p = subprocess.Popen(
+            [
+                "gmx",
+                "grompp",
+                "-f",
+                mdp,
+                "-c",
+                gro,
+                "-p",
+                top,
+                "-o",
+                tpr,
+            ],
+            stdin=subprocess.PIPE,
+        )
+        p.wait()
+        assert os.path.exists(tpr)
+        p = subprocess.Popen(
+            ["gmx", "mdrun", "-s", tpr.name, "-deffnm", deffnm],
+            stdin=subprocess.PIPE,
+            cwd=shared_basebath,
+        )
+        p.wait()
+        return
 
     def _execute(
         self,
@@ -728,10 +757,6 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
 
         # Run energy minimization
         print("Running EM")
-        import os
-        import subprocess
-
-        # EM
         if sim_settings_em.nsteps > 0:
             mdp = [
                 x
@@ -739,33 +764,37 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 if str(x).split("/")[1] == output_settings_em.mdp_file
             ]
             tpr = ctx.shared / output_settings_em.tpr_file
+            deffnm = str(output_settings_em.tpr_file.split('.')[0])
             assert len(mdp) == 1
-            assert os.path.exists(input_gro)
-            assert os.path.exists(input_top)
-            assert os.path.exists(mdp[0])
+            self._run_gromacs(mdp[0], input_gro, input_top, tpr, deffnm, ctx.shared)
 
-            p = subprocess.Popen(
-                [
-                    "gmx",
-                    "grompp",
-                    "-f",
-                    mdp[0],
-                    "-c",
-                    input_gro,
-                    "-p",
-                    input_top,
-                    "-o",
-                    tpr,
-                ],
-                stdin=subprocess.PIPE,
-            )
-            p.wait()
-            p = subprocess.Popen(
-                ["gmx", "mdrun", "-s", tpr.name, "-deffnm", "em"],
-                stdin=subprocess.PIPE,
-                cwd=ctx.shared,
-            )
-            p.wait()
+        # Run NVT
+        print("Running NVT")
+        if sim_settings_nvt.nsteps > 0:
+            mdp = [
+                x
+                for x in mdp_files
+                if str(x).split("/")[1] == output_settings_nvt.mdp_file
+            ]
+            tpr = ctx.shared / output_settings_nvt.tpr_file
+            deffnm = str(output_settings_nvt.tpr_file.split('.')[0])
+            assert len(mdp) == 1
+            self._run_gromacs(mdp[0], input_gro, input_top, tpr, deffnm,
+                              ctx.shared)
+
+        # Run NPT
+        print("Running NPT")
+        if sim_settings_npt.nsteps > 0:
+            mdp = [
+                x
+                for x in mdp_files
+                if str(x).split("/")[1] == output_settings_npt.mdp_file
+            ]
+            tpr = ctx.shared / output_settings_npt.tpr_file
+            deffnm = str(output_settings_npt.tpr_file.split('.')[0])
+            assert len(mdp) == 1
+            self._run_gromacs(mdp[0], input_gro, input_top, tpr, deffnm,
+                              ctx.shared)
 
         return {
             "repeat_id": self._inputs["repeat_id"],
