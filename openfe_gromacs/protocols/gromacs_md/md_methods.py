@@ -19,11 +19,7 @@ from typing import Any
 
 import gufe
 import pint
-from gufe import (
-    ChemicalSystem,
-    SmallMoleculeComponent,
-    settings,
-)
+from gufe import ChemicalSystem, SmallMoleculeComponent, settings
 from openfe.protocols.openmm_utils import (
     charge_generation,
     settings_validation,
