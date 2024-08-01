@@ -1,0 +1,11 @@
+name: test
+channels:
+  - conda-forge
+dependencies:
+  - openfe
+  - compilers
+  - mpi4py
+  - gromacs
+  - pytest
+  - pytest-xdist
+  - pytest-cov
