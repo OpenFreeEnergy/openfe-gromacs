@@ -461,6 +461,36 @@ class OutputSettings(SettingsBaseModel):
     Filename for the tpr file for running simulations in Gromacs.
     Default 'em.tpr'
     """
+    gro_file: str = "em.gro"
+    """
+    Filename for the output .gro file from a Gromacs run.
+    Default 'em.gro'
+    """
+    edr_file: str = "em.edr"
+    """
+    Filename for the output energy (.edr) file from a Gromacs simulation.
+    Default 'em.edr'
+    """
+    log_file: str = "em.log"
+    """
+    Filename for the output .log file from a Gromacs simulation.
+    Default 'em.tpr'
+    """
+    trr_file: str = "em.trr"
+    """
+    Filename for the output trajectory (.trr) file from a Gromacs simulation.
+    Default 'em.trr'
+    """
+    xtc_file: str = "em.xtc"
+    """
+    Filename for the output trajectory file (.xtc) from a Gromacs simulation.
+    Default 'em.xtc'
+    """
+    cpt_file: str = "em.cpt"
+    """
+    Filename for the checkpoint file (.cpt) from a Gromacs simulation.
+    Default 'em.cpt'
+    """
     nstxout: int = 0
     """
     Number of steps that elapse between writing coordinates to the output

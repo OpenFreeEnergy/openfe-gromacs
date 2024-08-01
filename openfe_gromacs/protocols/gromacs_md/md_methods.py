@@ -104,9 +104,10 @@ def _dict2mdp(settings_dict: dict, shared_basepath):
     """
     filename = shared_basepath / settings_dict["mdp_file"]
     # Remove non-mdp settings from the dictionary
-    settings_dict.pop("forcefield_cache")
-    settings_dict.pop("mdp_file")
-    settings_dict.pop("tpr_file")
+    non_mdps = ["forcefield_cache", "mdp_file", "tpr_file", "trr_file",
+                "xtc_file", "gro_file", "edr_file", "log_file", "cpt_file"]
+    for setting in non_mdps:
+        settings_dict.pop(setting)
     with open(filename, "w") as f:
         for key, value in settings_dict.items():
             # First convert units to units in the mdp file, then remove units
@@ -258,14 +259,32 @@ class GromacsMDProtocol(gufe.Protocol):
             output_settings_em=EMOutputSettings(
                 mdp_file="em.mdp",
                 tpr_file="em.tpr",
+                gro_file="em.gro",
+                trr_file="em.trr",
+                xtc_file="em.xtc",
+                edr_file="em.edr",
+                cpt_file="em.cpt",
+                log_file="em.log",
             ),
             output_settings_nvt=NVTOutputSettings(
                 mdp_file="nvt.mdp",
                 tpr_file="nvt.tpr",
+                gro_file="nvt.gro",
+                trr_file="nvt.trr",
+                xtc_file="nvt.xtc",
+                edr_file="nvt.edr",
+                cpt_file="nvt.cpt",
+                log_file="nvt.log",
             ),
             output_settings_npt=NPTOutputSettings(
                 mdp_file="npt.mdp",
                 tpr_file="npt.tpr",
+                gro_file="npt.gro",
+                trr_file="npt.trr",
+                xtc_file="npt.xtc",
+                edr_file="npt.edr",
+                cpt_file="npt.cpt",
+                log_file="npt.log",
                 nstxout=5000,
                 nstvout=5000,
                 nstfout=5000,
@@ -672,8 +691,11 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
     in Gromacs.
     """
 
-    def _run_gromacs(self, mdp, gro, top, tpr, deffnm, shared_basebath):
-        assert os.path.exists(gro)
+    def _run_gromacs(
+            self, mdp, in_gro, top, tpr, out_gro, xtc, trr, cpt, log, edr,
+            shared_basebath,
+    ):
+        assert os.path.exists(in_gro)
         assert os.path.exists(top)
         assert os.path.exists(mdp)
         p = subprocess.Popen(
@@ -683,7 +705,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 "-f",
                 mdp,
                 "-c",
-                gro,
+                in_gro,
                 "-p",
                 top,
                 "-o",
@@ -694,7 +716,8 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         p.wait()
         assert os.path.exists(tpr)
         p = subprocess.Popen(
-            ["gmx", "mdrun", "-s", tpr.name, "-deffnm", deffnm],
+            ["gmx", "mdrun", "-s", tpr.name, "-cpo", cpt, "-o", trr,
+             "-x", xtc, "-c", out_gro, "-e", edr, "-g", log],
             stdin=subprocess.PIPE,
             cwd=shared_basebath,
         )
@@ -707,6 +730,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         *,
         protocol,
         setup,
+        verbose=True,
         **kwargs,
     ) -> dict[str, Any]:
         """
@@ -737,9 +761,6 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             shared_basepath = ctx.shared
 
         # ToDo: Figure out how to specify the order in which to run things
-
-        # Will we need the settings? Likely only if we add run settings,
-        # e.g. number of threads,...
         # ToDo: Add output settings, e.g. name of output files
         protocol_settings: GromacsMDProtocolSettings = self._inputs["protocol"].settings
         sim_settings_em: EMSimulationSettings = protocol_settings.simulation_settings_em
@@ -758,43 +779,60 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         mdp_files = setup.outputs["mdp_files"]
 
         # Run energy minimization
-        print("Running EM")
         if sim_settings_em.nsteps > 0:
+            if verbose:
+                self.logger.info("Running energy minimization")
             mdp = [
                 x
                 for x in mdp_files
                 if str(x).split("/")[1] == output_settings_em.mdp_file
             ]
             tpr = ctx.shared / output_settings_em.tpr_file
-            deffnm = str(output_settings_em.tpr_file.split(".")[0])
             assert len(mdp) == 1
-            self._run_gromacs(mdp[0], input_gro, input_top, tpr, deffnm, ctx.shared)
+            #ToDo: If no traj should be written out, don't write empty file?
+            self._run_gromacs(
+                mdp[0], input_gro, input_top, tpr, output_settings_em.gro_file,
+                output_settings_em.xtc_file, output_settings_em.trr_file,
+                output_settings_em.cpt_file, output_settings_em.log_file,
+                output_settings_em.edr_file, ctx.shared)
 
+        # ToDo: Should we dissallow running MD without EM?
         # Run NVT
-        print("Running NVT")
         if sim_settings_nvt.nsteps > 0:
+            if verbose:
+                self.logger.info("Running an NVT MD simulation")
             mdp = [
                 x
                 for x in mdp_files
                 if str(x).split("/")[1] == output_settings_nvt.mdp_file
             ]
             tpr = ctx.shared / output_settings_nvt.tpr_file
-            deffnm = str(output_settings_nvt.tpr_file.split(".")[0])
             assert len(mdp) == 1
-            self._run_gromacs(mdp[0], input_gro, input_top, tpr, deffnm, ctx.shared)
+            #ToDo: Change .gro to output from EM if we do EM first,
+            # else original .gro file
+            self._run_gromacs(
+                mdp[0], input_gro, input_top, tpr, output_settings_nvt.gro_file,
+                output_settings_nvt.xtc_file, output_settings_nvt.trr_file,
+                output_settings_nvt.cpt_file, output_settings_nvt.log_file,
+                output_settings_nvt.edr_file, ctx.shared)
 
         # Run NPT
-        print("Running NPT")
         if sim_settings_npt.nsteps > 0:
+            if verbose:
+                self.logger.info("Running an NPT MD simulation")
             mdp = [
                 x
                 for x in mdp_files
                 if str(x).split("/")[1] == output_settings_npt.mdp_file
             ]
             tpr = ctx.shared / output_settings_npt.tpr_file
-            deffnm = str(output_settings_npt.tpr_file.split(".")[0])
             assert len(mdp) == 1
-            self._run_gromacs(mdp[0], input_gro, input_top, tpr, deffnm, ctx.shared)
+            self._run_gromacs(
+                mdp[0], input_gro, input_top, tpr,
+                output_settings_npt.gro_file,
+                output_settings_npt.xtc_file, output_settings_npt.trr_file,
+                output_settings_npt.cpt_file, output_settings_npt.log_file,
+                output_settings_npt.edr_file, ctx.shared)
 
         return {
             "repeat_id": self._inputs["repeat_id"],
