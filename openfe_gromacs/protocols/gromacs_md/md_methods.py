@@ -15,15 +15,13 @@ import pathlib
 import uuid
 from collections import defaultdict
 from collections.abc import Iterable
-from typing import Any, Optional
+from typing import Any
 
 import gufe
 import pint
 from gufe import (
     ChemicalSystem,
-    ProteinComponent,
     SmallMoleculeComponent,
-    SolventComponent,
     settings,
 )
 from openfe.protocols.openmm_utils import (
@@ -35,7 +33,6 @@ from openfe.protocols.openmm_utils import (
 from openfe.protocols.openmm_utils.omm_settings import BasePartialChargeSettings
 from openfe.utils import log_system_probe, without_oechem_backend
 from openff.interchange import Interchange
-from openff.toolkit import Topology
 from openff.toolkit.topology import Molecule as OFFMolecule
 from openff.units import unit
 from openff.units.openmm import from_openmm, to_openmm
