@@ -104,8 +104,17 @@ def _dict2mdp(settings_dict: dict, shared_basepath):
     """
     filename = shared_basepath / settings_dict["mdp_file"]
     # Remove non-mdp settings from the dictionary
-    non_mdps = ["forcefield_cache", "mdp_file", "tpr_file", "trr_file",
-                "xtc_file", "gro_file", "edr_file", "log_file", "cpt_file"]
+    non_mdps = [
+        "forcefield_cache",
+        "mdp_file",
+        "tpr_file",
+        "trr_file",
+        "xtc_file",
+        "gro_file",
+        "edr_file",
+        "log_file",
+        "cpt_file",
+    ]
     for setting in non_mdps:
         settings_dict.pop(setting)
     with open(filename, "w") as f:
@@ -692,8 +701,18 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
     """
 
     def _run_gromacs(
-            self, mdp, in_gro, top, tpr, out_gro, xtc, trr, cpt, log, edr,
-            shared_basebath,
+        self,
+        mdp,
+        in_gro,
+        top,
+        tpr,
+        out_gro,
+        xtc,
+        trr,
+        cpt,
+        log,
+        edr,
+        shared_basebath,
     ):
         assert os.path.exists(in_gro)
         assert os.path.exists(top)
@@ -716,8 +735,24 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         p.wait()
         assert os.path.exists(tpr)
         p = subprocess.Popen(
-            ["gmx", "mdrun", "-s", tpr.name, "-cpo", cpt, "-o", trr,
-             "-x", xtc, "-c", out_gro, "-e", edr, "-g", log],
+            [
+                "gmx",
+                "mdrun",
+                "-s",
+                tpr.name,
+                "-cpo",
+                cpt,
+                "-o",
+                trr,
+                "-x",
+                xtc,
+                "-c",
+                out_gro,
+                "-e",
+                edr,
+                "-g",
+                log,
+            ],
             stdin=subprocess.PIPE,
             cwd=shared_basebath,
         )
@@ -789,12 +824,20 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             ]
             tpr = ctx.shared / output_settings_em.tpr_file
             assert len(mdp) == 1
-            #ToDo: If no traj should be written out, don't write empty file?
+            # ToDo: If no traj should be written out, don't write empty file?
             self._run_gromacs(
-                mdp[0], input_gro, input_top, tpr, output_settings_em.gro_file,
-                output_settings_em.xtc_file, output_settings_em.trr_file,
-                output_settings_em.cpt_file, output_settings_em.log_file,
-                output_settings_em.edr_file, ctx.shared)
+                mdp[0],
+                input_gro,
+                input_top,
+                tpr,
+                output_settings_em.gro_file,
+                output_settings_em.xtc_file,
+                output_settings_em.trr_file,
+                output_settings_em.cpt_file,
+                output_settings_em.log_file,
+                output_settings_em.edr_file,
+                ctx.shared,
+            )
 
         # ToDo: Should we dissallow running MD without EM?
         # Run NVT
@@ -808,13 +851,21 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             ]
             tpr = ctx.shared / output_settings_nvt.tpr_file
             assert len(mdp) == 1
-            #ToDo: Change .gro to output from EM if we do EM first,
+            # ToDo: Change .gro to output from EM if we do EM first,
             # else original .gro file
             self._run_gromacs(
-                mdp[0], input_gro, input_top, tpr, output_settings_nvt.gro_file,
-                output_settings_nvt.xtc_file, output_settings_nvt.trr_file,
-                output_settings_nvt.cpt_file, output_settings_nvt.log_file,
-                output_settings_nvt.edr_file, ctx.shared)
+                mdp[0],
+                input_gro,
+                input_top,
+                tpr,
+                output_settings_nvt.gro_file,
+                output_settings_nvt.xtc_file,
+                output_settings_nvt.trr_file,
+                output_settings_nvt.cpt_file,
+                output_settings_nvt.log_file,
+                output_settings_nvt.edr_file,
+                ctx.shared,
+            )
 
         # Run NPT
         if sim_settings_npt.nsteps > 0:
@@ -828,11 +879,18 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             tpr = ctx.shared / output_settings_npt.tpr_file
             assert len(mdp) == 1
             self._run_gromacs(
-                mdp[0], input_gro, input_top, tpr,
+                mdp[0],
+                input_gro,
+                input_top,
+                tpr,
                 output_settings_npt.gro_file,
-                output_settings_npt.xtc_file, output_settings_npt.trr_file,
-                output_settings_npt.cpt_file, output_settings_npt.log_file,
-                output_settings_npt.edr_file, ctx.shared)
+                output_settings_npt.xtc_file,
+                output_settings_npt.trr_file,
+                output_settings_npt.cpt_file,
+                output_settings_npt.log_file,
+                output_settings_npt.edr_file,
+                ctx.shared,
+            )
 
         return {
             "repeat_id": self._inputs["repeat_id"],
