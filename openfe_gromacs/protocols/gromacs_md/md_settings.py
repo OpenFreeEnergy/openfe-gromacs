@@ -4,7 +4,7 @@
 """Settings class for plain MD Protocols using Gromacs + OpenMMTools
 
 This module implements the settings necessary to run MD simulations using
-:class:`openfe.protocols.gromacs_md.md_methods.py`
+:class:`openfe_gromacs.protocols.gromacs_md.md_methods.py`
 
 """
 from typing import Literal, Optional
