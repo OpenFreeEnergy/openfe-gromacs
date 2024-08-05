@@ -3,9 +3,10 @@
 import json
 import pathlib
 from unittest import mock
-from openff.units import unit as off_unit
+
 import gufe
 import pytest
+from openff.units import unit as off_unit
 
 import openfe_gromacs
 from openfe_gromacs.protocols.gromacs_md.md_methods import (
@@ -240,7 +241,7 @@ def test_dry_many_molecules_solvent(benzene_many_solv_system, monkeypatch, tmpdi
             shared_basedir=tmpdir,
             scratch_basedir=tmpdir,
             keep_shared=False,
-            n_retries=3
+            n_retries=3,
         )
         # system = setup_unit.run(dry=True)
         # system_run = run_unit.execute()
