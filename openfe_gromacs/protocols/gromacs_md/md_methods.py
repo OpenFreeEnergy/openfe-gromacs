@@ -820,9 +820,9 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             mdp = [
                 x
                 for x in mdp_files
-                if str(x).split("/")[1] == output_settings_em.mdp_file
+                if str(x).split("/")[-1] == output_settings_em.mdp_file
             ]
-            tpr = ctx.shared / output_settings_em.tpr_file
+            tpr = pathlib.Path(ctx.shared / output_settings_em.tpr_file)
             assert len(mdp) == 1
             # ToDo: If no traj should be written out, don't write empty file?
             self._run_gromacs(
@@ -839,7 +839,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 ctx.shared,
             )
 
-        # ToDo: Should we dissallow running MD without EM?
+        # ToDo: Should we disallow running MD without EM?
         # Run NVT
         if sim_settings_nvt.nsteps > 0:
             if verbose:
@@ -847,9 +847,9 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             mdp = [
                 x
                 for x in mdp_files
-                if str(x).split("/")[1] == output_settings_nvt.mdp_file
+                if str(x).split("/")[-1] == output_settings_nvt.mdp_file
             ]
-            tpr = ctx.shared / output_settings_nvt.tpr_file
+            tpr = pathlib.Path(ctx.shared / output_settings_nvt.tpr_file)
             assert len(mdp) == 1
             # ToDo: Change .gro to output from EM if we do EM first,
             # else original .gro file
@@ -874,9 +874,9 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             mdp = [
                 x
                 for x in mdp_files
-                if str(x).split("/")[1] == output_settings_npt.mdp_file
+                if str(x).split("/")[-1] == output_settings_npt.mdp_file
             ]
-            tpr = ctx.shared / output_settings_npt.tpr_file
+            tpr = pathlib.Path(ctx.shared / output_settings_npt.tpr_file)
             assert len(mdp) == 1
             self._run_gromacs(
                 mdp[0],
