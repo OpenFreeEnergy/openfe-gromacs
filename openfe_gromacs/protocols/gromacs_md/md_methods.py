@@ -175,8 +175,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         traj : list[pathlib.Path]
           list of paths (pathlib.Path) to the simulation trajectory
         """
-        gro = [pus[0].outputs["system_gro"] for pus in self.data.values() if
-               'GromacsMDSetupUnit' in pus[0].source_key]
+        gro = [
+            pus[0].outputs["system_gro"]
+            for pus in self.data.values()
+            if "GromacsMDSetupUnit" in pus[0].source_key
+        ]
 
         return gro
 
@@ -189,8 +192,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         traj : list[pathlib.Path]
           list of paths (pathlib.Path) to the simulation trajectory
         """
-        top = [pus[0].outputs["system_top"] for pus in self.data.values() if
-               'GromacsMDSetupUnit' in pus[0].source_key]
+        top = [
+            pus[0].outputs["system_top"]
+            for pus in self.data.values()
+            if "GromacsMDSetupUnit" in pus[0].source_key
+        ]
 
         return top
 
@@ -204,8 +210,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
           list of paths (pathlib.Path) to the mdp files for energy minimization,
           NVT and NPT MD runs
         """
-        mdps = [pus[0].outputs["mdp_files"] for pus in self.data.values() if
-                'GromacsMDSetupUnit' in pus[0].source_key]
+        mdps = [
+            pus[0].outputs["mdp_files"]
+            for pus in self.data.values()
+            if "GromacsMDSetupUnit" in pus[0].source_key
+        ]
 
         return mdps
 
@@ -219,8 +228,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         gro : list[pathlib.Path]
           list of paths (pathlib.Path) to the output .gro file
         """
-        gro = [pus[0].outputs["gro_em"] for pus in self.data.values() if
-               'GromacsMDRunUnit' in pus[0].source_key]
+        gro = [
+            pus[0].outputs["gro_em"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
 
         return gro
 
@@ -234,8 +246,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         gro : list[pathlib.Path]
           list of paths (pathlib.Path) to the output .gro file
         """
-        gro = [pus[0].outputs["gro_em"] for pus in self.data.values() if
-               'GromacsMDRunUnit' in pus[0].source_key]
+        gro = [
+            pus[0].outputs["gro_em"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
 
         return gro
 
@@ -249,8 +264,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         tpr : list[pathlib.Path]
           list of paths (pathlib.Path) to the output .tpr file
         """
-        file_path = [pus[0].outputs["tpr_em"] for pus in self.data.values() if
-               'GromacsMDRunUnit' in pus[0].source_key]
+        file_path = [
+            pus[0].outputs["tpr_em"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
 
         return file_path
 
@@ -264,8 +282,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         file_path : list[pathlib.Path]
           list of paths (pathlib.Path) to the output .trr file
         """
-        file_path = [pus[0].outputs["trr_em"] for pus in self.data.values() if
-               'GromacsMDRunUnit' in pus[0].source_key]
+        file_path = [
+            pus[0].outputs["trr_em"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
 
         return file_path
 
@@ -279,8 +300,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         file_path : list[pathlib.Path]
           list of paths (pathlib.Path) to the output .xtc file
         """
-        file_path = [pus[0].outputs["xtc_em"] for pus in self.data.values() if
-                     'GromacsMDRunUnit' in pus[0].source_key]
+        file_path = [
+            pus[0].outputs["xtc_em"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
 
         return file_path
 
@@ -294,8 +318,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         file_path : list[pathlib.Path]
           list of paths (pathlib.Path) to the output .edr file
         """
-        file_path = [pus[0].outputs["edr_em"] for pus in self.data.values() if
-                     'GromacsMDRunUnit' in pus[0].source_key]
+        file_path = [
+            pus[0].outputs["edr_em"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
 
         return file_path
 
@@ -309,8 +336,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         file_path : list[pathlib.Path]
           list of paths (pathlib.Path) to the output .log file
         """
-        file_path = [pus[0].outputs["log_em"] for pus in self.data.values() if
-                     'GromacsMDRunUnit' in pus[0].source_key]
+        file_path = [
+            pus[0].outputs["log_em"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
 
         return file_path
 
@@ -324,8 +354,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         file_path : list[pathlib.Path]
           list of paths (pathlib.Path) to the output .cpt file
         """
-        file_path = [pus[0].outputs["cpt_em"] for pus in self.data.values() if
-                     'GromacsMDRunUnit' in pus[0].source_key]
+        file_path = [
+            pus[0].outputs["cpt_em"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
 
         return file_path
 
