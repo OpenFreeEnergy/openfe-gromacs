@@ -1023,7 +1023,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 ctx.shared,
             )
 
-        # Run NPT
+        # Run NPT MD simulation
         if sim_settings_npt.nsteps > 0:
             if verbose:
                 self.logger.info("Running an NPT MD simulation")
