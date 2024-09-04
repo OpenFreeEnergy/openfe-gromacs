@@ -20,10 +20,7 @@ from openfe.protocols.openmm_utils.omm_settings import (
 from openff.models.types import FloatQuantity
 from openff.units import unit
 
-try:
-    from pydantic.v1 import validator
-except ImportError:
-    from pydantic import validator  # type: ignore[assignment]
+from pydantic.v1 import validator
 
 
 class SimulationSettings(SettingsBaseModel):
