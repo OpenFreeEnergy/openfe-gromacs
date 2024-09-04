@@ -31,20 +31,6 @@ class SimulationSettings(SettingsBaseModel):
         arbitrary_types_allowed = True
 
     # # # Run control # # #
-    integrator: Literal["md", "sd", "steep"] = "sd"
-    """
-    MD integrators and other algorithms (steep for energy minimization).
-    Allowed values are:
-    'md': a leap-frog integrator
-    'sd': A leap-frog stochastic dynamics integrator. Note that when using this
-          integrator the parameters tcoupl and nsttcouple are ignored.
-    'steep': A steepest descent algorithm for energy minimization.
-    """
-    dt: FloatQuantity["picosecond"] = 0.002 * unit.picosecond
-    """
-    Time step for integration (only makes sense for time-based integrators).
-    Default 0.002 * unit.picosecond
-    """
     nsteps: int = 0
     """
     Maximum number of steps to integrate or minimize, -1 is no maximum
@@ -542,16 +528,12 @@ class EMSimulationSettings(SimulationSettings):
     Settings for energy minimization.
     """
 
-    @validator("integrator")
-    def is_steep(cls, v):
-        # EM should have 'steep' integrator
-        if v != "steep":
-            errmsg = (
-                "For energy minimization, only the integrator=steep "
-                f"is supported, got integrator={v}."
-            )
-            raise ValueError(errmsg)
-        return v
+    integrator: Literal["steep"] = "steep"
+    """
+    Method for energy minimization.
+    Allowed value is:
+    'steep': A steepest descent algorithm for energy minimization.
+    """
 
 
 class EMOutputSettings(OutputSettings):
@@ -560,21 +542,30 @@ class EMOutputSettings(OutputSettings):
     """
 
 
-class NVTSimulationSettings(SimulationSettings):
+class MDSimulationSettings(SimulationSettings):
+    """
+    Settings for MD simulations
+    """
+
+    integrator: Literal["md", "sd"] = "sd"
+    """
+    MD integrators and other algorithms (steep for energy minimization).
+    Allowed values are:
+    'md': a leap-frog integrator
+    'sd': A leap-frog stochastic dynamics integrator. Note that when using this
+          integrator the parameters tcoupl and nsttcouple are ignored.
+    """
+    dt: FloatQuantity["picosecond"] = 0.002 * unit.picosecond
+    """
+    Time step for integration (only makes sense for time-based integrators).
+    Default 0.002 * unit.picosecond
+    """
+
+
+class NVTSimulationSettings(MDSimulationSettings):
     """
     Settings for MD simulation in the NVT ensemble.
     """
-
-    @validator("integrator")
-    def is_not_steep(cls, v):
-        # needs an MD integrator
-        if v == "steep":
-            errmsg = (
-                "Molecular Dynamics settings need an MD integrator, "
-                f"not integrator={v}."
-            )
-            raise ValueError(errmsg)
-        return v
 
     @validator("pcoupl")
     def has_no_barostat(cls, v):
@@ -591,21 +582,10 @@ class NVTOutputSettings(OutputSettings):
     """
 
 
-class NPTSimulationSettings(SimulationSettings):
+class NPTSimulationSettings(MDSimulationSettings):
     """
     Settings for MD simulation in the NPT ensemble.
     """
-
-    @validator("integrator")
-    def is_not_steep(cls, v):
-        # needs an MD integrator
-        if v == "steep":
-            errmsg = (
-                "Molecular Dynamics settings need an MD integrator, "
-                f"not integrator={v}."
-            )
-            raise ValueError(errmsg)
-        return v
 
     @validator("pcoupl")
     def has_barostat(cls, v):
