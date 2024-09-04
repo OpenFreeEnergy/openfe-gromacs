@@ -85,16 +85,6 @@ class SimulationSettings(SettingsBaseModel):
     If set to zero the neighbor list is only constructed once and never updated.
     Default 10.
     """
-    pbc: Literal["xyz", "no", "xy"] = "xyz"
-    """
-    Treatment of periodic boundary conditions.
-    Allowed values are:
-    'xyz': Use periodic boundary conditions in all directions.
-    'no': Use no periodic boundary conditions, ignore the box.
-    'xy': Use periodic boundary conditions in x and y directions only.
-          This can be used in combination with walls.
-    Default 'xyz'.
-    """
     rlist: FloatQuantity["nanometer"] = 1 * unit.nanometer
     """
     Cut-off distance for the short-range neighbor list. With dynamics, this is
@@ -331,14 +321,6 @@ class SimulationSettings(SettingsBaseModel):
         used, which is usally the case when only bonds involving hydrogens are
         constrained. SHAKE can not be used with energy minimization.
     Default 'lincs'
-    """
-    continuation: Literal["no", "yes"] = "no"
-    """
-    This option was formerly known as unconstrained-start.
-    Allowed values are:
-    'no': Apply constraints to the start configuration and reset shells.
-    'yes': Do not apply constraints to the start configuration and do not reset
-    shells, useful for exact coninuation and reruns.
     """
     shake_tol: float = 0.0001
     """ Relative tolerance for SHAKE. Default 0.0001. """

@@ -58,6 +58,7 @@ PRE_DEFINED_SETTINGS = {
     "comm_mode": "Linear",
     "nstcomm": 100,
     "comm_grps": "system",
+    "pbc": "xyz",
     "verlet_buffer_tolerance": 0.005 * unit.kilojoule / (unit.mole * unit.picosecond),
     "verlet_buffer_pressure_tolerance": 0.5 * unit.bar,
     "coulomb_modifier": "Potential-shift",
@@ -75,6 +76,7 @@ PRE_DEFINED_SETTINGS = {
     "tau_p": 5 * unit.picosecond,
     "compressibility": 4.5e-05 / unit.bar,
     "lincs_warnangle": 30 * unit.degree,
+    "continuation":  "no",
     "morse": "no",
 }
 
