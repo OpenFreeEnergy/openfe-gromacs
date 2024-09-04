@@ -51,7 +51,7 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
 logger = logging.getLogger(__name__)
 
 
-pre_defined_settings = {
+PRE_DEFINED_SETTINGS = {
     "tinit": 0 * unit.picosecond,
     "init_step": 0,
     "simulation_part": 0,
@@ -78,7 +78,7 @@ pre_defined_settings = {
     "morse": "no",
 }
 
-pre_defined_settings_em = {
+PRE_DEFINED_SETTINGS_EM = {
     "emtol": 10.0 * unit.kilojoule / (unit.mole * unit.nanometer),
     "emstep": 0.01 * unit.nanometer,
 }
@@ -241,7 +241,7 @@ class GromacsMDProtocol(gufe.Protocol):
             ),
             simulation_settings_npt=NPTSimulationSettings(
                 nsteps=500000,  # 1ns
-                pcoupl="Parrinello-Rahman",
+                pcoupl="C-rescale",
                 gen_vel="no",  # If continuation from NVT simulation
             ),
             output_settings_em=EMOutputSettings(
@@ -364,11 +364,6 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
           counter for how many times this repeat has been extended
         name : str, optional
           human-readable identifier for this Unit
-
-        Notes
-        -----
-        The mapping used must not involve any elemental changes.  A check for
-        this is done on class creation.
         """
         super().__init__(
             name=name,
@@ -488,8 +483,8 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             settings_dict = (
                 sim_settings_em.dict()
                 | output_settings_em.dict()
-                | pre_defined_settings
-                | pre_defined_settings_em
+                | PRE_DEFINED_SETTINGS
+                | PRE_DEFINED_SETTINGS_EM
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
@@ -497,7 +492,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             settings_dict = (
                 sim_settings_nvt.dict()
                 | output_settings_nvt.dict()
-                | pre_defined_settings
+                | PRE_DEFINED_SETTINGS
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
@@ -505,7 +500,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             settings_dict = (
                 sim_settings_npt.dict()
                 | output_settings_npt.dict()
-                | pre_defined_settings
+                | PRE_DEFINED_SETTINGS
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
