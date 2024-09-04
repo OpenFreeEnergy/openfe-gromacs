@@ -230,9 +230,7 @@ class SimulationSettings(SettingsBaseModel):
     @validator("mass_repartition_factor")
     def must_be_positive(cls, v):
         if v <= 0:
-            errmsg = (
-                f"mass_repartition_factor must be positive values, got {v}."
-            )
+            errmsg = f"mass_repartition_factor must be positive values, got {v}."
             raise ValueError(errmsg)
         return v
 
@@ -403,7 +401,6 @@ class MDSimulationSettings(SimulationSettings):
     Default 0.002 * unit.picosecond
     """
 
-
     # # # Langevin dynamics # # #
     ld_seed: int = -1
     """
@@ -414,8 +411,7 @@ class MDSimulationSettings(SimulationSettings):
 
     # # # Temperature coupling # # #
     tcoupl: Literal[
-        "no", "berendsen", "nose-hoover", "andersen", "andersen-massive",
-        "v-rescale"
+        "no", "berendsen", "nose-hoover", "andersen", "andersen-massive", "v-rescale"
     ] = "no"
     """
     Temperature coupling options. Note that tcoupl will be ignored when the
@@ -538,9 +534,7 @@ class MDSimulationSettings(SimulationSettings):
     @validator("dt")
     def must_be_positive(cls, v):
         if v <= 0:
-            errmsg = (
-                f"timestep dt must be positive values, got {v}."
-            )
+            errmsg = f"timestep dt must be positive values, got {v}."
             raise ValueError(errmsg)
         return v
 
@@ -554,8 +548,7 @@ class MDSimulationSettings(SimulationSettings):
     def is_temperature(cls, v):
         if not v.is_compatible_with(unit.kelvin):
             raise ValueError(
-                "ref_t and gen_temp must be in temperature units" " (i.e. "
-                "kelvin)"
+                "ref_t and gen_temp must be in temperature units" " (i.e. " "kelvin)"
             )
         return v
 
