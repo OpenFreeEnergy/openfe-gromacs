@@ -76,7 +76,7 @@ PRE_DEFINED_SETTINGS = {
     "tau_p": 5 * unit.picosecond,
     "compressibility": 4.5e-05 / unit.bar,
     "lincs_warnangle": 30 * unit.degree,
-    "continuation":  "no",
+    "continuation": "no",
     "morse": "no",
 }
 
