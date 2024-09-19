@@ -232,9 +232,6 @@ class GromacsMDProtocol(gufe.Protocol):
             simulation_settings_em=EMSimulationSettings(
                 integrator="steep",
                 nsteps=5000,
-                tcoupl="no",
-                pcoupl="no",
-                gen_vel="no",
             ),
             simulation_settings_nvt=NVTSimulationSettings(
                 nsteps=50000,  # 100ps
