@@ -419,23 +419,22 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             * output_settings_npt: NPTOutputSettings
             * integrator_settings: IntegratorSettings
         """
-        prot_settings: GromacsMDProtocolSettings = self._inputs[
-            "protocol"].settings
+        prot_settings: GromacsMDProtocolSettings = self._inputs["protocol"].settings
 
         settings = {}
-        settings['forcefield_settings'] = prot_settings.forcefield_settings
-        settings['thermo_settings'] = prot_settings.thermo_settings
-        settings['solvation_settings'] = prot_settings.solvation_settings
-        settings['charge_settings'] = prot_settings.partial_charge_settings
-        settings['sim_settings_em'] = prot_settings.simulation_settings_em
-        settings['sim_settings_nvt'] = prot_settings.simulation_settings_nvt
-        settings['sim_settings_npt'] = prot_settings.simulation_settings_npt
-        settings['output_settings_em'] = prot_settings.output_settings_em
-        settings['output_settings_nvt'] = prot_settings.output_settings_nvt
-        settings['output_settings_npt'] = prot_settings.output_settings_npt
-        settings['integrator_settings'] = prot_settings.integrator_settings
-        settings['gro'] = prot_settings.gro
-        settings['top'] = prot_settings.top
+        settings["forcefield_settings"] = prot_settings.forcefield_settings
+        settings["thermo_settings"] = prot_settings.thermo_settings
+        settings["solvation_settings"] = prot_settings.solvation_settings
+        settings["charge_settings"] = prot_settings.partial_charge_settings
+        settings["sim_settings_em"] = prot_settings.simulation_settings_em
+        settings["sim_settings_nvt"] = prot_settings.simulation_settings_nvt
+        settings["sim_settings_npt"] = prot_settings.simulation_settings_npt
+        settings["output_settings_em"] = prot_settings.output_settings_em
+        settings["output_settings_nvt"] = prot_settings.output_settings_nvt
+        settings["output_settings_npt"] = prot_settings.output_settings_npt
+        settings["integrator_settings"] = prot_settings.integrator_settings
+        settings["gro"] = prot_settings.gro
+        settings["top"] = prot_settings.top
 
         return settings
 
@@ -457,28 +456,28 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         """
 
         mdps = []
-        if settings['sim_settings_em'].nsteps > 0:
+        if settings["sim_settings_em"].nsteps > 0:
             settings_dict = (
-                    settings['sim_settings_em'].dict()
-                    | settings['output_settings_em'].dict()
-                    | PRE_DEFINED_SETTINGS
-                    | PRE_DEFINED_SETTINGS_EM
+                settings["sim_settings_em"].dict()
+                | settings["output_settings_em"].dict()
+                | PRE_DEFINED_SETTINGS
+                | PRE_DEFINED_SETTINGS_EM
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
-        if settings['sim_settings_nvt'].nsteps > 0:
+        if settings["sim_settings_nvt"].nsteps > 0:
             settings_dict = (
-                    settings['sim_settings_nvt'].dict()
-                    | settings['output_settings_nvt'].dict()
-                    | PRE_DEFINED_SETTINGS
+                settings["sim_settings_nvt"].dict()
+                | settings["output_settings_nvt"].dict()
+                | PRE_DEFINED_SETTINGS
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
-        if settings['sim_settings_npt'].nsteps > 0:
+        if settings["sim_settings_npt"].nsteps > 0:
             settings_dict = (
-                    settings['sim_settings_npt'].dict()
-                    | settings['output_settings_npt'].dict()
-                    | PRE_DEFINED_SETTINGS
+                settings["sim_settings_npt"].dict()
+                | settings["output_settings_npt"].dict()
+                | PRE_DEFINED_SETTINGS
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
@@ -510,16 +509,14 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
 
         # ToDo: Make this more general, check if there is a smc_component,
         #       allow ProteinComponents, ...
-        smc_components = {i: i.to_openff() for i in components['small_mols']}
+        smc_components = {i: i.to_openff() for i in components["small_mols"]}
 
         # a. assign partial charges to smcs
-        self._assign_partial_charges(settings['charge_settings'],
-                                     smc_components)
+        self._assign_partial_charges(settings["charge_settings"], smc_components)
 
         # b. get a system generator
-        if settings['output_settings_em'].forcefield_cache is not None:
-            ffcache = shared_basepath / settings[
-                'output_settings_em'].forcefield_cache
+        if settings["output_settings_em"].forcefield_cache is not None:
+            ffcache = shared_basepath / settings["output_settings_em"].forcefield_cache
         else:
             ffcache = None
 
@@ -528,11 +525,11 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         # go wrong when doing rdkit->OEchem roundtripping
         with without_oechem_backend():
             system_generator = system_creation.get_system_generator(
-                forcefield_settings=settings['forcefield_settings'],
-                integrator_settings=settings['integrator_settings'],
-                thermo_settings=settings['thermo_settings'],
+                forcefield_settings=settings["forcefield_settings"],
+                integrator_settings=settings["integrator_settings"],
+                thermo_settings=settings["thermo_settings"],
                 cache=ffcache,
-                has_solvent=components['solvent_comp'] is not None,
+                has_solvent=components["solvent_comp"] is not None,
             )
 
             # Force creation of smc templates so we can solvate later
@@ -543,23 +540,22 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
 
             # c. get OpenMM Modeller + a resids dictionary for each component
             stateA_modeller, comp_resids = system_creation.get_omm_modeller(
-                protein_comp=components['protein_comp'],
-                solvent_comp=components['solvent_comp'],
+                protein_comp=components["protein_comp"],
+                solvent_comp=components["solvent_comp"],
                 small_mols=smc_components,
                 omm_forcefield=system_generator.forcefield,
-                solvent_settings=settings['solvation_settings'],
+                solvent_settings=settings["solvation_settings"],
             )
 
             # d. get topology & positions
             # Note: roundtrip positions to remove vec3 issues
             stateA_topology = stateA_modeller.getTopology()
-            stateA_positions = to_openmm(
-                from_openmm(stateA_modeller.getPositions()))
+            stateA_positions = to_openmm(from_openmm(stateA_modeller.getPositions()))
 
             # e. create the stateA System
             stateA_system = system_generator.create_system(
                 stateA_topology,
-                molecules=[s.to_openff() for s in components['small_mols']],
+                molecules=[s.to_openff() for s in components["small_mols"]],
             )
 
             # 3. Create the Interchange object
@@ -579,7 +575,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             )
 
             for molecule_index, molecule in enumerate(
-                    stateA_interchange.topology.molecules
+                stateA_interchange.topology.molecules
             ):
                 for atom in molecule.atoms:
                     atom.metadata["residue_number"] = molecule_index + 1
@@ -601,7 +597,6 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                         atom.metadata["residue_name"] = "Cl"
 
         return stateA_interchange
-
 
     def run(
         self, *, dry=False, verbose=True, scratch_basepath=None, shared_basepath=None
@@ -651,9 +646,11 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         solvent_comp, protein_comp, small_mols = system_validation.get_components(
             stateA
         )
-        components = {'solvent_comp': solvent_comp,
-                      'protein_comp': protein_comp,
-                      'small_mols': small_mols}
+        components = {
+            "solvent_comp": solvent_comp,
+            "protein_comp": protein_comp,
+            "small_mols": small_mols,
+        }
 
         # Raise an error when no SolventComponent is provided as this Protocol
         # currently does not support vacuum simulations
@@ -668,7 +665,9 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         mdps = self._write_mdp_files(settings, shared_basepath)
 
         # 2. Create the Interchange object
-        stateA_interchange = self._create_interchange(settings, components, shared_basepath)
+        stateA_interchange = self._create_interchange(
+            settings, components, shared_basepath
+        )
 
         # 4. Save .gro and .top file of the entire system
         stateA_interchange.to_gro(shared_basepath / settings["gro"])
