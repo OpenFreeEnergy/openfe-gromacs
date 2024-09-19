@@ -43,6 +43,7 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
     NPTSimulationSettings,
     NVTOutputSettings,
     NVTSimulationSettings,
+    FFSettingsOpenMM,
     OpenFFPartialChargeSettings,
     OpenMMEngineSettings,
     OpenMMSolvationSettings,
@@ -217,7 +218,7 @@ class GromacsMDProtocol(gufe.Protocol):
           a set of default settings
         """
         return GromacsMDProtocolSettings(
-            forcefield_settings=settings.OpenMMSystemGeneratorFFSettings(
+            forcefield_settings=FFSettingsOpenMM(
                 nonbonded_method="PME",
                 constraints=None,
             ),
@@ -441,7 +442,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
 
         stateA = self._inputs["stateA"]
 
-        forcefield_settings: settings.OpenMMSystemGeneratorFFSettings = (
+        forcefield_settings: FFSettingsOpenMM = (
             protocol_settings.forcefield_settings
         )
         thermo_settings: settings.ThermoSettings = protocol_settings.thermo_settings
@@ -513,19 +514,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         # a. assign partial charges to smcs
         self._assign_partial_charges(charge_settings, smc_components)
 
-        # b. Validate that no constraints are specified which is needed
-        #    for Interchange to work properly
-        if forcefield_settings.constraints:
-            errmsg = (
-                "No constraints are allowed in this step of creating the "
-                "Gromacs input files since Interchange removes constrained "
-                f"bonds. Got constraints {forcefield_settings.constraints}."
-                "The constraints to be used within Gromacs can be specified in"
-                "the simulation settings, e.g. `sim_settings_em.constraints`."
-            )
-            raise ValueError(errmsg)
-
-        # c. get a system generator
+        # b. get a system generator
         if output_settings_em.forcefield_cache is not None:
             ffcache = shared_basepath / output_settings_em.forcefield_cache
         else:
@@ -549,7 +538,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                     mol.to_topology().to_openmm(), molecules=[mol]
                 )
 
-            # d. get OpenMM Modeller + a resids dictionary for each component
+            # c. get OpenMM Modeller + a resids dictionary for each component
             stateA_modeller, comp_resids = system_creation.get_omm_modeller(
                 protein_comp=protein_comp,
                 solvent_comp=solvent_comp,
@@ -558,12 +547,12 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 solvent_settings=solvation_settings,
             )
 
-            # e. get topology & positions
+            # d. get topology & positions
             # Note: roundtrip positions to remove vec3 issues
             stateA_topology = stateA_modeller.getTopology()
             stateA_positions = to_openmm(from_openmm(stateA_modeller.getPositions()))
 
-            # f. create the stateA System
+            # e. create the stateA System
             stateA_system = system_generator.create_system(
                 stateA_topology,
                 molecules=[s.to_openff() for s in small_mols],

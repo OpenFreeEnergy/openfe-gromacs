@@ -30,6 +30,12 @@ def test_must_be_positive_error():
     errmsg = "mass_repartition_factor must be positive value"
     settings = GromacsMDProtocol.default_settings()
     with pytest.raises(ValueError, match=errmsg):
+        settings.simulation_settings_em.mass_repartition_factor = 0
+
+def test_must_be_positive_error_dt():
+    errmsg = "timestep dt must "
+    settings = GromacsMDProtocol.default_settings()
+    with pytest.raises(ValueError, match=errmsg):
         settings.simulation_settings_nvt.dt = 0 * unit.picosecond
 
 
@@ -38,3 +44,10 @@ def test_must_be_between_3_12_error():
     settings = GromacsMDProtocol.default_settings()
     with pytest.raises(ValueError, match=errmsg):
         settings.simulation_settings_nvt.pme_order = 13
+
+
+def test_constraints_error():
+    errmsg = "The OpenMM system cannot have constraints"
+    settings = GromacsMDProtocol.default_settings()
+    with pytest.raises(ValueError, match=errmsg):
+        settings.forcefield_settings.constraints = 'hbonds'

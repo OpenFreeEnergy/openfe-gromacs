@@ -609,6 +609,25 @@ class NPTOutputSettings(OutputSettings):
     """
 
 
+class FFSettingsOpenMM(OpenMMSystemGeneratorFFSettings):
+    """
+    Forcefield settings for the creation of the OpenMM system.
+    Note: We have to enforce that no constraints are used, or else constrained
+    bonds will be removed upon creation of the Interchange object.
+    The constraints used in the Gromacs MD simulation can be specified under
+    the respective simulation settings.
+    """
+    @validator("constraints")
+    def has_no_constraints(cls, v):
+        if v:
+            errmsg = ("The OpenMM system cannot have constraints, or else the" 
+                      "constrained bonds will be removed from the system upon"
+                      "creation of the Interchange object. "
+                      f"Got constraints = {v}.")
+            raise ValueError(errmsg)
+        return v
+
+
 class GromacsMDProtocolSettings(Settings):
     class Config:
         arbitrary_types_allowed = True
@@ -629,8 +648,8 @@ class GromacsMDProtocolSettings(Settings):
     gro: str
     top: str
 
-    # Things for creating the systems
-    forcefield_settings: OpenMMSystemGeneratorFFSettings
+    # Things for creating the OpenMM systems
+    forcefield_settings: FFSettingsOpenMM
     partial_charge_settings: OpenFFPartialChargeSettings
     solvation_settings: OpenMMSolvationSettings
 
