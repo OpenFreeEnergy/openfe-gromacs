@@ -4,7 +4,7 @@
 """Settings class for plain MD Protocols using Gromacs + OpenMMTools
 
 This module implements the settings necessary to run MD simulations using
-:class:`openfe.protocols.gromacs_md.md_methods.py`
+:class:`openfe_gromacs.protocols.gromacs_md.md_methods.py`
 
 """
 from typing import Literal, Optional
@@ -19,11 +19,7 @@ from openfe.protocols.openmm_utils.omm_settings import (
 )
 from openff.models.types import FloatQuantity
 from openff.units import unit
-
-try:
-    from pydantic.v1 import validator
-except ImportError:
-    from pydantic import validator  # type: ignore[assignment]
+from pydantic.v1 import validator
 
 
 class SimulationSettings(SettingsBaseModel):
@@ -35,20 +31,6 @@ class SimulationSettings(SettingsBaseModel):
         arbitrary_types_allowed = True
 
     # # # Run control # # #
-    integrator: Literal["md", "sd", "steep"] = "sd"
-    """
-    MD integrators and other algorithms (steep for energy minimization).
-    Allowed values are:
-    'md': a leap-frog integrator
-    'sd': A leap-frog stochastic dynamics integrator. Note that when using this
-          integrator the parameters tcoupl and nsttcouple are ignored.
-    'steep': A steepest descent algorithm for energy minimization.
-    """
-    dt: FloatQuantity["picosecond"] = 0.002 * unit.picosecond
-    """
-    Time step for integration (only makes sense for time-based integrators).
-    Default 0.002 * unit.picosecond
-    """
     nsteps: int = 0
     """
     Maximum number of steps to integrate or minimize, -1 is no maximum
@@ -59,14 +41,6 @@ class SimulationSettings(SettingsBaseModel):
     Scales the masses of the lightest atoms in the system by this factor to
     the mass mMin. All atoms with a mass lower than mMin also have their mass
     set to that mMin. Default 1 (no mass scaling)
-    """
-
-    # # # Langevin dynamics # # #
-    ld_seed: int = -1
-    """
-    Integer used to initialize random generator for thermal noise for
-    stochastic and Brownian dynamics. When ld-seed is set to -1,
-    a pseudo random seed is used. Default -1.
     """
 
     # # # Neighbor searching # # #
@@ -170,6 +144,268 @@ class SimulationSettings(SettingsBaseModel):
     given by ewald-rtol. Decreasing this will give a more accurate direct sum,
     but then you need more wave vectors for the reciprocal sum.
     Default 1e-5
+    """
+
+    # # # Bonds # # #
+    constraints: Literal[
+        "none", "h-bonds", "all-bonds", "h-angles", "all-angles"
+    ] = "h-bonds"
+    """
+    Controls which bonds in the topology will be converted to rigid holonomic
+    constraints. Note that typical rigid water models do not have bonds, but
+    rather a specialized [settles] directive, so are not affected by this
+    keyword. Allowed values are:
+    'none': No bonds converted to constraints.
+    'h-bonds': Convert the bonds with H-atoms to constraints.
+    'all-bonds': Convert all bonds to constraints.
+    'h-angles': Convert all bonds to constraints and convert the angles that
+        involve H-atoms to bond-constraints.
+    'all-angles': Convert all bonds to constraints and all angles to
+         bond-constraints.
+    Default 'h-bonds'
+    """
+    constraint_algorithm: Literal["lincs", "shake"] = "lincs"
+    """
+    Chooses which solver satisfies any non-SETTLE holonomic constraints.
+    Allowed values are:
+    'lincs': LINear Constraint Solver. With domain decomposition the parallel
+        version P-LINCS is used. The accuracy in set with lincs-order, which
+        sets the number of matrices in the expansion for the matrix inversion.
+        After the matrix inversion correction the algorithm does an iterative
+        correction to compensate for lengthening due to rotation. The number of
+        such iterations can be controlled with lincs-iter. The root mean square
+        relative constraint deviation is printed to the log file every nstlog
+        steps. If a bond rotates more than lincs-warnangle in one step, a
+        warning will be printed both to the log file and to stderr.
+        LINCS should not be used with coupled angle constraints.
+    'shake': SHAKE is slightly slower and less stable than LINCS, but does work
+        with angle constraints. The relative tolerance is set with shake-tol,
+        0.0001 is a good value for “normal” MD. SHAKE does not support
+        constraints between atoms on different decomposition domains, so it can
+        only be used with domain decomposition when so-called update-groups are
+        used, which is usally the case when only bonds involving hydrogens are
+        constrained. SHAKE can not be used with energy minimization.
+    Default 'lincs'
+    """
+    shake_tol: float = 0.0001
+    """ Relative tolerance for SHAKE. Default 0.0001. """
+    lincs_order: int = 12
+    """
+    Highest order in the expansion of the constraint coupling matrix. When
+    constraints form triangles, an additional expansion of the same order is
+    applied on top of the normal expansion only for the couplings within such
+    triangles. For “normal” MD simulations an order of 4 usually suffices, 6 is
+    needed for large time-steps with virtual sites or BD. For accurate energy
+    minimization in double precision an order of 8 or more might be required.
+    Note that in single precision an order higher than 6 will often lead to
+    worse accuracy due to amplification of rounding errors. Default 12.
+    """
+    lincs_iter: int = 1
+    """
+    Number of iterations to correct for rotational lengthening in LINCS.
+    Default 1.
+    """
+
+    @validator(
+        "nsteps",
+        "nstlist",
+        "rlist",
+        "rcoulomb",
+        "rvdw",
+        "ewald_rtol",
+        "shake_tol",
+        "lincs_order",
+        "lincs_iter",
+    )
+    def must_be_positive_or_zero(cls, v):
+        if v < 0:
+            errmsg = (
+                "Settings nsteps, nstlist, rlist, rcoulomb, rvdw, ewald_rtol, "
+                "shake_tol, lincs_order, and lincs_iter"
+                f" must be zero or positive values, got {v}."
+            )
+            raise ValueError(errmsg)
+        return v
+
+    @validator("mass_repartition_factor")
+    def must_be_positive(cls, v):
+        if v <= 0:
+            errmsg = f"mass_repartition_factor must be positive values, got {v}."
+            raise ValueError(errmsg)
+        return v
+
+    @validator("pme_order")
+    def must_be_between_3_12(cls, v):
+        if not 3 <= v <= 12:
+            errmsg = f"pme_order must be between 3 and 12, got {v}."
+            raise ValueError(errmsg)
+        return v
+
+    @validator("rlist", "rcoulomb", "rvdw")
+    def is_distance(cls, v):
+        if not v.is_compatible_with(unit.nanometer):
+            raise ValueError(
+                "rlist, rcoulomb, and rvdw must be in distance "
+                "units (i.e. nanometers)"
+            )
+        return v
+
+
+class OutputSettings(SettingsBaseModel):
+    """ "
+    Output Settings for simulations run using Gromacs
+    """
+
+    forcefield_cache: Optional[str] = "db.json"
+    """
+    Filename for caching small molecule residue templates so they can be
+    later reused.
+    """
+    mdp_file: str = "em.mdp"
+    """
+    Filename for the mdp file for running simulations in Gromacs.
+    Default 'em.mdp'
+    """
+    nstxout: int = 0
+    """
+    Number of steps that elapse between writing coordinates to the output
+    trajectory file (trr), the last coordinates are always written unless 0,
+    which means coordinates are not written into the trajectory file.
+    Default 0.
+    """
+    nstvout: int = 0
+    """
+    Number of steps that elapse between writing velocities to the output
+    trajectory file (trr), the last velocities are always written unless 0,
+    which means velocities are not written into the trajectory file.
+    Default 0.
+    """
+    nstfout: int = 0
+    """
+    Number of steps that elapse between writing forces to the output trajectory
+    file (trr), the last forces are always written, unless 0, which means
+    forces are not written into the trajectory file.
+    Default 0.
+    """
+    nstlog: int = 1000
+    """
+    Number of steps that elapse between writing energies to the log file, the
+    last energies are always written. Default 1000.
+    """
+    nstcalcenergy: int = 100
+    """
+    Number of steps that elapse between calculating the energies, 0 is never.
+    This option is only relevant with dynamics. This option affects the
+    performance in parallel simulations, because calculating energies requires
+    global communication between all processes which can become a bottleneck at
+    high parallelization. Default 100.
+    """
+    nstenergy: int = 1000
+    """"
+    Number of steps that elapse between writing energies to energy file, the
+    last energies are always written, should be a multiple of nstcalcenergy.
+    Note that the exact sums and fluctuations over all MD steps modulo
+    nstcalcenergy are stored in the energy file, so gmx energy can report
+    exact energy averages and fluctuations also when nstenergy > 1
+    """
+    nstxout_compressed: int = 0
+    """
+    Number of steps that elapse between writing position coordinates using
+    lossy compression (xtc file), 0 for not writing compressed coordinates
+    output. Default 0.
+    """
+    compressed_x_precision: int = 1000
+    """
+    Precision with which to write to the compressed trajectory file.
+    Default 1000.
+    """
+    compressed_x_grps: str = ""
+    """
+    Group(s) to write to the compressed trajectory file, by default the whole
+    system is written (if nstxout-compressed > 0).
+    """
+    energygrps: str = ""
+    """
+    Group(s) for which to write to write short-ranged non-bonded potential
+    energies to the energy file (not supported on GPUs)
+    """
+
+    @validator(
+        "nstxout",
+        "nstvout",
+        "nstfout",
+        "nstlog",
+        "nstcalcenergy",
+        "nstenergy",
+        "nstxout_compressed",
+        "compressed_x_precision",
+    )
+    def must_be_positive_or_zero(cls, v):
+        if v < 0:
+            errmsg = (
+                "nstxout, nstvout, nstfout, nstlog, nstcalcenergy, nstenergy, "
+                "nstxout_compressed, and compressed_x_precision must be zero "
+                f"or positive values, got {v}."
+            )
+            raise ValueError(errmsg)
+        return v
+
+
+class EMSimulationSettings(SimulationSettings):
+    """
+    Settings for energy minimization.
+    """
+
+    integrator: Literal["steep"] = "steep"
+    """
+    Method for energy minimization.
+    Allowed value is:
+    'steep': A steepest descent algorithm for energy minimization.
+    """
+
+    @validator("integrator")
+    def supported_integrator(cls, v):
+        supported = ["steep"]
+        if v.lower() not in supported:
+            errmsg = (
+                "Only the following sampler_method values are "
+                f"supported: {supported}, got {v}"
+            )
+            raise ValueError(errmsg)
+        return v
+
+
+class EMOutputSettings(OutputSettings):
+    """
+    Output Settings for the energy minimization.
+    """
+
+
+class MDSimulationSettings(SimulationSettings):
+    """
+    Settings for MD simulations
+    """
+
+    integrator: Literal["md", "sd"] = "sd"
+    """
+    MD integrators and other algorithms (steep for energy minimization).
+    Allowed values are:
+    'md': a leap-frog integrator
+    'sd': A leap-frog stochastic dynamics integrator. Note that when using this
+          integrator the parameters tcoupl and nsttcouple are ignored.
+    """
+    dt: FloatQuantity["picosecond"] = 0.002 * unit.picosecond
+    """
+    Time step for integration (only makes sense for time-based integrators).
+    Default 0.002 * unit.picosecond
+    """
+
+    # # # Langevin dynamics # # #
+    ld_seed: int = -1
+    """
+    Integer used to initialize random generator for thermal noise for
+    stochastic and Brownian dynamics. When ld-seed is set to -1,
+    a pseudo random seed is used. Default -1.
     """
 
     # # # Temperature coupling # # #
@@ -281,126 +517,37 @@ class SimulationSettings(SettingsBaseModel):
     set to -1, a pseudo random seed is used. Default -1.
     """
 
-    # # # Bonds # # #
-    constraints: Literal[
-        "none", "h-bonds", "all-bonds", "h-angles", "all-angles"
-    ] = "h-bonds"
-    """
-    Controls which bonds in the topology will be converted to rigid holonomic
-    constraints. Note that typical rigid water models do not have bonds, but
-    rather a specialized [settles] directive, so are not affected by this
-    keyword. Allowed values are:
-    'none': No bonds converted to constraints.
-    'h-bonds': Convert the bonds with H-atoms to constraints.
-    'all-bonds': Convert all bonds to constraints.
-    'h-angles': Convert all bonds to constraints and convert the angles that
-        involve H-atoms to bond-constraints.
-    'all-angles': Convert all bonds to constraints and all angles to
-         bond-constraints.
-    Default 'h-bonds'
-    """
-    constraint_algorithm: Literal["lincs", "shake"] = "lincs"
-    """
-    Chooses which solver satisfies any non-SETTLE holonomic constraints.
-    Allowed values are:
-    'lincs': LINear Constraint Solver. With domain decomposition the parallel
-        version P-LINCS is used. The accuracy in set with lincs-order, which
-        sets the number of matrices in the expansion for the matrix inversion.
-        After the matrix inversion correction the algorithm does an iterative
-        correction to compensate for lengthening due to rotation. The number of
-        such iterations can be controlled with lincs-iter. The root mean square
-        relative constraint deviation is printed to the log file every nstlog
-        steps. If a bond rotates more than lincs-warnangle in one step, a
-        warning will be printed both to the log file and to stderr.
-        LINCS should not be used with coupled angle constraints.
-    'shake': SHAKE is slightly slower and less stable than LINCS, but does work
-        with angle constraints. The relative tolerance is set with shake-tol,
-        0.0001 is a good value for “normal” MD. SHAKE does not support
-        constraints between atoms on different decomposition domains, so it can
-        only be used with domain decomposition when so-called update-groups are
-        used, which is usally the case when only bonds involving hydrogens are
-        constrained. SHAKE can not be used with energy minimization.
-    Default 'lincs'
-    """
-    shake_tol: float = 0.0001
-    """ Relative tolerance for SHAKE. Default 0.0001. """
-    lincs_order: int = 12
-    """
-    Highest order in the expansion of the constraint coupling matrix. When
-    constraints form triangles, an additional expansion of the same order is
-    applied on top of the normal expansion only for the couplings within such
-    triangles. For “normal” MD simulations an order of 4 usually suffices, 6 is
-    needed for large time-steps with virtual sites or BD. For accurate energy
-    minimization in double precision an order of 8 or more might be required.
-    Note that in single precision an order higher than 6 will often lead to
-    worse accuracy due to amplification of rounding errors. Default 12.
-    """
-    lincs_iter: int = 1
-    """
-    Number of iterations to correct for rotational lengthening in LINCS.
-    Default 1.
-    """
-
     @validator(
-        "nsteps",
-        "nstlist",
-        "rlist",
-        "rcoulomb",
-        "rvdw",
-        "ewald_rtol",
         "ref_t",
         "gen_temp",
-        "shake_tol",
-        "lincs_order",
-        "lincs_iter",
     )
     def must_be_positive_or_zero(cls, v):
         if v < 0:
             errmsg = (
-                "Settings nsteps, nstlist, rlist, rcoulomb, rvdw, ewald_rtol, "
-                "ref_t, gen_temp, shake_tol, lincs_order, and lincs_iter"
-                f" must be zero or positive values, got {v}."
+                "Settings ref_t, and gen_temp must be zero or positive values,"
+                f" got {v}."
             )
             raise ValueError(errmsg)
         return v
 
-    @validator("dt", "mass_repartition_factor")
+    @validator("dt")
     def must_be_positive(cls, v):
         if v <= 0:
-            errmsg = (
-                "timestep dt, and mass_repartition_factor "
-                f"must be positive values, got {v}."
-            )
-            raise ValueError(errmsg)
-        return v
-
-    @validator("pme_order")
-    def must_be_between_3_12(cls, v):
-        if not 3 <= v <= 12:
-            errmsg = f"pme_order must be between 3 and 12, got {v}."
+            errmsg = f"timestep dt must be positive values, got {v}."
             raise ValueError(errmsg)
         return v
 
     @validator("dt")
     def is_time(cls, v):
         if not v.is_compatible_with(unit.picosecond):
-            raise ValueError("dt must be in time units (i.e. picoseconds)")
-        return v
-
-    @validator("rlist", "rcoulomb", "rvdw")
-    def is_distance(cls, v):
-        if not v.is_compatible_with(unit.nanometer):
-            raise ValueError(
-                "rlist, rcoulomb, and rvdw must be in distance "
-                "units (i.e. nanometers)"
-            )
+            raise ValueError("dt must be in time units " "(i.e. picoseconds)")
         return v
 
     @validator("ref_t", "gen_temp")
     def is_temperature(cls, v):
         if not v.is_compatible_with(unit.kelvin):
             raise ValueError(
-                "ref_t and gen_temp must be in temperature units (i.e. kelvin)"
+                "ref_t and gen_temp must be in temperature units" " (i.e. " "kelvin)"
             )
         return v
 
@@ -412,7 +559,7 @@ class SimulationSettings(SettingsBaseModel):
 
     @validator("integrator")
     def supported_integrator(cls, v):
-        supported = ["md", "sd", "steep"]
+        supported = ["md", "sd"]
         if v.lower() not in supported:
             errmsg = (
                 "Only the following sampler_method values are "
@@ -422,144 +569,10 @@ class SimulationSettings(SettingsBaseModel):
         return v
 
 
-class OutputSettings(SettingsBaseModel):
-    """ "
-    Output Settings for simulations run using Gromacs
-    """
-
-    forcefield_cache: Optional[str] = "db.json"
-    """
-    Filename for caching small molecule residue templates so they can be
-    later reused.
-    """
-    mdp_file: str = "em.mdp"
-    """
-    Filename for the mdp file for running simulations in Gromacs.
-    Default 'em.mdp'
-    """
-    nstxout: int = 0
-    """
-    Number of steps that elapse between writing coordinates to the output
-    trajectory file (trr), the last coordinates are always written unless 0,
-    which means coordinates are not written into the trajectory file.
-    Default 0.
-    """
-    nstvout: int = 0
-    """
-    Number of steps that elapse between writing velocities to the output
-    trajectory file (trr), the last velocities are always written unless 0,
-    which means velocities are not written into the trajectory file.
-    Default 0.
-    """
-    nstfout: int = 0
-    """
-    Number of steps that elapse between writing forces to the output trajectory
-    file (trr), the last forces are always written, unless 0, which means
-    forces are not written into the trajectory file.
-    Default 0.
-    """
-    nstlog: int = 1000
-    """
-    Number of steps that elapse between writing energies to the log file, the
-    last energies are always written. Default 1000.
-    """
-    nstcalcenergy: int = 100
-    """
-    Number of steps that elapse between calculating the energies, 0 is never.
-    This option is only relevant with dynamics. This option affects the
-    performance in parallel simulations, because calculating energies requires
-    global communication between all processes which can become a bottleneck at
-    high parallelization. Default 100.
-    """
-    nstenergy: int = 1000
-    """"
-    Number of steps that elapse between writing energies to energy file, the
-    last energies are always written, should be a multiple of nstcalcenergy.
-    Note that the exact sums and fluctuations over all MD steps modulo
-    nstcalcenergy are stored in the energy file, so gmx energy can report
-    exact energy averages and fluctuations also when nstenergy > 1
-    """
-    nstxout_compressed: int = 0
-    """
-    Number of steps that elapse between writing position coordinates using
-    lossy compression (xtc file), 0 for not writing compressed coordinates
-    output. Default 0.
-    """
-    compressed_x_precision: int = 1000
-    """
-    Precision with which to write to the compressed trajectory file.
-    Default 1000.
-    """
-    compressed_x_grps: str = ""
-    """
-    Group(s) to write to the compressed trajectory file, by default the whole
-    system is written (if nstxout-compressed > 0).
-    """
-    energygrps: str = ""
-    """
-    Group(s) for which to write to write short-ranged non-bonded potential
-    energies to the energy file (not supported on GPUs)
-    """
-
-    @validator(
-        "nstxout",
-        "nstvout",
-        "nstfout",
-        "nstlog",
-        "nstcalcenergy",
-        "nstenergy",
-        "nstxout_compressed",
-        "compressed_x_precision",
-    )
-    def must_be_positive_or_zero(cls, v):
-        if v < 0:
-            errmsg = (
-                "nstxout, nstvout, nstfout, nstlog, nstcalcenergy, nstenergy, "
-                "nstxout_compressed, and compressed_x_precision must be zero "
-                f"or positive values, got {v}."
-            )
-            raise ValueError(errmsg)
-        return v
-
-
-class EMSimulationSettings(SimulationSettings):
-    """
-    Settings for energy minimization.
-    """
-
-    @validator("integrator")
-    def is_steep(cls, v):
-        # EM should have 'steep' integrator
-        if v != "steep":
-            errmsg = (
-                "For energy minimization, only the integrator=steep "
-                f"is supported, got integrator={v}."
-            )
-            raise ValueError(errmsg)
-        return v
-
-
-class EMOutputSettings(OutputSettings):
-    """
-    Output Settings for the energy minimization.
-    """
-
-
-class NVTSimulationSettings(SimulationSettings):
+class NVTSimulationSettings(MDSimulationSettings):
     """
     Settings for MD simulation in the NVT ensemble.
     """
-
-    @validator("integrator")
-    def is_not_steep(cls, v):
-        # needs an MD integrator
-        if v == "steep":
-            errmsg = (
-                "Molecular Dynamics settings need an MD integrator, "
-                f"not integrator={v}."
-            )
-            raise ValueError(errmsg)
-        return v
 
     @validator("pcoupl")
     def has_no_barostat(cls, v):
@@ -576,21 +589,10 @@ class NVTOutputSettings(OutputSettings):
     """
 
 
-class NPTSimulationSettings(SimulationSettings):
+class NPTSimulationSettings(MDSimulationSettings):
     """
     Settings for MD simulation in the NPT ensemble.
     """
-
-    @validator("integrator")
-    def is_not_steep(cls, v):
-        # needs an MD integrator
-        if v == "steep":
-            errmsg = (
-                "Molecular Dynamics settings need an MD integrator, "
-                f"not integrator={v}."
-            )
-            raise ValueError(errmsg)
-        return v
 
     @validator("pcoupl")
     def has_barostat(cls, v):
