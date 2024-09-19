@@ -37,13 +37,13 @@ from openmmtools import forces
 from openfe_gromacs.protocols.gromacs_md.md_settings import (
     EMOutputSettings,
     EMSimulationSettings,
+    FFSettingsOpenMM,
     GromacsMDProtocolSettings,
     IntegratorSettings,
     NPTOutputSettings,
     NPTSimulationSettings,
     NVTOutputSettings,
     NVTSimulationSettings,
-    FFSettingsOpenMM,
     OpenFFPartialChargeSettings,
     OpenMMEngineSettings,
     OpenMMSolvationSettings,
@@ -442,9 +442,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
 
         stateA = self._inputs["stateA"]
 
-        forcefield_settings: FFSettingsOpenMM = (
-            protocol_settings.forcefield_settings
-        )
+        forcefield_settings: FFSettingsOpenMM = protocol_settings.forcefield_settings
         thermo_settings: settings.ThermoSettings = protocol_settings.thermo_settings
         solvation_settings: OpenMMSolvationSettings = (
             protocol_settings.solvation_settings

@@ -617,13 +617,16 @@ class FFSettingsOpenMM(OpenMMSystemGeneratorFFSettings):
     The constraints used in the Gromacs MD simulation can be specified under
     the respective simulation settings.
     """
+
     @validator("constraints")
     def has_no_constraints(cls, v):
         if v:
-            errmsg = ("The OpenMM system cannot have constraints, or else the" 
-                      "constrained bonds will be removed from the system upon"
-                      "creation of the Interchange object. "
-                      f"Got constraints = {v}.")
+            errmsg = (
+                "The OpenMM system cannot have constraints, or else the"
+                "constrained bonds will be removed from the system upon"
+                "creation of the Interchange object. "
+                f"Got constraints = {v}."
+            )
             raise ValueError(errmsg)
         return v
 
