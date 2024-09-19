@@ -7,6 +7,7 @@ from unittest import mock
 import gufe
 import pytest
 from openff.units import unit
+
 import openfe_gromacs
 from openfe_gromacs.protocols.gromacs_md.md_methods import (
     GromacsMDProtocol,
