@@ -884,18 +884,37 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
 
     @staticmethod
     def _run_gromacs(
-        mdp,
-        in_gro,
-        top,
-        tpr,
-        out_gro,
-        xtc,
-        trr,
-        cpt,
-        log,
-        edr,
-        shared_basebath,
+        mdp: pathlib.Path,
+        in_gro: pathlib.Path,
+        top: pathlib.Path,
+        tpr: pathlib.Path,
+        out_gro: str,
+        xtc: str,
+        trr: str,
+        cpt: str,
+        log: str,
+        edr: str,
+        shared_basebath: pathlib.Path,
     ):
+        """
+        Running Gromacs gmx grompp and gmx mdrun commands using subprocess.
+
+        Parameters
+        ----------
+        :param mdp: pathlib.Path
+          Path to the mdp file
+        :param in_gro: pathlib.Path
+        :param top: pathlib.Path
+        :param tpr: pathlib.Path
+        :param out_gro: str
+        :param xtc: str
+        :param trr: str
+        :param cpt: str
+        :param log: str
+        :param edr: str
+        :param shared_basebath: Pathlike, optional
+          Where to run the calculation, defaults to current working directory
+        """
         assert os.path.exists(in_gro)
         assert os.path.exists(top)
         assert os.path.exists(mdp)
