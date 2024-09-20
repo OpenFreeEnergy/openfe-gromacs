@@ -134,7 +134,7 @@ def test_unit_tagging_setup_unit(solvent_protocol_dag, tmpdir):
     assert len(repeats) == 1
 
 
-def test_dry_run_ffcache_none(benzene_system, monkeypatch, tmpdir):
+def test_dry_run_ffcache_none(benzene_system, monkeypatch, tmp_path_factory):
     monkeypatch.setenv("INTERCHANGE_EXPERIMENTAL", "1")
     settings = GromacsMDProtocol.default_settings()
     settings.output_settings_em.forcefield_cache = None
@@ -155,17 +155,19 @@ def test_dry_run_ffcache_none(benzene_system, monkeypatch, tmpdir):
         stateB=benzene_system,
         mapping=None,
     )
-    with tmpdir.as_cwd():
-        gufe.protocols.execute_DAG(
-            dag,
-            shared_basedir=tmpdir,
-            scratch_basedir=tmpdir,
-            keep_shared=False,
-            n_retries=3,
-        )
+
+    shared_temp = tmp_path_factory.mktemp("shared")
+    scratch_temp = tmp_path_factory.mktemp("scratch")
+    gufe.protocols.execute_DAG(
+        dag,
+        shared_basedir=shared_temp,
+        scratch_basedir=scratch_temp,
+        keep_shared=False,
+        n_retries=3,
+    )
 
 
-def test_dry_many_molecules_solvent(benzene_many_solv_system, monkeypatch, tmpdir):
+def test_dry_many_molecules_solvent(benzene_many_solv_system, monkeypatch, tmp_path_factory):
     """
     A basic test flushing "will it work if you pass multiple molecules"
     """
@@ -187,14 +189,15 @@ def test_dry_many_molecules_solvent(benzene_many_solv_system, monkeypatch, tmpdi
         mapping=None,
     )
 
-    with tmpdir.as_cwd():
-        gufe.protocols.execute_DAG(
-            dag,
-            shared_basedir=tmpdir,
-            scratch_basedir=tmpdir,
-            keep_shared=False,
-            n_retries=3,
-        )
+    shared_temp = tmp_path_factory.mktemp("shared")
+    scratch_temp = tmp_path_factory.mktemp("scratch")
+    gufe.protocols.execute_DAG(
+        dag,
+        shared_basedir=shared_temp,
+        scratch_basedir=scratch_temp,
+        keep_shared=False,
+        n_retries=3,
+    )
 
 
 class TestProtocolResult:
@@ -244,11 +247,11 @@ class TestProtocolResult:
 
     def test_get_filenames_em(self, protocolresult):
         dict_file_path = protocolresult.get_filenames_em()
-
         assert isinstance(dict_file_path, dict)
+        assert len(dict_file_path) == 7
         for name, file_path in dict_file_path.items():
             assert isinstance(file_path, list)
-            assert len(file_path) == 7
+            assert len(file_path) == 1
             assert isinstance(file_path[0], pathlib.Path)
 
     def test_get_gro_em_filename(self, protocolresult):
@@ -265,11 +268,11 @@ class TestProtocolResult:
 
     def test_get_filenames_nvt(self, protocolresult):
         dict_file_path = protocolresult.get_filenames_nvt()
-
         assert isinstance(dict_file_path, dict)
+        assert len(dict_file_path) == 7
         for name, file_path in dict_file_path.items():
             assert isinstance(file_path, list)
-            assert len(file_path) == 7
+            assert len(file_path) == 1
             assert isinstance(file_path[0], pathlib.Path)
 
     def test_get_gro_nvt_filename(self, protocolresult):
@@ -286,11 +289,11 @@ class TestProtocolResult:
 
     def test_get_filenames_npt(self, protocolresult):
         dict_file_path = protocolresult.get_filenames_npt()
-
         assert isinstance(dict_file_path, dict)
+        assert len(dict_file_path) == 7
         for name, file_path in dict_file_path.items():
             assert isinstance(file_path, list)
-            assert len(file_path) == 7
+            assert len(file_path) == 1
             assert isinstance(file_path[0], pathlib.Path)
 
     def test_get_gro_npt_filename(self, protocolresult):

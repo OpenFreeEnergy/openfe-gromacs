@@ -72,13 +72,6 @@ PRE_DEFINED_SETTINGS = {
     "lj_pme_comb_rule": "Geometric",
     "ewald_geometry": "3d",
     "epsilon_surface": 0,
-    "nsttcouple": -1,
-    "tc_grps": "system",
-    "tau_t": 2.0 * unit.picosecond,
-    "pcoupltype": "isotropic",
-    "nstpcouple": -1,
-    "tau_p": 5 * unit.picosecond,
-    "compressibility": 4.5e-05 / unit.bar,
     "lincs_warnangle": 30 * unit.degree,
     "continuation": "no",
     "morse": "no",
@@ -87,6 +80,16 @@ PRE_DEFINED_SETTINGS = {
 PRE_DEFINED_SETTINGS_EM = {
     "emtol": 10.0 * unit.kilojoule / (unit.mole * unit.nanometer),
     "emstep": 0.01 * unit.nanometer,
+}
+
+PRE_DEFINED_SETTINGS_MD = {
+    "nsttcouple": -1,
+    "tc_grps": "system",
+    "tau_t": 2.0 * unit.picosecond,
+    "pcoupltype": "isotropic",
+    "nstpcouple": -1,
+    "tau_p": 5 * unit.picosecond,
+    "compressibility": 4.5e-05 / unit.bar,
 }
 
 
@@ -746,6 +749,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 settings["sim_settings_nvt"].dict()
                 | settings["output_settings_nvt"].dict()
                 | PRE_DEFINED_SETTINGS
+                | PRE_DEFINED_SETTINGS_MD
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
@@ -754,6 +758,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 settings["sim_settings_npt"].dict()
                 | settings["output_settings_npt"].dict()
                 | PRE_DEFINED_SETTINGS
+                | PRE_DEFINED_SETTINGS_MD
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
