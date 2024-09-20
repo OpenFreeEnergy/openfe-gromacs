@@ -271,17 +271,13 @@ class GromacsMDProtocol(gufe.Protocol):
     ) -> list[gufe.ProtocolUnit]:
 
         # Validate solvent component
-        # TODO: Maybe only allow PME as nonbonded_method since Interchange requires PME?
         nonbond = self.settings.forcefield_settings.nonbonded_method
-        # TODO: Add check that there has to be solvent since
-        #  Gromacs doesn't support vacuum MD
         system_validation.validate_solvent(stateA, nonbond)
 
         # Validate protein component
         system_validation.validate_protein(stateA)
 
         # actually create and return Units
-        # TODO: Deal with multiple ProteinComponents
         solvent_comp, protein_comp, small_mols = system_validation.get_components(
             stateA
         )
@@ -641,7 +637,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         if not solvent_comp:
             errmsg = (
                 "No SolventComponent provided. This protocol currently does"
-                "not support vacuum simulations."
+                " not support vacuum simulations."
             )
             raise ValueError(errmsg)
 
