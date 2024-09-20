@@ -233,8 +233,15 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
           dictionary containing list of paths (pathlib.Path)
           to the output files
         """
-        file_keys = ["gro_em", "tpr_em", "trr_em", "xtc_em", "edr_em",
-                     "log_em", "cpt_em"]
+        file_keys = [
+            "gro_em",
+            "tpr_em",
+            "trr_em",
+            "xtc_em",
+            "edr_em",
+            "log_em",
+            "cpt_em",
+        ]
         dict_em = {}
         for file in file_keys:
 
@@ -301,8 +308,15 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
           dictionary containing list of paths (pathlib.Path)
           to the output files
         """
-        file_keys = ["gro_nvt", "tpr_nvt", "trr_nvt", "xtc_nvt", "edr_nvt",
-                     "log_nvt", "cpt_nvt"]
+        file_keys = [
+            "gro_nvt",
+            "tpr_nvt",
+            "trr_nvt",
+            "xtc_nvt",
+            "edr_nvt",
+            "log_nvt",
+            "cpt_nvt",
+        ]
         dict_nvt = {}
         for file in file_keys:
 
@@ -369,8 +383,15 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
           dictionary containing list of paths (pathlib.Path)
           to the output files
         """
-        file_keys = ["gro_npt", "tpr_npt", "trr_npt", "xtc_npt", "edr_npt",
-                     "log_npt", "cpt_npt"]
+        file_keys = [
+            "gro_npt",
+            "tpr_npt",
+            "trr_npt",
+            "xtc_npt",
+            "edr_npt",
+            "log_npt",
+            "cpt_npt",
+        ]
         dict_npt = {}
         for file in file_keys:
 
