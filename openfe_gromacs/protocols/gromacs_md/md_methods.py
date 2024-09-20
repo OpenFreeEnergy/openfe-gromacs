@@ -232,24 +232,6 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
         return gro
 
-    def get_gro_em_filename(self) -> list[pathlib.Path]:
-        """
-        Get a list of paths to the .gro file, last frame of the
-        energy minimization
-
-        Returns
-        -------
-        gro : list[pathlib.Path]
-          list of paths (pathlib.Path) to the output .gro file
-        """
-        gro = [
-            pus[0].outputs["gro_em"]
-            for pus in self.data.values()
-            if "GromacsMDRunUnit" in pus[0].source_key
-        ]
-
-        return gro
-
     def get_tpr_em_filename(self) -> list[pathlib.Path]:
         """
         Get a list of paths to the .tpr file of the
