@@ -1,19 +1,29 @@
 name: test
 channels:
-
+  - jaimergp/label/unsupported-cudatoolkit-shim
   - conda-forge
-
   - defaults
 dependencies:
     # Base depends
   - python
   - pip
-
+  - openff-toolkit-base >=0.16
+  - openff-units
+  - openff-models
+  - ambertools =23
     # Testing
   - pytest
+  - pytest-xdist
   - pytest-cov
+  - pydantic >1
   - codecov
 
-    # Pip-only installs
-  #- pip:
-  #  - codecov
+  - numpy
+  - networkx
+  - rdkit
+  - openfe>=1.0.0rc0
+  - click
+  - openmm
+  - openmmtools
+  - plugcli
+  - gufe

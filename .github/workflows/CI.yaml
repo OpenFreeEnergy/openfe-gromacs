@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  # GitHub has started calling new repo's first branch "main" https://github.com/github/renaming
-  # The cookiecutter uses the "--initial-branch" flag when it runs git-init
   push:
     branches:
       - "main"
@@ -15,17 +13,36 @@ on:
     #   (from https://help.github.com/en/actions/reference/events-that-trigger-workflows#scheduled-events-schedule)
     - cron: "0 0 * * 0"
 
+# This will cancel the workflow if we make another push,
+# we want this so that if we make 3 commits, we only
+# run our workflow on the last commit, instead of running
+# it 3 times.
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+defaults:
+  run:
+    # This shell command is a safer default so if bash hits
+    # and error, it will stop
+    shell: bash -leo pipefail {0}
+
 jobs:
   test:
     name: Test on ${{ matrix.os }}, Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
+      # We want every job in our matrix to run, so we don't
+      # want to fail fast
+      fail-fast: false
       matrix:
-        os: [macOS-latest, ubuntu-latest, windows-latest]
-        python-version: [3.9, "3.10", "3.11"]
+        # We don't really support windows so we don't need
+        # to test it
+        os: [macOS-latest, ubuntu-latest]
+        python-version: ["3.10", "3.11", "3.12"]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Additional info about the build
         shell: bash
@@ -35,26 +52,31 @@ jobs:
           ulimit -a
 
       # More info on options: https://github.com/marketplace/actions/provision-with-micromamba
-      - uses: mamba-org/provision-with-micromamba@main
+      - name: "Setup Micromamba"
+        uses: mamba-org/setup-micromamba@v1
         with:
-          environment-file: devtools/conda-envs/test_env.yaml
+          #environment-file: devtools/conda-envs/test_env.yaml
+          environment-file: environment.yml
           environment-name: test
-          channels: conda-forge,defaults
-          extra-specs: |
+          cache-environment: true
+          cache-downloads: true
+          create-args: >-
             python=${{ matrix.python-version }}
+          init-shell: bash
+
+      - name: Install gmxapi
+        run: |
+          # gmxapi needs to be pointed to where gromacs lives
+          # we also need to tell it where to find our compilers
+          export CMAKE_ARGS="-Dgmxapi_ROOT=$CONDA_PREFIX -C $CONDA_PREFIX/share/cmake/gromacs/gromacs-hints.cmake -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC"
+          pip install gmxapi
 
       - name: Install package
-        # conda setup requires this special shell
-        shell: bash -l {0}
-        run: |
-          python -m pip install . --no-deps
-          micromamba list
+        run: python -m pip install . --no-deps
 
       - name: Run tests
-        # conda setup requires this special shell
-        shell: bash -l {0}
         run: |
-          pytest -v --cov=openfe_gromacs --cov-report=xml --color=yes openfe_gromacs/tests/
+          pytest -n logical -v --cov=openfe_gromacs --cov-report=xml --color=yes openfe_gromacs/tests/
 
       - name: CodeCov
         uses: codecov/codecov-action@v3
