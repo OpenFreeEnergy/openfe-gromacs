@@ -52,8 +52,7 @@ class TestGromacsMDProtocol(GufeTokenizableTestsMixin):
 class TestMDSetupUnit(GufeTokenizableTestsMixin):
     cls = gromacs_md.GromacsMDSetupUnit
     repr = (
-        "GromacsMDSetupUnit(Solvent MD SmallMoleculeComponent: "
-        "benzene repeat 0 generation 0)"
+        "GromacsMDSetupUnit(Solvent MD SmallMoleculeComponent: benzene)"
     )
     key = None
 
