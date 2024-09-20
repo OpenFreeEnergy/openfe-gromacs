@@ -564,10 +564,6 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             )
             stateA_system.removeForce(barostat_idx)
 
-            water = OFFMolecule.from_mapped_smiles("[O:1]([H:2])[H:3]")
-            cl = OFFMolecule.from_smiles("[Cl-]", name="Cl")
-            na = OFFMolecule.from_smiles("[Na+]", name="Na")
-
             stateA_interchange = Interchange.from_openmm(
                 topology=stateA_topology,
                 system=stateA_system,
@@ -583,18 +579,6 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                     if molecule.n_atoms == [*smc_components.values()][0].n_atoms:
                         for atom in molecule.atoms:
                             atom.metadata["residue_name"] = "UNK"
-                # molecules don't know their residue metadata, so need to
-                # set on each atom
-                # https://github.com/openforcefield/openff-toolkit/issues/1554
-                elif molecule.is_isomorphic_with(water):
-                    for atom in molecule.atoms:
-                        atom.metadata["residue_name"] = "WAT"
-                elif molecule.is_isomorphic_with(na):
-                    for atom in molecule.atoms:
-                        atom.metadata["residue_name"] = "Na"
-                elif molecule.is_isomorphic_with(cl):
-                    for atom in molecule.atoms:
-                        atom.metadata["residue_name"] = "Cl"
 
         return stateA_interchange
 
