@@ -51,9 +51,7 @@ class TestGromacsMDProtocol(GufeTokenizableTestsMixin):
 
 class TestMDSetupUnit(GufeTokenizableTestsMixin):
     cls = gromacs_md.GromacsMDSetupUnit
-    repr = (
-        "GromacsMDSetupUnit(Solvent MD SmallMoleculeComponent: benzene)"
-    )
+    repr = "GromacsMDSetupUnit(Solvent MD SmallMoleculeComponent: benzene)"
     key = None
 
     @pytest.fixture()
