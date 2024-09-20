@@ -167,7 +167,9 @@ def test_dry_run_ffcache_none(benzene_system, monkeypatch, tmp_path_factory):
     )
 
 
-def test_dry_many_molecules_solvent(benzene_many_solv_system, monkeypatch, tmp_path_factory):
+def test_dry_many_molecules_solvent(
+    benzene_many_solv_system, monkeypatch, tmp_path_factory
+):
     """
     A basic test flushing "will it work if you pass multiple molecules"
     """
