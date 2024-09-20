@@ -882,8 +882,8 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
     in Gromacs.
     """
 
+    @staticmethod
     def _run_gromacs(
-        self,
         mdp,
         in_gro,
         top,
