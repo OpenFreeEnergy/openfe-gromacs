@@ -214,6 +214,38 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
         return mdps
 
+    def get_filenames_em(self) -> dict[str, list[pathlib.Path]]:
+        """
+        Get a list of paths to the files of the
+        energy minimization
+        Following file formats are stored in the dictionary under these keys:
+        - "gro_em"
+        - "tpr_em"
+        - "trr_em"
+        - "xtc_em"
+        - "edr_em"
+        - "log_em"
+        - "cpt_em"
+
+        Returns
+        -------
+        dict_em : dict[str, list[pathlib.Path]]
+          dictionary containing list of paths (pathlib.Path)
+          to the output files
+        """
+        file_keys = ["gro_em", "tpr_em", "trr_em", "xtc_em", "edr_em",
+                     "log_em", "cpt_em"]
+        dict_em = {}
+        for file in file_keys:
+
+            file_path = [
+                pus[0].outputs[file]
+                for pus in self.data.values()
+                if "GromacsMDRunUnit" in pus[0].source_key
+            ]
+            dict_em[file] = file_path
+        return dict_em
+
     def get_gro_em_filename(self) -> list[pathlib.Path]:
         """
         Get a list of paths to the .gro file, last frame of the
@@ -231,42 +263,6 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         ]
 
         return gro
-
-    def get_tpr_em_filename(self) -> list[pathlib.Path]:
-        """
-        Get a list of paths to the .tpr file of the
-        energy minimization
-
-        Returns
-        -------
-        tpr : list[pathlib.Path]
-          list of paths (pathlib.Path) to the output .tpr file
-        """
-        file_path = [
-            pus[0].outputs["tpr_em"]
-            for pus in self.data.values()
-            if "GromacsMDRunUnit" in pus[0].source_key
-        ]
-
-        return file_path
-
-    def get_trr_em_filename(self) -> list[pathlib.Path]:
-        """
-        Get a list of paths to the .trr file of the
-        energy minimization
-
-        Returns
-        -------
-        file_path : list[pathlib.Path]
-          list of paths (pathlib.Path) to the output .trr file
-        """
-        file_path = [
-            pus[0].outputs["trr_em"]
-            for pus in self.data.values()
-            if "GromacsMDRunUnit" in pus[0].source_key
-        ]
-
-        return file_path
 
     def get_xtc_em_filename(self) -> list[pathlib.Path]:
         """
@@ -286,54 +282,136 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
         return file_path
 
-    def get_edr_em_filename(self) -> list[pathlib.Path]:
+    def get_filenames_nvt(self) -> dict[str, list[pathlib.Path]]:
         """
-        Get a list of paths to the .edr file of the
-        energy minimization
+        Get a list of paths to the files of the
+        NVT equilibration
+        Following file formats are stored in the dictionary under these keys:
+        - "gro_nvt"
+        - "tpr_nvt"
+        - "trr_nvt"
+        - "xtc_nvt"
+        - "edr_nvt"
+        - "log_nvt"
+        - "cpt_nvt"
+
+        Returns
+        -------
+        dict_nvt : dict[str, list[pathlib.Path]]
+          dictionary containing list of paths (pathlib.Path)
+          to the output files
+        """
+        file_keys = ["gro_nvt", "tpr_nvt", "trr_nvt", "xtc_nvt", "edr_nvt",
+                     "log_nvt", "cpt_nvt"]
+        dict_nvt = {}
+        for file in file_keys:
+
+            file_path = [
+                pus[0].outputs[file]
+                for pus in self.data.values()
+                if "GromacsMDRunUnit" in pus[0].source_key
+            ]
+            dict_nvt[file] = file_path
+        return dict_nvt
+
+    def get_gro_nvt_filename(self) -> list[pathlib.Path]:
+        """
+        Get a list of paths to the .gro file, last frame of the
+        NVT equilibration
+
+        Returns
+        -------
+        gro : list[pathlib.Path]
+          list of paths (pathlib.Path) to the output .gro file
+        """
+        gro = [
+            pus[0].outputs["gro_nvt"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
+
+        return gro
+
+    def get_xtc_nvt_filename(self) -> list[pathlib.Path]:
+        """
+        Get a list of paths to the .xtc file of the
+        NVT equilibration
 
         Returns
         -------
         file_path : list[pathlib.Path]
-          list of paths (pathlib.Path) to the output .edr file
+          list of paths (pathlib.Path) to the output .xtc file
         """
         file_path = [
-            pus[0].outputs["edr_em"]
+            pus[0].outputs["xtc_nvt"]
             for pus in self.data.values()
             if "GromacsMDRunUnit" in pus[0].source_key
         ]
 
         return file_path
 
-    def get_log_em_filename(self) -> list[pathlib.Path]:
+    def get_filenames_npt(self) -> dict[str, list[pathlib.Path]]:
         """
-        Get a list of paths to the .log file of the
-        energy minimization
+        Get a list of paths to the files of the
+        NPT MD simulation
+        Following file formats are stored in the dictionary under these keys:
+        - "gro_npt"
+        - "tpr_npt"
+        - "trr_npt"
+        - "xtc_npt"
+        - "edr_npt"
+        - "log_npt"
+        - "cpt_npt"
 
         Returns
         -------
-        file_path : list[pathlib.Path]
-          list of paths (pathlib.Path) to the output .log file
+        dict_npt : dict[str, list[pathlib.Path]]
+          dictionary containing list of paths (pathlib.Path)
+          to the output files
         """
-        file_path = [
-            pus[0].outputs["log_em"]
+        file_keys = ["gro_npt", "tpr_npt", "trr_npt", "xtc_npt", "edr_npt",
+                     "log_npt", "cpt_npt"]
+        dict_npt = {}
+        for file in file_keys:
+
+            file_path = [
+                pus[0].outputs[file]
+                for pus in self.data.values()
+                if "GromacsMDRunUnit" in pus[0].source_key
+            ]
+            dict_npt[file] = file_path
+        return dict_npt
+
+    def get_gro_npt_filename(self) -> list[pathlib.Path]:
+        """
+        Get a list of paths to the .gro file, last frame of the
+        NPT MD simulation
+
+        Returns
+        -------
+        gro : list[pathlib.Path]
+          list of paths (pathlib.Path) to the output .gro file
+        """
+        gro = [
+            pus[0].outputs["gro_npt"]
             for pus in self.data.values()
             if "GromacsMDRunUnit" in pus[0].source_key
         ]
 
-        return file_path
+        return gro
 
-    def get_cpt_em_filename(self) -> list[pathlib.Path]:
+    def get_xtc_npt_filename(self) -> list[pathlib.Path]:
         """
-        Get a list of paths to the .cpt file of the
-        energy minimization
+        Get a list of paths to the .xtc file of the
+        NPT MD simulation
 
         Returns
         -------
         file_path : list[pathlib.Path]
-          list of paths (pathlib.Path) to the output .cpt file
+          list of paths (pathlib.Path) to the output .xtc file
         """
         file_path = [
-            pus[0].outputs["cpt_em"]
+            pus[0].outputs["xtc_npt"]
             for pus in self.data.values()
             if "GromacsMDRunUnit" in pus[0].source_key
         ]

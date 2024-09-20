@@ -242,20 +242,17 @@ class TestProtocolResult:
         assert isinstance(mdps[0], list)
         assert isinstance(mdps[0][0], pathlib.Path)
 
+    def test_get_filenames_em(self, protocolresult):
+        dict_file_path = protocolresult.get_filenames_em()
+
+        assert isinstance(dict_file_path, dict)
+        for name, file_path in dict_file_path.items():
+            assert isinstance(file_path, list)
+            assert len(file_path) == 7
+            assert isinstance(file_path[0], pathlib.Path)
+
     def test_get_gro_em_filename(self, protocolresult):
         file_path = protocolresult.get_gro_em_filename()
-
-        assert isinstance(file_path, list)
-        assert isinstance(file_path[0], pathlib.Path)
-
-    def test_get_tpr_em_filename(self, protocolresult):
-        file_path = protocolresult.get_tpr_em_filename()
-
-        assert isinstance(file_path, list)
-        assert isinstance(file_path[0], pathlib.Path)
-
-    def test_get_trr_em_filename(self, protocolresult):
-        file_path = protocolresult.get_trr_em_filename()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
@@ -266,20 +263,44 @@ class TestProtocolResult:
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
 
-    def test_get_edr_em_filename(self, protocolresult):
-        file_path = protocolresult.get_edr_em_filename()
+    def test_get_filenames_nvt(self, protocolresult):
+        dict_file_path = protocolresult.get_filenames_nvt()
+
+        assert isinstance(dict_file_path, dict)
+        for name, file_path in dict_file_path.items():
+            assert isinstance(file_path, list)
+            assert len(file_path) == 7
+            assert isinstance(file_path[0], pathlib.Path)
+
+    def test_get_gro_nvt_filename(self, protocolresult):
+        file_path = protocolresult.get_gro_nvt_filename()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
 
-    def test_get_log_em_filename(self, protocolresult):
-        file_path = protocolresult.get_log_em_filename()
+    def test_get_xtc_nvt_filename(self, protocolresult):
+        file_path = protocolresult.get_xtc_nvt_filename()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
 
-    def test_get_cpt_em_filename(self, protocolresult):
-        file_path = protocolresult.get_cpt_em_filename()
+    def test_get_filenames_npt(self, protocolresult):
+        dict_file_path = protocolresult.get_filenames_npt()
+
+        assert isinstance(dict_file_path, dict)
+        for name, file_path in dict_file_path.items():
+            assert isinstance(file_path, list)
+            assert len(file_path) == 7
+            assert isinstance(file_path[0], pathlib.Path)
+
+    def test_get_gro_npt_filename(self, protocolresult):
+        file_path = protocolresult.get_gro_npt_filename()
+
+        assert isinstance(file_path, list)
+        assert isinstance(file_path[0], pathlib.Path)
+
+    def test_get_xtc_npt_filename(self, protocolresult):
+        file_path = protocolresult.get_xtc_npt_filename()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
