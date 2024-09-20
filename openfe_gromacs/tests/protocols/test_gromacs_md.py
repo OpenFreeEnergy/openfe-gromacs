@@ -93,27 +93,6 @@ def test_no_SolventComponent(benzene_vacuum_system, tmpdir):
             dag_unit.run(dry=True)
 
 
-def test_no_constraints(benzene_system, tmpdir):
-    settings = GromacsMDProtocol.default_settings()
-    settings.forcefield_settings.constraints = "hbonds"
-
-    p = GromacsMDProtocol(
-        settings=settings,
-    )
-
-    dag = p.create(
-        stateA=benzene_system,
-        stateB=benzene_system,
-        mapping=None,
-    )
-    dag_unit = list(dag.protocol_units)[0]
-
-    errmsg = "No constraints are allowed in this step of creating the Gromacs"
-    with tmpdir.as_cwd():
-        with pytest.raises(ValueError, match=errmsg):
-            dag_unit.run(dry=True)
-
-
 @pytest.fixture
 def solvent_protocol_dag(benzene_system):
     settings = GromacsMDProtocol.default_settings()

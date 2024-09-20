@@ -17,18 +17,12 @@ import subprocess
 import uuid
 from collections import defaultdict
 from collections.abc import Iterable
-from typing import Any, Optional
+from typing import Any
 
 import gmxapi as gmx
 import gufe
 import pint
-from gufe import (
-    ChemicalSystem,
-    ProteinComponent,
-    SmallMoleculeComponent,
-    SolventComponent,
-    settings,
-)
+from gufe import ChemicalSystem, SmallMoleculeComponent, settings
 from openfe.protocols.openmm_utils import (
     charge_generation,
     settings_validation,
@@ -38,7 +32,6 @@ from openfe.protocols.openmm_utils import (
 from openfe.protocols.openmm_utils.omm_settings import BasePartialChargeSettings
 from openfe.utils import log_system_probe, without_oechem_backend
 from openff.interchange import Interchange
-from openff.toolkit import Topology
 from openff.toolkit.topology import Molecule as OFFMolecule
 from openff.units import unit
 from openff.units.openmm import from_openmm, to_openmm
@@ -47,6 +40,7 @@ from openmmtools import forces
 from openfe_gromacs.protocols.gromacs_md.md_settings import (
     EMOutputSettings,
     EMSimulationSettings,
+    FFSettingsOpenMM,
     GromacsMDProtocolSettings,
     IntegratorSettings,
     NPTOutputSettings,
@@ -61,13 +55,14 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
 logger = logging.getLogger(__name__)
 
 
-pre_defined_settings = {
+PRE_DEFINED_SETTINGS = {
     "tinit": 0 * unit.picosecond,
     "init_step": 0,
     "simulation_part": 0,
     "comm_mode": "Linear",
     "nstcomm": 100,
     "comm_grps": "system",
+    "pbc": "xyz",
     "verlet_buffer_tolerance": 0.005 * unit.kilojoule / (unit.mole * unit.picosecond),
     "verlet_buffer_pressure_tolerance": 0.5 * unit.bar,
     "coulomb_modifier": "Potential-shift",
@@ -85,10 +80,11 @@ pre_defined_settings = {
     "tau_p": 5 * unit.picosecond,
     "compressibility": 4.5e-05 / unit.bar,
     "lincs_warnangle": 30 * unit.degree,
+    "continuation": "no",
     "morse": "no",
 }
 
-pre_defined_settings_em = {
+PRE_DEFINED_SETTINGS_EM = {
     "emtol": 10.0 * unit.kilojoule / (unit.mole * unit.nanometer),
     "emstep": 0.01 * unit.nanometer,
 }
@@ -392,7 +388,7 @@ class GromacsMDProtocol(gufe.Protocol):
           a set of default settings
         """
         return GromacsMDProtocolSettings(
-            forcefield_settings=settings.OpenMMSystemGeneratorFFSettings(
+            forcefield_settings=FFSettingsOpenMM(
                 nonbonded_method="PME",
                 constraints=None,
             ),
@@ -407,9 +403,6 @@ class GromacsMDProtocol(gufe.Protocol):
             simulation_settings_em=EMSimulationSettings(
                 integrator="steep",
                 nsteps=5000,
-                tcoupl="no",
-                pcoupl="no",
-                gen_vel="no",
             ),
             simulation_settings_nvt=NVTSimulationSettings(
                 nsteps=50000,  # 100ps
@@ -418,7 +411,7 @@ class GromacsMDProtocol(gufe.Protocol):
             ),
             simulation_settings_npt=NPTSimulationSettings(
                 nsteps=500000,  # 1ns
-                pcoupl="Parrinello-Rahman",
+                pcoupl="C-rescale",
                 gen_vel="no",  # If continuation from NVT simulation
             ),
             output_settings_em=EMOutputSettings(
@@ -469,17 +462,13 @@ class GromacsMDProtocol(gufe.Protocol):
     ) -> list[gufe.ProtocolUnit]:
 
         # Validate solvent component
-        # TODO: Maybe only allow PME as nonbonded_method since Interchange requires PME?
         nonbond = self.settings.forcefield_settings.nonbonded_method
-        # TODO: Add check that there has to be solvent since
-        #  Gromacs doesn't support vacuum MD
         system_validation.validate_solvent(stateA, nonbond)
 
         # Validate protein component
         system_validation.validate_protein(stateA)
 
         # actually create and return Units
-        # TODO: Deal with multiple ProteinComponents
         solvent_comp, protein_comp, small_mols = system_validation.get_components(
             stateA
         )
@@ -605,11 +594,196 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 nagl_model=charge_settings.nagl_model,
             )
 
+    def _handle_settings(self) -> dict[str, gufe.settings.SettingsBaseModel]:
+        """
+        Extract the relevant settings for an MD simulation.
+
+        Returns
+        -------
+        settings : dict[str, SettingsBaseModel]
+          A dictionary with the following entries:
+            * forcefield_settings : FFSettingsOpenMM
+            * thermo_settings : ThermoSettings
+            * solvation_settings : SolvationSettings
+            * charge_settings: BasePartialChargeSetting
+            * sim_settings_em: EMSimulationSettings
+            * sim_settings_nvt: NVTSimulationSettings
+            * sim_settings_npt: NPTSimulationSettings
+            * output_settings_em: EMOutputSettings
+            * output_settings_nvt: NVTOutputSettings
+            * output_settings_npt: NPTOutputSettings
+            * integrator_settings: IntegratorSettings
+        """
+        prot_settings: GromacsMDProtocolSettings = self._inputs["protocol"].settings
+
+        settings = {}
+        settings["forcefield_settings"] = prot_settings.forcefield_settings
+        settings["thermo_settings"] = prot_settings.thermo_settings
+        settings["solvation_settings"] = prot_settings.solvation_settings
+        settings["charge_settings"] = prot_settings.partial_charge_settings
+        settings["sim_settings_em"] = prot_settings.simulation_settings_em
+        settings["sim_settings_nvt"] = prot_settings.simulation_settings_nvt
+        settings["sim_settings_npt"] = prot_settings.simulation_settings_npt
+        settings["output_settings_em"] = prot_settings.output_settings_em
+        settings["output_settings_nvt"] = prot_settings.output_settings_nvt
+        settings["output_settings_npt"] = prot_settings.output_settings_npt
+        settings["integrator_settings"] = prot_settings.integrator_settings
+        settings["gro"] = prot_settings.gro
+        settings["top"] = prot_settings.top
+
+        return settings
+
+    def _write_mdp_files(self, settings: dict, shared_basepath):
+        """
+        Writes out the .mdp files for running a Gromacs MD simulation.
+
+        Parameters
+        ----------
+        settings: dict
+          Dictionary of all the settings
+        shared_basepath : Pathlike, optional
+          Where to run the calculation, defaults to current working directory
+
+        Returns
+        -------
+        mdps: list
+          List of file paths to mdp files.
+        """
+
+        mdps = []
+        if settings["sim_settings_em"].nsteps > 0:
+            settings_dict = (
+                settings["sim_settings_em"].dict()
+                | settings["output_settings_em"].dict()
+                | PRE_DEFINED_SETTINGS
+                | PRE_DEFINED_SETTINGS_EM
+            )
+            mdp = _dict2mdp(settings_dict, shared_basepath)
+            mdps.append(mdp)
+        if settings["sim_settings_nvt"].nsteps > 0:
+            settings_dict = (
+                settings["sim_settings_nvt"].dict()
+                | settings["output_settings_nvt"].dict()
+                | PRE_DEFINED_SETTINGS
+            )
+            mdp = _dict2mdp(settings_dict, shared_basepath)
+            mdps.append(mdp)
+        if settings["sim_settings_npt"].nsteps > 0:
+            settings_dict = (
+                settings["sim_settings_npt"].dict()
+                | settings["output_settings_npt"].dict()
+                | PRE_DEFINED_SETTINGS
+            )
+            mdp = _dict2mdp(settings_dict, shared_basepath)
+            mdps.append(mdp)
+
+        return mdps
+
+    def _create_interchange(self, settings, components, shared_basepath):
+        """
+        Creates the Interchange object for the system.
+
+        Parameters
+        ----------
+        settings: dict
+          Dictionary of all the settings
+        components: dict
+          Dictionary of the components of the settings, solvent, protein, and
+          small molecules
+        shared_basepath : Pathlike, optional
+          Where to run the calculation, defaults to current working directory
+
+        Returns
+        -------
+        stateA_interchange: Interchange object
+          The interchange object of the system.
+        """
+        # Create the stateA system
+        # Create a dictionary of OFFMol for each SMC for bookkeeping
+        smc_components: dict[SmallMoleculeComponent, OFFMolecule]
+
+        # ToDo: Make this more general, check if there is a smc_component,
+        #       allow ProteinComponents, ...
+        smc_components = {i: i.to_openff() for i in components["small_mols"]}
+
+        # a. assign partial charges to smcs
+        self._assign_partial_charges(settings["charge_settings"], smc_components)
+
+        # b. get a system generator
+        if settings["output_settings_em"].forcefield_cache is not None:
+            ffcache = shared_basepath / settings["output_settings_em"].forcefield_cache
+        else:
+            ffcache = None
+
+        # Note: we block out the oechem backend for all systemgenerator
+        # linked operations to avoid any smiles operations that can
+        # go wrong when doing rdkit->OEchem roundtripping
+        with without_oechem_backend():
+            system_generator = system_creation.get_system_generator(
+                forcefield_settings=settings["forcefield_settings"],
+                integrator_settings=settings["integrator_settings"],
+                thermo_settings=settings["thermo_settings"],
+                cache=ffcache,
+                has_solvent=components["solvent_comp"] is not None,
+            )
+
+            # Force creation of smc templates so we can solvate later
+            for mol in smc_components.values():
+                system_generator.create_system(
+                    mol.to_topology().to_openmm(), molecules=[mol]
+                )
+
+            # c. get OpenMM Modeller + a resids dictionary for each component
+            stateA_modeller, comp_resids = system_creation.get_omm_modeller(
+                protein_comp=components["protein_comp"],
+                solvent_comp=components["solvent_comp"],
+                small_mols=smc_components,
+                omm_forcefield=system_generator.forcefield,
+                solvent_settings=settings["solvation_settings"],
+            )
+
+            # d. get topology & positions
+            # Note: roundtrip positions to remove vec3 issues
+            stateA_topology = stateA_modeller.getTopology()
+            stateA_positions = to_openmm(from_openmm(stateA_modeller.getPositions()))
+
+            # e. create the stateA System
+            stateA_system = system_generator.create_system(
+                stateA_topology,
+                molecules=[s.to_openff() for s in components["small_mols"]],
+            )
+
+            # 3. Create the Interchange object
+            barostat_idx, barostat = forces.find_forces(
+                stateA_system, ".*Barostat.*", only_one=True
+            )
+            stateA_system.removeForce(barostat_idx)
+
+            stateA_interchange = Interchange.from_openmm(
+                topology=stateA_topology,
+                system=stateA_system,
+                positions=stateA_positions,
+            )
+
+            for molecule_index, molecule in enumerate(
+                stateA_interchange.topology.molecules
+            ):
+                for atom in molecule.atoms:
+                    atom.metadata["residue_number"] = molecule_index + 1
+                if len([*smc_components.values()]) > 0:
+                    if molecule.n_atoms == [*smc_components.values()][0].n_atoms:
+                        for atom in molecule.atoms:
+                            atom.metadata["residue_name"] = "UNK"
+
+        return stateA_interchange
+
     def run(
         self, *, dry=False, verbose=True, scratch_basepath=None, shared_basepath=None
     ) -> dict[str, Any]:
-        """Run the MD simulation.
-
+        """
+        Write out all the files necessary to run the Gromacs MD simulation.
+        MDP files, Gromacs coordinate and topology files are written.
+        This SetupUnit does not actually run the MD simulation.
         Parameters
         ----------
         dry : bool
@@ -642,193 +816,45 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             shared_basepath = pathlib.Path(".")
 
         # 0. General setup and settings dependency resolution step
-
-        # Extract relevant settingsprotocol_settings:
-        protocol_settings: GromacsMDProtocolSettings = self._inputs["protocol"].settings
+        # Extract relevant protocol_settings:
+        settings = self._handle_settings()
 
         stateA = self._inputs["stateA"]
 
-        forcefield_settings: settings.OpenMMSystemGeneratorFFSettings = (
-            protocol_settings.forcefield_settings
-        )
-        thermo_settings: settings.ThermoSettings = protocol_settings.thermo_settings
-        solvation_settings: OpenMMSolvationSettings = (
-            protocol_settings.solvation_settings
-        )
-        charge_settings: BasePartialChargeSettings = (
-            protocol_settings.partial_charge_settings
-        )
-        sim_settings_em: EMSimulationSettings = protocol_settings.simulation_settings_em
-        sim_settings_nvt: NVTSimulationSettings = (
-            protocol_settings.simulation_settings_nvt
-        )
-        sim_settings_npt: NPTSimulationSettings = (
-            protocol_settings.simulation_settings_npt
-        )
-        output_settings_em: EMOutputSettings = protocol_settings.output_settings_em
-        output_settings_nvt: NVTOutputSettings = protocol_settings.output_settings_nvt
-        output_settings_npt: NPTOutputSettings = protocol_settings.output_settings_npt
-        integrator_settings = protocol_settings.integrator_settings
-
+        # Get the different components
         solvent_comp, protein_comp, small_mols = system_validation.get_components(
             stateA
         )
+        components = {
+            "solvent_comp": solvent_comp,
+            "protein_comp": protein_comp,
+            "small_mols": small_mols,
+        }
 
         # Raise an error when no SolventComponent is provided as this Protocol
         # currently does not support vacuum simulations
         if not solvent_comp:
             errmsg = (
                 "No SolventComponent provided. This protocol currently does"
-                "not support vacuum simulations."
+                " not support vacuum simulations."
             )
             raise ValueError(errmsg)
 
         # 1. Write out .mdp files
-        mdps = []
-        if protocol_settings.simulation_settings_em.nsteps > 0:
-            settings_dict = (
-                sim_settings_em.dict()
-                | output_settings_em.dict()
-                | pre_defined_settings
-                | pre_defined_settings_em
-            )
-            mdp = _dict2mdp(settings_dict, shared_basepath)
-            mdps.append(mdp)
-        if protocol_settings.simulation_settings_nvt.nsteps > 0:
-            settings_dict = (
-                sim_settings_nvt.dict()
-                | output_settings_nvt.dict()
-                | pre_defined_settings
-            )
-            mdp = _dict2mdp(settings_dict, shared_basepath)
-            mdps.append(mdp)
-        if protocol_settings.simulation_settings_npt.nsteps > 0:
-            settings_dict = (
-                sim_settings_npt.dict()
-                | output_settings_npt.dict()
-                | pre_defined_settings
-            )
-            mdp = _dict2mdp(settings_dict, shared_basepath)
-            mdps.append(mdp)
+        mdps = self._write_mdp_files(settings, shared_basepath)
 
-        # 2. Create stateA system
-        # Create a dictionary of OFFMol for each SMC for bookkeeping
-        smc_components: dict[SmallMoleculeComponent, OFFMolecule]
+        # 2. Create the Interchange object
+        stateA_interchange = self._create_interchange(
+            settings, components, shared_basepath
+        )
 
-        smc_components = {i: i.to_openff() for i in small_mols}
-
-        # a. assign partial charges to smcs
-        self._assign_partial_charges(charge_settings, smc_components)
-
-        # b. Validate that no constraints are specified which is needed
-        #    for Interchange to work properly
-        if forcefield_settings.constraints:
-            errmsg = (
-                "No constraints are allowed in this step of creating the "
-                "Gromacs input files since Interchange removes constrained "
-                f"bonds. Got constraints {forcefield_settings.constraints}."
-                "The constraints to be used within Gromacs can be specified in"
-                "the simulation settings, e.g. `sim_settings_em.constraints`."
-            )
-            raise ValueError(errmsg)
-
-        # c. get a system generator
-        if output_settings_em.forcefield_cache is not None:
-            ffcache = shared_basepath / output_settings_em.forcefield_cache
-        else:
-            ffcache = None
-
-        # Note: we block out the oechem backend for all systemgenerator
-        # linked operations to avoid any smiles operations that can
-        # go wrong when doing rdkit->OEchem roundtripping
-        with without_oechem_backend():
-            system_generator = system_creation.get_system_generator(
-                forcefield_settings=forcefield_settings,
-                integrator_settings=integrator_settings,
-                thermo_settings=thermo_settings,
-                cache=ffcache,
-                has_solvent=solvent_comp is not None,
-            )
-
-            # Force creation of smc templates so we can solvate later
-            for mol in smc_components.values():
-                system_generator.create_system(
-                    mol.to_topology().to_openmm(), molecules=[mol]
-                )
-
-            # d. get OpenMM Modeller + a resids dictionary for each component
-            stateA_modeller, comp_resids = system_creation.get_omm_modeller(
-                protein_comp=protein_comp,
-                solvent_comp=solvent_comp,
-                small_mols=smc_components,
-                omm_forcefield=system_generator.forcefield,
-                solvent_settings=solvation_settings,
-            )
-
-            # e. get topology & positions
-            # Note: roundtrip positions to remove vec3 issues
-            stateA_topology = stateA_modeller.getTopology()
-            stateA_positions = to_openmm(from_openmm(stateA_modeller.getPositions()))
-
-            # f. create the stateA System
-            stateA_system = system_generator.create_system(
-                stateA_topology,
-                molecules=[s.to_openff() for s in small_mols],
-            )
-
-            # 3. Create the Interchange object
-            barostat_idx, barostat = forces.find_forces(
-                stateA_system, ".*Barostat.*", only_one=True
-            )
-            stateA_system.removeForce(barostat_idx)
-
-            water = OFFMolecule.from_mapped_smiles("[O:1]([H:2])[H:3]")
-            cl = OFFMolecule.from_smiles("[Cl-]", name="Cl")
-            na = OFFMolecule.from_smiles("[Na+]", name="Na")
-
-            # For now we will be using the OpenMM Topology, not OpenFF
-            # unique_molecules = [water, cl, na]
-            #
-            # for mol in smc_components.values():
-            #     unique_molecules.append(mol)
-            # topology = Topology.from_openmm(
-            #     stateA_topology, unique_molecules=unique_molecules
-            # )
-
-            stateA_interchange = Interchange.from_openmm(
-                topology=stateA_topology,
-                system=stateA_system,
-                positions=stateA_positions,
-            )
-
-            for molecule_index, molecule in enumerate(
-                stateA_interchange.topology.molecules
-            ):
-                for atom in molecule.atoms:
-                    atom.metadata["residue_number"] = molecule_index + 1
-                if len([*smc_components.values()]) > 0:
-                    if molecule.n_atoms == [*smc_components.values()][0].n_atoms:
-                        for atom in molecule.atoms:
-                            atom.metadata["residue_name"] = "UNK"
-                # molecules don't know their residue metadata, so need to
-                # set on each atom
-                # https://github.com/openforcefield/openff-toolkit/issues/1554
-                elif molecule.is_isomorphic_with(water):
-                    for atom in molecule.atoms:
-                        atom.metadata["residue_name"] = "WAT"
-                elif molecule.is_isomorphic_with(na):
-                    for atom in molecule.atoms:
-                        atom.metadata["residue_name"] = "Na"
-                elif molecule.is_isomorphic_with(cl):
-                    for atom in molecule.atoms:
-                        atom.metadata["residue_name"] = "Cl"
-            # 4. Save .gro and .top file of the entire system
-            stateA_interchange.to_gro(shared_basepath / protocol_settings.gro)
-            stateA_interchange.to_top(shared_basepath / protocol_settings.top)
+        # 4. Save .gro and .top file of the entire system
+        stateA_interchange.to_gro(shared_basepath / settings["gro"])
+        stateA_interchange.to_top(shared_basepath / settings["top"])
 
         output = {
-            "system_gro": shared_basepath / protocol_settings.gro,
-            "system_top": shared_basepath / protocol_settings.top,
+            "system_gro": shared_basepath / settings["gro"],
+            "system_top": shared_basepath / settings["top"],
             "mdp_files": mdps,
         }
 
