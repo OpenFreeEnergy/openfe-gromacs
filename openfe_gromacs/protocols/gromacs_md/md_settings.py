@@ -208,7 +208,7 @@ class SimulationSettings(SettingsBaseModel):
     """
     ntomp: int = 1
     """
-    Number of threads to be used for OpenMP multithreading. 
+    Number of threads to be used for OpenMP multithreading.
     GROMACS must be compiled with OpenMP support if a value greater than 1 is
     set here.
     """
