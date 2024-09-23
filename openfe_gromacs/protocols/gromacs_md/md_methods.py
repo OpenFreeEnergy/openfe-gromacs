@@ -164,8 +164,6 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
         return None
 
-    # TODO: Change this to return the actual outputs
-
     def get_gro_filename(self) -> list[pathlib.Path]:
         """
         Get a list of paths to the .gro file
