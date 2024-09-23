@@ -41,7 +41,7 @@ def protocol_result(md_json):
 
 class TestGromacsMDProtocol(GufeTokenizableTestsMixin):
     cls = gromacs_md.GromacsMDProtocol
-    key = "GromacsMDProtocol-a32efc65b4df98bda778b1543fb34b70"
+    key = "GromacsMDProtocol-76fa290de019030035f2010e9155f57f"
     repr = f"<{key}>"
 
     @pytest.fixture()
@@ -51,10 +51,7 @@ class TestGromacsMDProtocol(GufeTokenizableTestsMixin):
 
 class TestMDSetupUnit(GufeTokenizableTestsMixin):
     cls = gromacs_md.GromacsMDSetupUnit
-    repr = (
-        "GromacsMDSetupUnit(Solvent MD SmallMoleculeComponent: "
-        "benzene repeat 0 generation 0)"
-    )
+    repr = "GromacsMDSetupUnit(Solvent MD SmallMoleculeComponent: benzene)"
     key = None
 
     @pytest.fixture()
@@ -67,7 +64,7 @@ class TestMDSetupUnit(GufeTokenizableTestsMixin):
 
 class TestGromacsMDProtocolResult(GufeTokenizableTestsMixin):
     cls = gromacs_md.GromacsMDProtocolResult
-    key = "GromacsMDProtocolResult-3e88fee8127fa7c04d8e5f1fa09d9c98"
+    key = "GromacsMDProtocolResult-f5a750033d57f5fd2177491cff9046c0"
     repr = f"<{key}>"
 
     @pytest.fixture()

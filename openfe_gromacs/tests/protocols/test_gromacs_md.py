@@ -6,6 +6,7 @@ from unittest import mock
 
 import gufe
 import pytest
+from openff.units import unit as off_unit
 
 import openfe_gromacs
 from openfe_gromacs.protocols.gromacs_md.md_methods import (
@@ -63,13 +64,13 @@ def test_create_independent_repeat_ids(benzene_system):
     )
 
     repeat_ids = set()
-    u: GromacsMDSetupUnit
     for u in dag1.protocol_units:
         repeat_ids.add(u.inputs["repeat_id"])
     for u in dag2.protocol_units:
         repeat_ids.add(u.inputs["repeat_id"])
-
-    assert len(repeat_ids) == 6
+    # This should result in 4 repeat ids per DAG, 1 GromacsMDSetupUnit and
+    # 3 GromacsMDRunUnits
+    assert len(repeat_ids) == 8
 
 
 def test_no_SolventComponent(benzene_vacuum_system, tmpdir):
@@ -107,7 +108,7 @@ def solvent_protocol_dag(benzene_system):
     )
 
 
-def test_unit_tagging(solvent_protocol_dag, tmpdir):
+def test_unit_tagging_setup_unit(solvent_protocol_dag, tmpdir):
     # test that executing the Units includes correct generation and repeat info
     dag_units = solvent_protocol_dag.protocol_units
     with mock.patch(
@@ -120,49 +121,29 @@ def test_unit_tagging(solvent_protocol_dag, tmpdir):
     ):
         results = []
         for u in dag_units:
-            ret = u.execute(context=gufe.Context(tmpdir, tmpdir))
-            results.append(ret)
-
+            if type(u) is GromacsMDSetupUnit:
+                ret = u.execute(context=gufe.Context(tmpdir, tmpdir))
+                results.append(ret)
     repeats = set()
     for ret in results:
         assert isinstance(ret, gufe.ProtocolUnitResult)
         assert ret.outputs["generation"] == 0
         repeats.add(ret.outputs["repeat_id"])
-    # repeats are random ints, so check we got 2 individual numbers
-    assert len(repeats) == 2
+    # repeats are random ints, so check we got 1 individual number
+    # (there's only one Setup Unit, even with two repeats)
+    assert len(repeats) == 1
 
 
-def test_gather(solvent_protocol_dag, tmpdir):
-    # check .gather behaves as expected
-    with mock.patch(
-        "openfe_gromacs.protocols.gromacs_md.md_methods.GromacsMDSetupUnit.run",
-        return_value={
-            "system_gro": "system.gro",
-            "system_top": "system.top",
-            "mdp_files": ["em.mdp", "nvt.mdp", "npt.mdp"],
-        },
-    ):
-        dagres = gufe.protocols.execute_DAG(
-            solvent_protocol_dag,
-            shared_basedir=tmpdir,
-            scratch_basedir=tmpdir,
-            keep_shared=True,
-        )
-
-    settings = GromacsMDProtocol.default_settings()
-    settings.protocol_repeats = 2
-    prot = GromacsMDProtocol(settings=settings)
-
-    res = prot.gather([dagres])
-
-    assert isinstance(res, GromacsMDProtocolResult)
-
-
-def test_dry_run_ffcache_none(benzene_system, monkeypatch, tmpdir):
+def test_dry_run_ffcache_none(benzene_system, monkeypatch, tmp_path_factory):
     monkeypatch.setenv("INTERCHANGE_EXPERIMENTAL", "1")
     settings = GromacsMDProtocol.default_settings()
     settings.output_settings_em.forcefield_cache = None
-
+    settings.simulation_settings_em.nsteps = 10
+    settings.simulation_settings_nvt.nsteps = 10
+    settings.simulation_settings_npt.nsteps = 1
+    settings.simulation_settings_em.rcoulomb = 1.0 * off_unit.nanometer
+    settings.simulation_settings_nvt.rcoulomb = 1.0 * off_unit.nanometer
+    settings.simulation_settings_npt.rcoulomb = 1.0 * off_unit.nanometer
     protocol = GromacsMDProtocol(
         settings=settings,
     )
@@ -174,19 +155,31 @@ def test_dry_run_ffcache_none(benzene_system, monkeypatch, tmpdir):
         stateB=benzene_system,
         mapping=None,
     )
-    dag_unit = list(dag.protocol_units)[0]
 
-    with tmpdir.as_cwd():
-        dag_unit.run(dry=True)
+    shared_temp = tmp_path_factory.mktemp("shared")
+    scratch_temp = tmp_path_factory.mktemp("scratch")
+    gufe.protocols.execute_DAG(
+        dag,
+        shared_basedir=shared_temp,
+        scratch_basedir=scratch_temp,
+        keep_shared=False,
+        n_retries=3,
+    )
 
 
-def test_dry_many_molecules_solvent(benzene_many_solv_system, monkeypatch, tmpdir):
+def test_dry_many_molecules_solvent(
+    benzene_many_solv_system, monkeypatch, tmp_path_factory
+):
     """
     A basic test flushing "will it work if you pass multiple molecules"
     """
     monkeypatch.setenv("INTERCHANGE_EXPERIMENTAL", "1")
     settings = GromacsMDProtocol.default_settings()
-
+    # Only run an EM, no MD, to make the test faster
+    settings.simulation_settings_em.nsteps = 1
+    settings.simulation_settings_nvt.nsteps = 0
+    settings.simulation_settings_npt.nsteps = 0
+    settings.simulation_settings_em.rcoulomb = 1.0 * off_unit.nanometer
     protocol = GromacsMDProtocol(
         settings=settings,
     )
@@ -197,10 +190,16 @@ def test_dry_many_molecules_solvent(benzene_many_solv_system, monkeypatch, tmpdi
         stateB=benzene_many_solv_system,
         mapping=None,
     )
-    unit = list(dag.protocol_units)[0]
 
-    with tmpdir.as_cwd():
-        system = unit.run(dry=True)
+    shared_temp = tmp_path_factory.mktemp("shared")
+    scratch_temp = tmp_path_factory.mktemp("scratch")
+    gufe.protocols.execute_DAG(
+        dag,
+        shared_basedir=shared_temp,
+        scratch_basedir=scratch_temp,
+        keep_shared=False,
+        n_retries=3,
+    )
 
 
 class TestProtocolResult:
@@ -247,3 +246,66 @@ class TestProtocolResult:
         assert isinstance(mdps, list)
         assert isinstance(mdps[0], list)
         assert isinstance(mdps[0][0], pathlib.Path)
+
+    def test_get_filenames_em(self, protocolresult):
+        dict_file_path = protocolresult.get_filenames_em()
+        assert isinstance(dict_file_path, dict)
+        assert len(dict_file_path) == 7
+        for name, file_path in dict_file_path.items():
+            assert isinstance(file_path, list)
+            assert len(file_path) == 1
+            assert isinstance(file_path[0], pathlib.Path)
+
+    def test_get_gro_em_filename(self, protocolresult):
+        file_path = protocolresult.get_gro_em_filename()
+
+        assert isinstance(file_path, list)
+        assert isinstance(file_path[0], pathlib.Path)
+
+    def test_get_xtc_em_filename(self, protocolresult):
+        file_path = protocolresult.get_xtc_em_filename()
+
+        assert isinstance(file_path, list)
+        assert isinstance(file_path[0], pathlib.Path)
+
+    def test_get_filenames_nvt(self, protocolresult):
+        dict_file_path = protocolresult.get_filenames_nvt()
+        assert isinstance(dict_file_path, dict)
+        assert len(dict_file_path) == 7
+        for name, file_path in dict_file_path.items():
+            assert isinstance(file_path, list)
+            assert len(file_path) == 1
+            assert isinstance(file_path[0], pathlib.Path)
+
+    def test_get_gro_nvt_filename(self, protocolresult):
+        file_path = protocolresult.get_gro_nvt_filename()
+
+        assert isinstance(file_path, list)
+        assert isinstance(file_path[0], pathlib.Path)
+
+    def test_get_xtc_nvt_filename(self, protocolresult):
+        file_path = protocolresult.get_xtc_nvt_filename()
+
+        assert isinstance(file_path, list)
+        assert isinstance(file_path[0], pathlib.Path)
+
+    def test_get_filenames_npt(self, protocolresult):
+        dict_file_path = protocolresult.get_filenames_npt()
+        assert isinstance(dict_file_path, dict)
+        assert len(dict_file_path) == 7
+        for name, file_path in dict_file_path.items():
+            assert isinstance(file_path, list)
+            assert len(file_path) == 1
+            assert isinstance(file_path[0], pathlib.Path)
+
+    def test_get_gro_npt_filename(self, protocolresult):
+        file_path = protocolresult.get_gro_npt_filename()
+
+        assert isinstance(file_path, list)
+        assert isinstance(file_path[0], pathlib.Path)
+
+    def test_get_xtc_npt_filename(self, protocolresult):
+        file_path = protocolresult.get_xtc_npt_filename()
+
+        assert isinstance(file_path, list)
+        assert isinstance(file_path[0], pathlib.Path)

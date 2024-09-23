@@ -9,6 +9,7 @@ This module implements the settings necessary to run MD simulations using
 """
 from typing import Literal, Optional
 
+import pint
 from gufe.settings import OpenMMSystemGeneratorFFSettings, SettingsBaseModel
 from openfe.protocols.openmm_utils.omm_settings import (
     IntegratorSettings,
@@ -205,6 +206,12 @@ class SimulationSettings(SettingsBaseModel):
     Number of iterations to correct for rotational lengthening in LINCS.
     Default 1.
     """
+    ntomp: int = 1
+    """
+    Number of threads to be used for OpenMP multithreading.
+    GROMACS must be compiled with OpenMP support if a value greater than 1 is
+    set here.
+    """
 
     @validator(
         "nsteps",
@@ -265,6 +272,41 @@ class OutputSettings(SettingsBaseModel):
     """
     Filename for the mdp file for running simulations in Gromacs.
     Default 'em.mdp'
+    """
+    tpr_file: str = "em.tpr"
+    """
+    Filename for the tpr file for running simulations in Gromacs.
+    Default 'em.tpr'
+    """
+    gro_file: str = "em.gro"
+    """
+    Filename for the output .gro file from a Gromacs run.
+    Default 'em.gro'
+    """
+    edr_file: str = "em.edr"
+    """
+    Filename for the output energy (.edr) file from a Gromacs simulation.
+    Default 'em.edr'
+    """
+    log_file: str = "em.log"
+    """
+    Filename for the output .log file from a Gromacs simulation.
+    Default 'em.tpr'
+    """
+    trr_file: str = "em.trr"
+    """
+    Filename for the output trajectory (.trr) file from a Gromacs simulation.
+    Default 'em.trr'
+    """
+    xtc_file: str = "em.xtc"
+    """
+    Filename for the output trajectory file (.xtc) from a Gromacs simulation.
+    Default 'em.xtc'
+    """
+    cpt_file: str = "em.cpt"
+    """
+    Filename for the checkpoint file (.cpt) from a Gromacs simulation.
+    Default 'em.cpt'
     """
     nstxout: int = 0
     """

@@ -11,12 +11,15 @@ simulation using OpenMM tools and Gromacs.
 from __future__ import annotations
 
 import logging
+import os
 import pathlib
+import subprocess
 import uuid
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any
 
+import gmxapi as gmx
 import gufe
 import pint
 from gufe import ChemicalSystem, SmallMoleculeComponent, settings
@@ -69,13 +72,6 @@ PRE_DEFINED_SETTINGS = {
     "lj_pme_comb_rule": "Geometric",
     "ewald_geometry": "3d",
     "epsilon_surface": 0,
-    "nsttcouple": -1,
-    "tc_grps": "system",
-    "tau_t": 2.0 * unit.picosecond,
-    "pcoupltype": "isotropic",
-    "nstpcouple": -1,
-    "tau_p": 5 * unit.picosecond,
-    "compressibility": 4.5e-05 / unit.bar,
     "lincs_warnangle": 30 * unit.degree,
     "continuation": "no",
     "morse": "no",
@@ -84,6 +80,16 @@ PRE_DEFINED_SETTINGS = {
 PRE_DEFINED_SETTINGS_EM = {
     "emtol": 10.0 * unit.kilojoule / (unit.mole * unit.nanometer),
     "emstep": 0.01 * unit.nanometer,
+}
+
+PRE_DEFINED_SETTINGS_MD = {
+    "nsttcouple": -1,
+    "tc_grps": "system",
+    "tau_t": 2.0 * unit.picosecond,
+    "pcoupltype": "isotropic",
+    "nstpcouple": -1,
+    "tau_p": 5 * unit.picosecond,
+    "compressibility": 4.5e-05 / unit.bar,
 }
 
 
@@ -97,8 +103,20 @@ def _dict2mdp(settings_dict: dict, shared_basepath):
     """
     filename = shared_basepath / settings_dict["mdp_file"]
     # Remove non-mdp settings from the dictionary
-    settings_dict.pop("forcefield_cache")
-    settings_dict.pop("mdp_file")
+    non_mdps = [
+        "forcefield_cache",
+        "mdp_file",
+        "tpr_file",
+        "trr_file",
+        "xtc_file",
+        "gro_file",
+        "edr_file",
+        "log_file",
+        "cpt_file",
+        "ntomp",
+    ]
+    for setting in non_mdps:
+        settings_dict.pop(setting)
     with open(filename, "w") as f:
         for key, value in settings_dict.items():
             # First convert units to units in the mdp file, then remove units
@@ -146,8 +164,6 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
         return None
 
-    # TODO: Change this to return the actual outputs
-
     def get_gro_filename(self) -> list[pathlib.Path]:
         """
         Get a list of paths to the .gro file
@@ -157,7 +173,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         traj : list[pathlib.Path]
           list of paths (pathlib.Path) to the simulation trajectory
         """
-        gro = [pus[0].outputs["system_gro"] for pus in self.data.values()]
+        gro = [
+            pus[0].outputs["system_gro"]
+            for pus in self.data.values()
+            if "GromacsMDSetupUnit" in pus[0].source_key
+        ]
 
         return gro
 
@@ -170,7 +190,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         traj : list[pathlib.Path]
           list of paths (pathlib.Path) to the simulation trajectory
         """
-        top = [pus[0].outputs["system_top"] for pus in self.data.values()]
+        top = [
+            pus[0].outputs["system_top"]
+            for pus in self.data.values()
+            if "GromacsMDSetupUnit" in pus[0].source_key
+        ]
 
         return top
 
@@ -184,9 +208,238 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
           list of paths (pathlib.Path) to the mdp files for energy minimization,
           NVT and NPT MD runs
         """
-        mdps = [pus[0].outputs["mdp_files"] for pus in self.data.values()]
+        mdps = [
+            pus[0].outputs["mdp_files"]
+            for pus in self.data.values()
+            if "GromacsMDSetupUnit" in pus[0].source_key
+        ]
 
         return mdps
+
+    def get_filenames_em(self) -> dict[str, list[pathlib.Path]]:
+        """
+        Get a list of paths to the files of the
+        energy minimization
+        Following file formats are stored in the dictionary under these keys:
+        - "gro_em"
+        - "tpr_em"
+        - "trr_em"
+        - "xtc_em"
+        - "edr_em"
+        - "log_em"
+        - "cpt_em"
+
+        Returns
+        -------
+        dict_em : dict[str, list[pathlib.Path]]
+          dictionary containing list of paths (pathlib.Path)
+          to the output files
+        """
+        file_keys = [
+            "gro_em",
+            "tpr_em",
+            "trr_em",
+            "xtc_em",
+            "edr_em",
+            "log_em",
+            "cpt_em",
+        ]
+        dict_em = {}
+        for file in file_keys:
+
+            file_path = [
+                pus[0].outputs[file]
+                for pus in self.data.values()
+                if "GromacsMDRunUnit" in pus[0].source_key
+            ]
+            dict_em[file] = file_path
+        return dict_em
+
+    def get_gro_em_filename(self) -> list[pathlib.Path]:
+        """
+        Get a list of paths to the .gro file, last frame of the
+        energy minimization
+
+        Returns
+        -------
+        gro : list[pathlib.Path]
+          list of paths (pathlib.Path) to the output .gro file
+        """
+        gro = [
+            pus[0].outputs["gro_em"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
+
+        return gro
+
+    def get_xtc_em_filename(self) -> list[pathlib.Path]:
+        """
+        Get a list of paths to the .xtc file of the
+        energy minimization
+
+        Returns
+        -------
+        file_path : list[pathlib.Path]
+          list of paths (pathlib.Path) to the output .xtc file
+        """
+        file_path = [
+            pus[0].outputs["xtc_em"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
+
+        return file_path
+
+    def get_filenames_nvt(self) -> dict[str, list[pathlib.Path]]:
+        """
+        Get a list of paths to the files of the
+        NVT equilibration
+        Following file formats are stored in the dictionary under these keys:
+        - "gro_nvt"
+        - "tpr_nvt"
+        - "trr_nvt"
+        - "xtc_nvt"
+        - "edr_nvt"
+        - "log_nvt"
+        - "cpt_nvt"
+
+        Returns
+        -------
+        dict_nvt : dict[str, list[pathlib.Path]]
+          dictionary containing list of paths (pathlib.Path)
+          to the output files
+        """
+        file_keys = [
+            "gro_nvt",
+            "tpr_nvt",
+            "trr_nvt",
+            "xtc_nvt",
+            "edr_nvt",
+            "log_nvt",
+            "cpt_nvt",
+        ]
+        dict_nvt = {}
+        for file in file_keys:
+
+            file_path = [
+                pus[0].outputs[file]
+                for pus in self.data.values()
+                if "GromacsMDRunUnit" in pus[0].source_key
+            ]
+            dict_nvt[file] = file_path
+        return dict_nvt
+
+    def get_gro_nvt_filename(self) -> list[pathlib.Path]:
+        """
+        Get a list of paths to the .gro file, last frame of the
+        NVT equilibration
+
+        Returns
+        -------
+        gro : list[pathlib.Path]
+          list of paths (pathlib.Path) to the output .gro file
+        """
+        gro = [
+            pus[0].outputs["gro_nvt"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
+
+        return gro
+
+    def get_xtc_nvt_filename(self) -> list[pathlib.Path]:
+        """
+        Get a list of paths to the .xtc file of the
+        NVT equilibration
+
+        Returns
+        -------
+        file_path : list[pathlib.Path]
+          list of paths (pathlib.Path) to the output .xtc file
+        """
+        file_path = [
+            pus[0].outputs["xtc_nvt"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
+
+        return file_path
+
+    def get_filenames_npt(self) -> dict[str, list[pathlib.Path]]:
+        """
+        Get a list of paths to the files of the
+        NPT MD simulation
+        Following file formats are stored in the dictionary under these keys:
+        - "gro_npt"
+        - "tpr_npt"
+        - "trr_npt"
+        - "xtc_npt"
+        - "edr_npt"
+        - "log_npt"
+        - "cpt_npt"
+
+        Returns
+        -------
+        dict_npt : dict[str, list[pathlib.Path]]
+          dictionary containing list of paths (pathlib.Path)
+          to the output files
+        """
+        file_keys = [
+            "gro_npt",
+            "tpr_npt",
+            "trr_npt",
+            "xtc_npt",
+            "edr_npt",
+            "log_npt",
+            "cpt_npt",
+        ]
+        dict_npt = {}
+        for file in file_keys:
+
+            file_path = [
+                pus[0].outputs[file]
+                for pus in self.data.values()
+                if "GromacsMDRunUnit" in pus[0].source_key
+            ]
+            dict_npt[file] = file_path
+        return dict_npt
+
+    def get_gro_npt_filename(self) -> list[pathlib.Path]:
+        """
+        Get a list of paths to the .gro file, last frame of the
+        NPT MD simulation
+
+        Returns
+        -------
+        gro : list[pathlib.Path]
+          list of paths (pathlib.Path) to the output .gro file
+        """
+        gro = [
+            pus[0].outputs["gro_npt"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
+
+        return gro
+
+    def get_xtc_npt_filename(self) -> list[pathlib.Path]:
+        """
+        Get a list of paths to the .xtc file of the
+        NPT MD simulation
+
+        Returns
+        -------
+        file_path : list[pathlib.Path]
+          list of paths (pathlib.Path) to the output .xtc file
+        """
+        file_path = [
+            pus[0].outputs["xtc_npt"]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key
+        ]
+
+        return file_path
 
 
 class GromacsMDProtocol(gufe.Protocol):
@@ -246,12 +499,33 @@ class GromacsMDProtocol(gufe.Protocol):
             ),
             output_settings_em=EMOutputSettings(
                 mdp_file="em.mdp",
+                tpr_file="em.tpr",
+                gro_file="em.gro",
+                trr_file="em.trr",
+                xtc_file="em.xtc",
+                edr_file="em.edr",
+                cpt_file="em.cpt",
+                log_file="em.log",
             ),
             output_settings_nvt=NVTOutputSettings(
                 mdp_file="nvt.mdp",
+                tpr_file="nvt.tpr",
+                gro_file="nvt.gro",
+                trr_file="nvt.trr",
+                xtc_file="nvt.xtc",
+                edr_file="nvt.edr",
+                cpt_file="nvt.cpt",
+                log_file="nvt.log",
             ),
             output_settings_npt=NPTOutputSettings(
                 mdp_file="npt.mdp",
+                tpr_file="npt.tpr",
+                gro_file="npt.gro",
+                trr_file="npt.trr",
+                xtc_file="npt.xtc",
+                edr_file="npt.edr",
+                cpt_file="npt.cpt",
+                log_file="npt.log",
                 nstxout=5000,
                 nstvout=5000,
                 nstfout=5000,
@@ -295,16 +569,24 @@ class GromacsMDProtocol(gufe.Protocol):
 
         # our DAG has no dependencies, so just list units
         n_repeats = self.settings.protocol_repeats
-        units = [
-            GromacsMDSetupUnit(
+        setup = GromacsMDSetupUnit(
+            protocol=self,
+            stateA=stateA,
+            generation=0,
+            repeat_id=int(uuid.uuid4()),
+            name=f"{system_name}",
+        )
+        run = [
+            GromacsMDRunUnit(
                 protocol=self,
-                stateA=stateA,
+                setup=setup,
                 generation=0,
                 repeat_id=int(uuid.uuid4()),
                 name=f"{system_name} repeat {i} generation 0",
             )
             for i in range(n_repeats)
         ]
+        units = [setup] + run
 
         return units
 
@@ -466,6 +748,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 settings["sim_settings_nvt"].dict()
                 | settings["output_settings_nvt"].dict()
                 | PRE_DEFINED_SETTINGS
+                | PRE_DEFINED_SETTINGS_MD
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
@@ -474,6 +757,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 settings["sim_settings_npt"].dict()
                 | settings["output_settings_npt"].dict()
                 | PRE_DEFINED_SETTINGS
+                | PRE_DEFINED_SETTINGS_MD
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
             mdps.append(mdp)
@@ -674,4 +958,265 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             "repeat_id": self._inputs["repeat_id"],
             "generation": self._inputs["generation"],
             **outputs,
+        }
+
+
+class GromacsMDRunUnit(gufe.ProtocolUnit):
+    """
+    Protocol unit for running plain MD simulations (NonTransformation)
+    in Gromacs.
+    """
+
+    @staticmethod
+    def _run_gromacs(
+        mdp: pathlib.Path,
+        in_gro: pathlib.Path,
+        top: pathlib.Path,
+        tpr: pathlib.Path,
+        out_gro: str,
+        xtc: str,
+        trr: str,
+        cpt: str,
+        log: str,
+        edr: str,
+        ntomp: int,
+        shared_basebath: pathlib.Path,
+    ):
+        """
+        Running Gromacs gmx grompp and gmx mdrun commands using subprocess.
+
+        Parameters
+        ----------
+        :param mdp: pathlib.Path
+          Path to the mdp file
+        :param in_gro: pathlib.Path
+        :param top: pathlib.Path
+        :param tpr: pathlib.Path
+        :param out_gro: str
+        :param xtc: str
+        :param trr: str
+        :param cpt: str
+        :param log: str
+        :param edr: str
+        :param shared_basebath: Pathlike, optional
+          Where to run the calculation, defaults to current working directory
+        """
+        assert os.path.exists(in_gro)
+        assert os.path.exists(top)
+        assert os.path.exists(mdp)
+        p = subprocess.Popen(
+            [
+                "gmx",
+                "grompp",
+                "-f",
+                mdp,
+                "-c",
+                in_gro,
+                "-p",
+                top,
+                "-o",
+                tpr,
+            ],
+            stdin=subprocess.PIPE,
+        )
+        p.wait()
+        assert os.path.exists(tpr)
+        p = subprocess.Popen(
+            [
+                "gmx",
+                "mdrun",
+                "-s",
+                tpr.name,
+                "-cpo",
+                cpt,
+                "-o",
+                trr,
+                "-x",
+                xtc,
+                "-c",
+                out_gro,
+                "-e",
+                edr,
+                "-g",
+                log,
+                "-ntmpi",
+                "1",
+                "-ntomp",
+                str(ntomp),
+            ],
+            stdin=subprocess.PIPE,
+            cwd=shared_basebath,
+        )
+        p.wait()
+        return
+
+    def _execute(
+        self,
+        ctx: gufe.Context,
+        *,
+        protocol,
+        setup,
+        verbose=True,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """
+        Execute the simulation part of the Gromacs MD protocol.
+
+        Parameters
+        ----------
+        ctx : gufe.protocols.protocolunit.Context
+            The gufe context for the unit.
+        protocol : gufe.protocols.Protocol
+            The Protocol used to create this Unit. Contains key
+            information
+            such as the settings.
+        setup : gufe.protocols.ProtocolUnit
+            The SetupUnit
+
+        Returns
+        -------
+        dict : dict[str, str]
+            Dictionary with paths to ...
+        """
+        log_system_probe(logging.INFO, paths=[ctx.scratch])
+
+        if ctx.shared is None:
+            # use cwd
+            shared_basepath = pathlib.Path(".")
+        else:
+            shared_basepath = ctx.shared
+
+        protocol_settings: GromacsMDProtocolSettings = self._inputs["protocol"].settings
+        sim_settings_em: EMSimulationSettings = protocol_settings.simulation_settings_em
+        sim_settings_nvt: NVTSimulationSettings = (
+            protocol_settings.simulation_settings_nvt
+        )
+        sim_settings_npt: NPTSimulationSettings = (
+            protocol_settings.simulation_settings_npt
+        )
+        output_settings_em: EMOutputSettings = protocol_settings.output_settings_em
+        output_settings_nvt: NVTOutputSettings = protocol_settings.output_settings_nvt
+        output_settings_npt: NPTOutputSettings = protocol_settings.output_settings_npt
+
+        input_gro = setup.outputs["system_gro"]
+        input_top = setup.outputs["system_top"]
+        mdp_files = setup.outputs["mdp_files"]
+
+        # Run energy minimization
+        if sim_settings_em.nsteps > 0:
+            if verbose:
+                self.logger.info("Running energy minimization")
+            mdp = [
+                x
+                for x in mdp_files
+                if str(x).split("/")[-1] == output_settings_em.mdp_file
+            ]
+            tpr = pathlib.Path(ctx.shared / output_settings_em.tpr_file)
+            assert len(mdp) == 1
+            self._run_gromacs(
+                mdp[0],
+                input_gro,
+                input_top,
+                tpr,
+                output_settings_em.gro_file,
+                output_settings_em.xtc_file,
+                output_settings_em.trr_file,
+                output_settings_em.cpt_file,
+                output_settings_em.log_file,
+                output_settings_em.edr_file,
+                sim_settings_em.ntomp,
+                ctx.shared,
+            )
+
+        # ToDo: Should we disallow running MD without EM?
+        # Run NVT
+        if sim_settings_nvt.nsteps > 0:
+            if verbose:
+                self.logger.info("Running an NVT MD simulation")
+            mdp = [
+                x
+                for x in mdp_files
+                if str(x).split("/")[-1] == output_settings_nvt.mdp_file
+            ]
+            tpr = pathlib.Path(ctx.shared / output_settings_nvt.tpr_file)
+            assert len(mdp) == 1
+            # If EM was run, use the output from that to run NVT MD
+            if sim_settings_em.nsteps > 0:
+                gro = pathlib.Path(ctx.shared / output_settings_em.gro_file)
+            else:
+                gro = input_gro
+            self._run_gromacs(
+                mdp[0],
+                gro,
+                input_top,
+                tpr,
+                output_settings_nvt.gro_file,
+                output_settings_nvt.xtc_file,
+                output_settings_nvt.trr_file,
+                output_settings_nvt.cpt_file,
+                output_settings_nvt.log_file,
+                output_settings_nvt.edr_file,
+                sim_settings_nvt.ntomp,
+                ctx.shared,
+            )
+
+        # Run NPT MD simulation
+        if sim_settings_npt.nsteps > 0:
+            if verbose:
+                self.logger.info("Running an NPT MD simulation")
+            mdp = [
+                x
+                for x in mdp_files
+                if str(x).split("/")[-1] == output_settings_npt.mdp_file
+            ]
+            tpr = pathlib.Path(ctx.shared / output_settings_npt.tpr_file)
+            assert len(mdp) == 1
+            # If EM and/or NVT MD was run, use the output coordinate file
+            # from that to run NPT MD
+            if sim_settings_em.nsteps > 0:
+                if sim_settings_nvt.nsteps > 0:
+                    gro = pathlib.Path(ctx.shared / output_settings_nvt.gro_file)
+                else:
+                    gro = pathlib.Path(ctx.shared / output_settings_em.gro_file)
+            else:
+                gro = input_gro
+            self._run_gromacs(
+                mdp[0],
+                gro,
+                input_top,
+                tpr,
+                output_settings_npt.gro_file,
+                output_settings_npt.xtc_file,
+                output_settings_npt.trr_file,
+                output_settings_npt.cpt_file,
+                output_settings_npt.log_file,
+                output_settings_npt.edr_file,
+                sim_settings_npt.ntomp,
+                ctx.shared,
+            )
+
+        return {
+            "repeat_id": self._inputs["repeat_id"],
+            "generation": self._inputs["generation"],
+            "gro_em": shared_basepath / output_settings_em.gro_file,
+            "tpr_em": shared_basepath / output_settings_em.tpr_file,
+            "trr_em": shared_basepath / output_settings_em.trr_file,
+            "xtc_em": shared_basepath / output_settings_em.xtc_file,
+            "edr_em": shared_basepath / output_settings_em.edr_file,
+            "log_em": shared_basepath / output_settings_em.log_file,
+            "cpt_em": shared_basepath / output_settings_em.cpt_file,
+            "gro_nvt": shared_basepath / output_settings_nvt.gro_file,
+            "tpr_nvt": shared_basepath / output_settings_nvt.tpr_file,
+            "trr_nvt": shared_basepath / output_settings_nvt.trr_file,
+            "xtc_nvt": shared_basepath / output_settings_nvt.xtc_file,
+            "edr_nvt": shared_basepath / output_settings_nvt.edr_file,
+            "log_nvt": shared_basepath / output_settings_nvt.log_file,
+            "cpt_nvt": shared_basepath / output_settings_nvt.cpt_file,
+            "gro_npt": shared_basepath / output_settings_npt.gro_file,
+            "tpr_npt": shared_basepath / output_settings_npt.tpr_file,
+            "trr_npt": shared_basepath / output_settings_npt.trr_file,
+            "xtc_npt": shared_basepath / output_settings_npt.xtc_file,
+            "edr_npt": shared_basepath / output_settings_npt.edr_file,
+            "log_npt": shared_basepath / output_settings_npt.log_file,
+            "cpt_npt": shared_basepath / output_settings_npt.cpt_file,
         }
