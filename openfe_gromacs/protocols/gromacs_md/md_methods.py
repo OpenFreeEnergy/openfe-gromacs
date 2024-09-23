@@ -1111,7 +1111,6 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             ]
             tpr = pathlib.Path(ctx.shared / output_settings_em.tpr_file)
             assert len(mdp) == 1
-            # ToDo: If no traj should be written out, don't write empty file?
             self._run_gromacs(
                 mdp[0],
                 input_gro,
@@ -1138,11 +1137,14 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             ]
             tpr = pathlib.Path(ctx.shared / output_settings_nvt.tpr_file)
             assert len(mdp) == 1
-            # ToDo: Change .gro to output from EM if we do EM first,
-            # else original .gro file
+            # If EM was run, use the output from that to run NVT MD
+            if sim_settings_em.nsteps > 0:
+                gro = pathlib.Path(ctx.shared / output_settings_em.gro_file)
+            else:
+                gro = input_gro
             self._run_gromacs(
                 mdp[0],
-                input_gro,
+                gro,
                 input_top,
                 tpr,
                 output_settings_nvt.gro_file,
@@ -1165,9 +1167,20 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             ]
             tpr = pathlib.Path(ctx.shared / output_settings_npt.tpr_file)
             assert len(mdp) == 1
+            # If EM and/or NVT MD was run, use the output coordinate file
+            # from that to run NPT MD
+            if sim_settings_em.nsteps > 0:
+                if sim_settings_nvt.nsteps > 0:
+                    gro = pathlib.Path(
+                        ctx.shared / output_settings_nvt.gro_file)
+                else:
+                    gro = pathlib.Path(
+                        ctx.shared / output_settings_em.gro_file)
+            else:
+                gro = input_gro
             self._run_gromacs(
                 mdp[0],
-                input_gro,
+                gro,
                 input_top,
                 tpr,
                 output_settings_npt.gro_file,
