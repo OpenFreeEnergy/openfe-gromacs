@@ -1171,11 +1171,9 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             # from that to run NPT MD
             if sim_settings_em.nsteps > 0:
                 if sim_settings_nvt.nsteps > 0:
-                    gro = pathlib.Path(
-                        ctx.shared / output_settings_nvt.gro_file)
+                    gro = pathlib.Path(ctx.shared / output_settings_nvt.gro_file)
                 else:
-                    gro = pathlib.Path(
-                        ctx.shared / output_settings_em.gro_file)
+                    gro = pathlib.Path(ctx.shared / output_settings_em.gro_file)
             else:
                 gro = input_gro
             self._run_gromacs(
