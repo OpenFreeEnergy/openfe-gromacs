@@ -206,6 +206,12 @@ class SimulationSettings(SettingsBaseModel):
     Number of iterations to correct for rotational lengthening in LINCS.
     Default 1.
     """
+    ntomp: int = 1
+    """
+    Number of threads to be used for OpenMP multithreading. 
+    GROMACS must be compiled with OpenMP support if a value greater than 1 is
+    set here.
+    """
 
     @validator(
         "nsteps",

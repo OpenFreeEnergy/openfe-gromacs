@@ -113,6 +113,7 @@ def _dict2mdp(settings_dict: dict, shared_basepath):
         "edr_file",
         "log_file",
         "cpt_file",
+        "ntomp",
     ]
     for setting in non_mdps:
         settings_dict.pop(setting)
@@ -980,6 +981,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         cpt: str,
         log: str,
         edr: str,
+        ntomp: int,
         shared_basebath: pathlib.Path,
     ):
         """
@@ -1039,6 +1041,10 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 edr,
                 "-g",
                 log,
+                "-ntmpi",
+                "1",
+                "-ntomp",
+                str(ntomp),
             ],
             stdin=subprocess.PIPE,
             cwd=shared_basebath,
@@ -1082,8 +1088,6 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         else:
             shared_basepath = ctx.shared
 
-        # ToDo: Figure out how to specify the order in which to run things
-        # ToDo: Add output settings, e.g. name of output files
         protocol_settings: GromacsMDProtocolSettings = self._inputs["protocol"].settings
         sim_settings_em: EMSimulationSettings = protocol_settings.simulation_settings_em
         sim_settings_nvt: NVTSimulationSettings = (
@@ -1122,6 +1126,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 output_settings_em.cpt_file,
                 output_settings_em.log_file,
                 output_settings_em.edr_file,
+                sim_settings_em.ntomp,
                 ctx.shared,
             )
 
@@ -1153,6 +1158,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 output_settings_nvt.cpt_file,
                 output_settings_nvt.log_file,
                 output_settings_nvt.edr_file,
+                sim_settings_nvt.ntomp,
                 ctx.shared,
             )
 
@@ -1187,6 +1193,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 output_settings_npt.cpt_file,
                 output_settings_npt.log_file,
                 output_settings_npt.edr_file,
+                sim_settings_npt.ntomp,
                 ctx.shared,
             )
 
