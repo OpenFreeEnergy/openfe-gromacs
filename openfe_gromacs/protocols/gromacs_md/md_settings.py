@@ -14,7 +14,6 @@ from gufe.settings import OpenMMSystemGeneratorFFSettings, SettingsBaseModel
 from openfe.protocols.openmm_utils.omm_settings import (
     IntegratorSettings,
     OpenFFPartialChargeSettings,
-    OpenMMEngineSettings,
     OpenMMSolvationSettings,
     Settings,
 )
@@ -697,9 +696,6 @@ class GromacsMDProtocolSettings(Settings):
     forcefield_settings: FFSettingsOpenMM
     partial_charge_settings: OpenFFPartialChargeSettings
     solvation_settings: OpenMMSolvationSettings
-
-    # MD Engine things
-    engine_settings: OpenMMEngineSettings
 
     # Sampling State defining things
     integrator_settings: IntegratorSettings

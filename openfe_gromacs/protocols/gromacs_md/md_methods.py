@@ -48,7 +48,6 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
     NVTOutputSettings,
     NVTSimulationSettings,
     OpenFFPartialChargeSettings,
-    OpenMMEngineSettings,
     OpenMMSolvationSettings,
 )
 
@@ -481,7 +480,6 @@ class GromacsMDProtocol(gufe.Protocol):
             ),
             partial_charge_settings=OpenFFPartialChargeSettings(),
             solvation_settings=OpenMMSolvationSettings(),
-            engine_settings=OpenMMEngineSettings(),
             integrator_settings=IntegratorSettings(),
             simulation_settings_em=EMSimulationSettings(
                 integrator="steep",
