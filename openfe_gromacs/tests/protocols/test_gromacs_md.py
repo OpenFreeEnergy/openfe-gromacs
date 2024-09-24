@@ -80,17 +80,14 @@ def test_no_SolventComponent(benzene_vacuum_system, tmpdir):
         settings=settings,
     )
 
-    dag = p.create(
-        stateA=benzene_vacuum_system,
-        stateB=benzene_vacuum_system,
-        mapping=None,
-    )
-    dag_unit = list(dag.protocol_units)[0]
-
     errmsg = "No SolventComponent provided. This protocol currently"
     with tmpdir.as_cwd():
         with pytest.raises(ValueError, match=errmsg):
-            dag_unit.run(dry=True)
+            p.create(
+                stateA=benzene_vacuum_system,
+                stateB=benzene_vacuum_system,
+                mapping=None,
+            )
 
 
 @pytest.fixture

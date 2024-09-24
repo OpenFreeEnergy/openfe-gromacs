@@ -557,7 +557,16 @@ class GromacsMDProtocol(gufe.Protocol):
             stateA
         )
 
-        system_name = "Solvent MD" if solvent_comp is not None else "Vacuum MD"
+        # Raise an error when no SolventComponent is provided as this Protocol
+        # currently does not support vacuum simulations
+        if not solvent_comp:
+            errmsg = (
+                "No SolventComponent provided. This protocol currently does"
+                " not support vacuum simulations."
+            )
+            raise ValueError(errmsg)
+
+        system_name = "Solvent MD"
 
         for comp in [protein_comp] + small_mols:
             if comp is not None:
@@ -916,15 +925,6 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             "protein_comp": protein_comp,
             "small_mols": small_mols,
         }
-
-        # Raise an error when no SolventComponent is provided as this Protocol
-        # currently does not support vacuum simulations
-        if not solvent_comp:
-            errmsg = (
-                "No SolventComponent provided. This protocol currently does"
-                " not support vacuum simulations."
-            )
-            raise ValueError(errmsg)
 
         # 1. Write out .mdp files
         mdps = self._write_mdp_files(settings, shared_basepath)
