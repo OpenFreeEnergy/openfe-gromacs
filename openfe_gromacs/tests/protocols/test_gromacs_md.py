@@ -244,8 +244,8 @@ class TestProtocolResult:
         mdps = protocolresult.get_mdp_filenames()
 
         assert isinstance(mdps, list)
-        assert isinstance(mdps[0], list)
-        assert isinstance(mdps[0][0], pathlib.Path)
+        assert isinstance(mdps[0], dict)
+        assert all(isinstance(mdp, pathlib.Path) for mdp in mdps[0].values())
 
     def test_get_filenames_em(self, protocolresult):
         dict_file_path = protocolresult.get_filenames_em()

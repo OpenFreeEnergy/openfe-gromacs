@@ -198,16 +198,17 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
         return top
 
-    def get_mdp_filenames(self) -> list[list[pathlib.Path]]:
+    def get_mdp_filenames(self) -> list[dict[str, pathlib.Path]]:
         """
-        Get a list of paths to the .mdp files
+        Get a dictionary of paths to the .mdp files
 
         Returns
         -------
-        mdps : list[list[pathlib.Path]]
-          list of paths (pathlib.Path) to the mdp files for energy minimization,
+        mdps : list[dict[str, pathlib.Path]]
+          dictionary of paths (pathlib.Path) to the mdp files for energy minimization,
           NVT and NPT MD runs
         """
+
         mdps = [
             pus[0].outputs["mdp_files"]
             for pus in self.data.values()
@@ -729,11 +730,11 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
 
         Returns
         -------
-        mdps: list
-          List of file paths to mdp files.
+        mdps: dict
+          Dictionary of file paths to mdp files.
         """
 
-        mdps = []
+        mdps = {}
         if settings["sim_settings_em"].nsteps > 0:
             settings_dict = (
                 settings["sim_settings_em"].dict()
@@ -742,7 +743,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 | PRE_DEFINED_SETTINGS_EM
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
-            mdps.append(mdp)
+            mdps["em"] = mdp
         if settings["sim_settings_nvt"].nsteps > 0:
             settings_dict = (
                 settings["sim_settings_nvt"].dict()
@@ -751,7 +752,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 | PRE_DEFINED_SETTINGS_MD
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
-            mdps.append(mdp)
+            mdps["nvt"] = mdp
         if settings["sim_settings_npt"].nsteps > 0:
             settings_dict = (
                 settings["sim_settings_npt"].dict()
@@ -760,7 +761,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 | PRE_DEFINED_SETTINGS_MD
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
-            mdps.append(mdp)
+            mdps["npt"] = mdp
 
         return mdps
 
@@ -1106,15 +1107,11 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         if sim_settings_em.nsteps > 0:
             if verbose:
                 self.logger.info("Running energy minimization")
-            mdp = [
-                x
-                for x in mdp_files
-                if str(x).split("/")[-1] == output_settings_em.mdp_file
-            ]
+            mdp = mdp_files["em"]
             tpr = pathlib.Path(ctx.shared / output_settings_em.tpr_file)
-            assert len(mdp) == 1
+            assert mdp.exists()
             self._run_gromacs(
-                mdp[0],
+                mdp,
                 input_gro,
                 input_top,
                 tpr,
@@ -1133,20 +1130,16 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         if sim_settings_nvt.nsteps > 0:
             if verbose:
                 self.logger.info("Running an NVT MD simulation")
-            mdp = [
-                x
-                for x in mdp_files
-                if str(x).split("/")[-1] == output_settings_nvt.mdp_file
-            ]
+            mdp = mdp_files["nvt"]
             tpr = pathlib.Path(ctx.shared / output_settings_nvt.tpr_file)
-            assert len(mdp) == 1
+            assert mdp.exists()
             # If EM was run, use the output from that to run NVT MD
             if sim_settings_em.nsteps > 0:
                 gro = pathlib.Path(ctx.shared / output_settings_em.gro_file)
             else:
                 gro = input_gro
             self._run_gromacs(
-                mdp[0],
+                mdp,
                 gro,
                 input_top,
                 tpr,
@@ -1164,13 +1157,9 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         if sim_settings_npt.nsteps > 0:
             if verbose:
                 self.logger.info("Running an NPT MD simulation")
-            mdp = [
-                x
-                for x in mdp_files
-                if str(x).split("/")[-1] == output_settings_npt.mdp_file
-            ]
+            mdp = mdp_files["npt"]
             tpr = pathlib.Path(ctx.shared / output_settings_npt.tpr_file)
-            assert len(mdp) == 1
+            assert mdp.exists()
             # If EM and/or NVT MD was run, use the output coordinate file
             # from that to run NPT MD
             if sim_settings_em.nsteps > 0:
@@ -1181,7 +1170,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             else:
                 gro = input_gro
             self._run_gromacs(
-                mdp[0],
+                mdp,
                 gro,
                 input_top,
                 tpr,
