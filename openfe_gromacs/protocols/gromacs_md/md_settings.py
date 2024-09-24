@@ -692,12 +692,10 @@ class GromacsMDProtocolSettings(Settings):
     gro: str
     top: str
 
-    # Things for creating the OpenMM systems
+    # Settings for creating the OpenMM systems
     forcefield_settings: FFSettingsOpenMM
     partial_charge_settings: OpenFFPartialChargeSettings
     solvation_settings: OpenMMSolvationSettings
-
-    # Sampling State defining things
     integrator_settings: IntegratorSettings
 
     # Simulation run settings
