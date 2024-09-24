@@ -1133,7 +1133,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         # Create a dictionary for the run output
         output_dict = {
             "repeat_id": self._inputs["repeat_id"],
-            "generation": self._inputs["generation"]
+            "generation": self._inputs["generation"],
         }
 
         # Run energy minimization
@@ -1200,20 +1200,13 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 sim_settings_nvt.ntomp,
                 ctx.shared,
             )
-            output_dict[
-                "gro_nvt"] = shared_basepath / output_settings_nvt.gro_file
-            output_dict[
-                "tpr_nvt"] = shared_basepath / output_settings_nvt.tpr_file
-            output_dict[
-                "trr_nvt"] = shared_basepath / output_settings_nvt.trr_file
-            output_dict[
-                "xtc_nvt"] = shared_basepath / output_settings_nvt.xtc_file
-            output_dict[
-                "edr_nvt"] = shared_basepath / output_settings_nvt.edr_file
-            output_dict[
-                "log_nvt"] = shared_basepath / output_settings_nvt.log_file
-            output_dict[
-                "cpt_nvt"] = shared_basepath / output_settings_nvt.cpt_file
+            output_dict["gro_nvt"] = shared_basepath / output_settings_nvt.gro_file
+            output_dict["tpr_nvt"] = shared_basepath / output_settings_nvt.tpr_file
+            output_dict["trr_nvt"] = shared_basepath / output_settings_nvt.trr_file
+            output_dict["xtc_nvt"] = shared_basepath / output_settings_nvt.xtc_file
+            output_dict["edr_nvt"] = shared_basepath / output_settings_nvt.edr_file
+            output_dict["log_nvt"] = shared_basepath / output_settings_nvt.log_file
+            output_dict["cpt_nvt"] = shared_basepath / output_settings_nvt.cpt_file
 
         # Run NPT MD simulation
         if sim_settings_npt.nsteps > 0:
@@ -1249,19 +1242,12 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 sim_settings_npt.ntomp,
                 ctx.shared,
             )
-            output_dict[
-                "gro_npt"] = shared_basepath / output_settings_npt.gro_file
-            output_dict[
-                "tpr_npt"] = shared_basepath / output_settings_npt.tpr_file
-            output_dict[
-                "trr_npt"] = shared_basepath / output_settings_npt.trr_file
-            output_dict[
-                "xtc_npt"] = shared_basepath / output_settings_npt.xtc_file
-            output_dict[
-                "edr_npt"] = shared_basepath / output_settings_npt.edr_file
-            output_dict[
-                "log_npt"] = shared_basepath / output_settings_npt.log_file
-            output_dict[
-                "cpt_npt"] = shared_basepath / output_settings_npt.cpt_file
+            output_dict["gro_npt"] = shared_basepath / output_settings_npt.gro_file
+            output_dict["tpr_npt"] = shared_basepath / output_settings_npt.tpr_file
+            output_dict["trr_npt"] = shared_basepath / output_settings_npt.trr_file
+            output_dict["xtc_npt"] = shared_basepath / output_settings_npt.xtc_file
+            output_dict["edr_npt"] = shared_basepath / output_settings_npt.edr_file
+            output_dict["log_npt"] = shared_basepath / output_settings_npt.log_file
+            output_dict["cpt_npt"] = shared_basepath / output_settings_npt.cpt_file
 
         return output_dict
