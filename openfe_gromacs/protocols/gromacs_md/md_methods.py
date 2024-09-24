@@ -245,14 +245,18 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
             "cpt_em",
         ]
         dict_em = {}
-        for file in file_keys:
 
-            file_path = [
-                pus[0].outputs[file]
-                for pus in self.data.values()
-                if "GromacsMDRunUnit" in pus[0].source_key
-            ]
-            dict_em[file] = file_path
+        for file in file_keys:
+            try:
+                file_path = [
+                    pus[0].outputs[file]
+                    for pus in self.data.values()
+                    if "GromacsMDRunUnit" in pus[0].source_key
+                ]
+                dict_em[file] = file_path
+            except KeyError:
+                dict_em[file] = None
+
         return dict_em
 
     def get_gro_em_filename(self) -> list[pathlib.Path]:
@@ -265,13 +269,16 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         gro : list[pathlib.Path]
           list of paths (pathlib.Path) to the output .gro file
         """
-        gro = [
-            pus[0].outputs["gro_em"]
-            for pus in self.data.values()
-            if "GromacsMDRunUnit" in pus[0].source_key
-        ]
+        try:
+            file_path = [
+                pus[0].outputs["gro_em"]
+                for pus in self.data.values()
+                if "GromacsMDRunUnit" in pus[0].source_key
+            ]
+        except KeyError:
+            file_path = None
 
-        return gro
+        return file_path
 
     def get_xtc_em_filename(self) -> list[pathlib.Path]:
         """
@@ -283,11 +290,14 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         file_path : list[pathlib.Path]
           list of paths (pathlib.Path) to the output .xtc file
         """
-        file_path = [
-            pus[0].outputs["xtc_em"]
-            for pus in self.data.values()
-            if "GromacsMDRunUnit" in pus[0].source_key
-        ]
+        try:
+            file_path = [
+                pus[0].outputs["xtc_em"]
+                for pus in self.data.values()
+                if "GromacsMDRunUnit" in pus[0].source_key
+            ]
+        except KeyError:
+            file_path = None
 
         return file_path
 
@@ -321,13 +331,16 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         ]
         dict_nvt = {}
         for file in file_keys:
+            try:
+                file_path = [
+                    pus[0].outputs[file]
+                    for pus in self.data.values()
+                    if "GromacsMDRunUnit" in pus[0].source_key
+                ]
+                dict_nvt[file] = file_path
+            except KeyError:
+                dict_nvt[file] = None
 
-            file_path = [
-                pus[0].outputs[file]
-                for pus in self.data.values()
-                if "GromacsMDRunUnit" in pus[0].source_key
-            ]
-            dict_nvt[file] = file_path
         return dict_nvt
 
     def get_gro_nvt_filename(self) -> list[pathlib.Path]:
@@ -340,13 +353,16 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         gro : list[pathlib.Path]
           list of paths (pathlib.Path) to the output .gro file
         """
-        gro = [
-            pus[0].outputs["gro_nvt"]
-            for pus in self.data.values()
-            if "GromacsMDRunUnit" in pus[0].source_key
-        ]
+        try:
+            file_path = [
+                pus[0].outputs["gro_nvt"]
+                for pus in self.data.values()
+                if "GromacsMDRunUnit" in pus[0].source_key
+            ]
+        except KeyError:
+            file_path = None
 
-        return gro
+        return file_path
 
     def get_xtc_nvt_filename(self) -> list[pathlib.Path]:
         """
@@ -358,11 +374,14 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         file_path : list[pathlib.Path]
           list of paths (pathlib.Path) to the output .xtc file
         """
-        file_path = [
-            pus[0].outputs["xtc_nvt"]
-            for pus in self.data.values()
-            if "GromacsMDRunUnit" in pus[0].source_key
-        ]
+        try:
+            file_path = [
+                pus[0].outputs["xtc_nvt"]
+                for pus in self.data.values()
+                if "GromacsMDRunUnit" in pus[0].source_key
+            ]
+        except KeyError:
+            file_path = None
 
         return file_path
 
@@ -396,13 +415,16 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         ]
         dict_npt = {}
         for file in file_keys:
+            try:
+                file_path = [
+                    pus[0].outputs[file]
+                    for pus in self.data.values()
+                    if "GromacsMDRunUnit" in pus[0].source_key
+                ]
+                dict_npt[file] = file_path
+            except KeyError:
+                dict_npt[file] = None
 
-            file_path = [
-                pus[0].outputs[file]
-                for pus in self.data.values()
-                if "GromacsMDRunUnit" in pus[0].source_key
-            ]
-            dict_npt[file] = file_path
         return dict_npt
 
     def get_gro_npt_filename(self) -> list[pathlib.Path]:
@@ -415,13 +437,16 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         gro : list[pathlib.Path]
           list of paths (pathlib.Path) to the output .gro file
         """
-        gro = [
-            pus[0].outputs["gro_npt"]
-            for pus in self.data.values()
-            if "GromacsMDRunUnit" in pus[0].source_key
-        ]
+        try:
+            file_path = [
+                pus[0].outputs["gro_npt"]
+                for pus in self.data.values()
+                if "GromacsMDRunUnit" in pus[0].source_key
+            ]
+        except KeyError:
+            file_path = None
 
-        return gro
+        return file_path
 
     def get_xtc_npt_filename(self) -> list[pathlib.Path]:
         """
@@ -433,11 +458,14 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         file_path : list[pathlib.Path]
           list of paths (pathlib.Path) to the output .xtc file
         """
-        file_path = [
-            pus[0].outputs["xtc_npt"]
-            for pus in self.data.values()
-            if "GromacsMDRunUnit" in pus[0].source_key
-        ]
+        try:
+            file_path = [
+                pus[0].outputs["xtc_npt"]
+                for pus in self.data.values()
+                if "GromacsMDRunUnit" in pus[0].source_key
+            ]
+        except KeyError:
+            file_path = None
 
         return file_path
 
@@ -1102,6 +1130,12 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         input_top = setup.outputs["system_top"]
         mdp_files = setup.outputs["mdp_files"]
 
+        # Create a dictionary for the run output
+        output_dict = {
+            "repeat_id": self._inputs["repeat_id"],
+            "generation": self._inputs["generation"]
+        }
+
         # Run energy minimization
         if sim_settings_em.nsteps > 0:
             if verbose:
@@ -1127,6 +1161,13 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 sim_settings_em.ntomp,
                 ctx.shared,
             )
+            output_dict["gro_em"] = shared_basepath / output_settings_em.gro_file
+            output_dict["tpr_em"] = shared_basepath / output_settings_em.tpr_file
+            output_dict["trr_em"] = shared_basepath / output_settings_em.trr_file
+            output_dict["xtc_em"] = shared_basepath / output_settings_em.xtc_file
+            output_dict["edr_em"] = shared_basepath / output_settings_em.edr_file
+            output_dict["log_em"] = shared_basepath / output_settings_em.log_file
+            output_dict["cpt_em"] = shared_basepath / output_settings_em.cpt_file
 
         # ToDo: Should we disallow running MD without EM?
         # Run NVT
@@ -1159,6 +1200,20 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 sim_settings_nvt.ntomp,
                 ctx.shared,
             )
+            output_dict[
+                "gro_nvt"] = shared_basepath / output_settings_nvt.gro_file
+            output_dict[
+                "tpr_nvt"] = shared_basepath / output_settings_nvt.tpr_file
+            output_dict[
+                "trr_nvt"] = shared_basepath / output_settings_nvt.trr_file
+            output_dict[
+                "xtc_nvt"] = shared_basepath / output_settings_nvt.xtc_file
+            output_dict[
+                "edr_nvt"] = shared_basepath / output_settings_nvt.edr_file
+            output_dict[
+                "log_nvt"] = shared_basepath / output_settings_nvt.log_file
+            output_dict[
+                "cpt_nvt"] = shared_basepath / output_settings_nvt.cpt_file
 
         # Run NPT MD simulation
         if sim_settings_npt.nsteps > 0:
@@ -1194,29 +1249,19 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 sim_settings_npt.ntomp,
                 ctx.shared,
             )
+            output_dict[
+                "gro_npt"] = shared_basepath / output_settings_npt.gro_file
+            output_dict[
+                "tpr_npt"] = shared_basepath / output_settings_npt.tpr_file
+            output_dict[
+                "trr_npt"] = shared_basepath / output_settings_npt.trr_file
+            output_dict[
+                "xtc_npt"] = shared_basepath / output_settings_npt.xtc_file
+            output_dict[
+                "edr_npt"] = shared_basepath / output_settings_npt.edr_file
+            output_dict[
+                "log_npt"] = shared_basepath / output_settings_npt.log_file
+            output_dict[
+                "cpt_npt"] = shared_basepath / output_settings_npt.cpt_file
 
-        return {
-            "repeat_id": self._inputs["repeat_id"],
-            "generation": self._inputs["generation"],
-            "gro_em": shared_basepath / output_settings_em.gro_file,
-            "tpr_em": shared_basepath / output_settings_em.tpr_file,
-            "trr_em": shared_basepath / output_settings_em.trr_file,
-            "xtc_em": shared_basepath / output_settings_em.xtc_file,
-            "edr_em": shared_basepath / output_settings_em.edr_file,
-            "log_em": shared_basepath / output_settings_em.log_file,
-            "cpt_em": shared_basepath / output_settings_em.cpt_file,
-            "gro_nvt": shared_basepath / output_settings_nvt.gro_file,
-            "tpr_nvt": shared_basepath / output_settings_nvt.tpr_file,
-            "trr_nvt": shared_basepath / output_settings_nvt.trr_file,
-            "xtc_nvt": shared_basepath / output_settings_nvt.xtc_file,
-            "edr_nvt": shared_basepath / output_settings_nvt.edr_file,
-            "log_nvt": shared_basepath / output_settings_nvt.log_file,
-            "cpt_nvt": shared_basepath / output_settings_nvt.cpt_file,
-            "gro_npt": shared_basepath / output_settings_npt.gro_file,
-            "tpr_npt": shared_basepath / output_settings_npt.tpr_file,
-            "trr_npt": shared_basepath / output_settings_npt.trr_file,
-            "xtc_npt": shared_basepath / output_settings_npt.xtc_file,
-            "edr_npt": shared_basepath / output_settings_npt.edr_file,
-            "log_npt": shared_basepath / output_settings_npt.log_file,
-            "cpt_npt": shared_basepath / output_settings_npt.cpt_file,
-        }
+        return output_dict
