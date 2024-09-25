@@ -163,9 +163,7 @@ def test_dry_run_ffcache_none(benzene_system, tmp_path_factory):
     )
 
 
-def test_dry_many_molecules_solvent(
-benzene_many_solv_system, tmp_path_factory
-):
+def test_dry_many_molecules_solvent(benzene_many_solv_system, tmp_path_factory):
     """
     A basic test flushing "will it work if you pass multiple molecules"
     """
@@ -230,9 +228,7 @@ def test_gather(benzene_system, tmp_path_factory):
         keep_shared=False,
         n_retries=3,
     )
-    prot = GromacsMDProtocol(
-        settings=settings
-    )
+    prot = GromacsMDProtocol(settings=settings)
 
     res = prot.gather([dagres])
 
