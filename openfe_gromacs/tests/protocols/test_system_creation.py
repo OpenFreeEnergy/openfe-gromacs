@@ -1,15 +1,13 @@
 # This code is part of OpenFE and is licensed under the MIT license.
 # For details, see https://github.com/OpenFreeEnergy/openfe-gromacs
 import gufe
-import pytest
 import numpy as np
-from openmm.app import GromacsGroFile, GromacsTopFile
+import pytest
 from openmm import NonbondedForce
+from openmm.app import GromacsGroFile, GromacsTopFile
 
 from openfe_gromacs.protocols.gromacs_md.md_methods import GromacsMDProtocol
 from openfe_gromacs.protocols.gromacs_utils import system_creation
-
-
 
 # def test_interchange_gromacs(T4_protein_component, tmpdir):
 #     solvent = gufe.SolventComponent()
@@ -52,7 +50,9 @@ def test_user_charges(ethane, tmpdir):
     # Load Gromacs .top file back in as OpenMM system
     gromacs_system = GromacsTopFile(f"{tmpdir}/test.top").createSystem()
     # Get the partial charges of the ligand atoms
-    nonbonded = [f for f in gromacs_system.getForces() if isinstance(f, NonbondedForce)][0]
+    nonbonded = [
+        f for f in gromacs_system.getForces() if isinstance(f, NonbondedForce)
+    ][0]
     gro_charges = []
     for i in range(len(off_charges)):
         charge, sigma, epsilon = nonbonded.getParticleParameters(i)
