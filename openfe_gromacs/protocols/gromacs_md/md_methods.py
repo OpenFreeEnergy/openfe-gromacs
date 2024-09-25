@@ -15,10 +15,10 @@ import os
 import pathlib
 import subprocess
 import uuid
+import warnings
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any
-import warnings
 
 import gmxapi as gmx
 import gufe
@@ -796,11 +796,12 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         """
         # Set the environment variable for using the experimental interchange
         # functionality `from_openmm` and raise a warning
-        os.environ['INTERCHANGE_EXPERIMENTAL'] = "1"
+        os.environ["INTERCHANGE_EXPERIMENTAL"] = "1"
         war = (
             "Environment variable INTERCHANGE_EXPERIMENTAL=1 is set for using "
             "the interchange functionality 'from_openmm' which is not well "
-            "tested yet.")
+            "tested yet."
+        )
         warnings.warn(war)
         # Create the stateA system
         # Create a dictionary of OFFMol for each SMC for bookkeeping
