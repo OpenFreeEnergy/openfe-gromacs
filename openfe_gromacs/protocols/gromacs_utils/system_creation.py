@@ -151,10 +151,14 @@ def create_interchange(
     )
     warnings.warn(war)
 
-    barostat_idx, barostat = forces.find_forces(
-        stateA_system, ".*Barostat.*", only_one=True
-    )
-    stateA_system.removeForce(barostat_idx)
+    try:
+        barostat_idx, barostat = forces.find_forces(
+            stateA_system, ".*Barostat.*", only_one=True
+        )
+        stateA_system.removeForce(barostat_idx)
+
+    except forces.NoForceFoundError:
+        pass
 
     stateA_interchange = Interchange.from_openmm(
         topology=stateA_topology,
