@@ -42,8 +42,10 @@ def assign_partial_charges(
             nagl_model=charge_settings.nagl_model,
         )
 
+
 def create_openmm_system(
-        settings, solvent_comp, protein_comp, smc_components, shared_basepath):
+    settings, solvent_comp, protein_comp, smc_components, shared_basepath
+):
     """
     Creates the OpenMM system.
 
@@ -72,8 +74,7 @@ def create_openmm_system(
 
     # b. get a system generator
     if settings.output_settings_em.forcefield_cache is not None:
-        ffcache = shared_basepath / \
-                  settings.output_settings_em.forcefield_cache
+        ffcache = shared_basepath / settings.output_settings_em.forcefield_cache
     else:
         ffcache = None
 
@@ -107,8 +108,7 @@ def create_openmm_system(
         # d. get topology & positions
         # Note: roundtrip positions to remove vec3 issues
         stateA_topology = stateA_modeller.getTopology()
-        stateA_positions = to_openmm(
-            from_openmm(stateA_modeller.getPositions()))
+        stateA_positions = to_openmm(from_openmm(stateA_modeller.getPositions()))
 
         # e. create the stateA System
         stateA_system = system_generator.create_system(
@@ -119,7 +119,10 @@ def create_openmm_system(
 
 
 def create_interchange(
-        stateA_system, stateA_topology, stateA_positions, smc_components,
+    stateA_system,
+    stateA_topology,
+    stateA_positions,
+    smc_components,
 ):
     """
     Creates the Interchange object for the system.
@@ -159,9 +162,7 @@ def create_interchange(
         positions=stateA_positions,
     )
 
-    for molecule_index, molecule in enumerate(
-        stateA_interchange.topology.molecules
-    ):
+    for molecule_index, molecule in enumerate(stateA_interchange.topology.molecules):
         for atom in molecule.atoms:
             atom.metadata["residue_number"] = molecule_index + 1
         if len([*smc_components.values()]) > 0:

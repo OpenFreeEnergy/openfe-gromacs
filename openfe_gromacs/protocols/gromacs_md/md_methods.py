@@ -796,12 +796,23 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         smc_components: dict[gufe.SmallMoleculeComponent, OFFMolecule]
         smc_components = {i: i.to_openff() for i in small_mols}
 
-        stateA_system, stateA_topology, stateA_positions = system_creation.create_openmm_system(
-            settings, solvent_comp, protein_comp, smc_components, shared_basepath,
+        (
+            stateA_system,
+            stateA_topology,
+            stateA_positions,
+        ) = system_creation.create_openmm_system(
+            settings,
+            solvent_comp,
+            protein_comp,
+            smc_components,
+            shared_basepath,
         )
         # 3. Create the Interchange object
         stateA_interchange = system_creation.create_interchange(
-            stateA_system, stateA_topology, stateA_positions, smc_components,
+            stateA_system,
+            stateA_topology,
+            stateA_positions,
+            smc_components,
         )
 
         # 4. Save .gro and .top file of the entire system
