@@ -9,6 +9,7 @@ from openmm.app import GromacsGroFile, GromacsTopFile
 from openfe_gromacs.protocols.gromacs_md.md_methods import GromacsMDProtocol
 from openfe_gromacs.protocols.gromacs_utils import create_systems
 
+
 def test_interchange_gromacs(T4_protein_component, tmpdir):
     solvent = gufe.SolventComponent()
     smc_components = {}
