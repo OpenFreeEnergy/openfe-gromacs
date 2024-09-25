@@ -22,9 +22,7 @@ from typing import Any
 import gufe
 import pint
 from gufe import ChemicalSystem, SmallMoleculeComponent, settings
-from openfe.protocols.openmm_utils import (
-    system_validation,
-)
+from openfe.protocols.openmm_utils import system_validation
 from openfe.utils import log_system_probe
 from openff.units import unit
 
@@ -653,7 +651,6 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             generation=generation,
         )
 
-
     def _handle_settings(self) -> dict[str, gufe.settings.SettingsBaseModel]:
         """
         Extract the relevant settings for an MD simulation.
@@ -740,7 +737,6 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             mdps["npt"] = mdp
 
         return mdps
-
 
     def run(
         self, *, dry=False, verbose=True, scratch_basepath=None, shared_basepath=None

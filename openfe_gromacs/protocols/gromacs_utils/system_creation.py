@@ -1,18 +1,20 @@
 import os
 import warnings
+
+from gufe import ChemicalSystem, SmallMoleculeComponent, settings
+from openfe.protocols.openmm_utils import charge_generation, system_creation
+from openfe.utils import without_oechem_backend
+from openff.interchange import Interchange
+from openff.toolkit.topology import Molecule as OFFMolecule
+from openff.units.openmm import from_openmm, to_openmm
+from openmmtools import forces
+
 from openfe_gromacs.protocols.gromacs_md.md_settings import (
     IntegratorSettings,
     OpenFFPartialChargeSettings,
     OpenMMEngineSettings,
     OpenMMSolvationSettings,
 )
-from openff.interchange import Interchange
-from openff.toolkit.topology import Molecule as OFFMolecule
-from gufe import ChemicalSystem, SmallMoleculeComponent, settings
-from openff.units.openmm import from_openmm, to_openmm
-from openmmtools import forces
-from openfe.protocols.openmm_utils import charge_generation, system_creation
-from openfe.utils import without_oechem_backend
 
 
 def assign_partial_charges(
@@ -41,7 +43,9 @@ def assign_partial_charges(
         )
 
 
-def create_interchange(settings, solvent_comp, protein_comp, small_mols, shared_basepath):
+def create_interchange(
+    settings, solvent_comp, protein_comp, small_mols, shared_basepath
+):
     """
     Creates the Interchange object for the system.
 
@@ -79,8 +83,7 @@ def create_interchange(settings, solvent_comp, protein_comp, small_mols, shared_
 
     # b. get a system generator
     if settings["output_settings_em"].forcefield_cache is not None:
-        ffcache = shared_basepath / settings[
-            "output_settings_em"].forcefield_cache
+        ffcache = shared_basepath / settings["output_settings_em"].forcefield_cache
     else:
         ffcache = None
 
@@ -114,8 +117,7 @@ def create_interchange(settings, solvent_comp, protein_comp, small_mols, shared_
         # d. get topology & positions
         # Note: roundtrip positions to remove vec3 issues
         stateA_topology = stateA_modeller.getTopology()
-        stateA_positions = to_openmm(
-            from_openmm(stateA_modeller.getPositions()))
+        stateA_positions = to_openmm(from_openmm(stateA_modeller.getPositions()))
 
         # e. create the stateA System
         stateA_system = system_generator.create_system(
@@ -136,7 +138,7 @@ def create_interchange(settings, solvent_comp, protein_comp, small_mols, shared_
         )
 
         for molecule_index, molecule in enumerate(
-                stateA_interchange.topology.molecules
+            stateA_interchange.topology.molecules
         ):
             for atom in molecule.atoms:
                 atom.metadata["residue_number"] = molecule_index + 1
