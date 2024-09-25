@@ -40,7 +40,7 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
     OpenMMEngineSettings,
     OpenMMSolvationSettings,
 )
-from openfe_gromacs.protocols.gromacs_utils import system_creation
+from openfe_gromacs.protocols.gromacs_utils import create_systems
 
 logger = logging.getLogger(__name__)
 
@@ -800,7 +800,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             stateA_system,
             stateA_topology,
             stateA_positions,
-        ) = system_creation.create_openmm_system(
+        ) = create_systems.create_openmm_system(
             settings,
             solvent_comp,
             protein_comp,
@@ -808,7 +808,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             shared_basepath,
         )
         # 3. Create the Interchange object
-        stateA_interchange = system_creation.create_interchange(
+        stateA_interchange = create_systems.create_interchange(
             stateA_system,
             stateA_topology,
             stateA_positions,
