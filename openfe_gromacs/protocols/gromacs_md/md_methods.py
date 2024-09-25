@@ -560,7 +560,7 @@ class GromacsMDProtocol(gufe.Protocol):
 
         # Raise an error when no SolventComponent is provided as this Protocol
         # currently does not support vacuum simulations
-        if not solvent_comp:
+        if solvent_comp is None:
             errmsg = (
                 "No SolventComponent provided. This protocol currently does"
                 " not support vacuum simulations."
