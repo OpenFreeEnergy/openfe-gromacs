@@ -18,6 +18,7 @@ import uuid
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any
+import warnings
 
 import gmxapi as gmx
 import gufe
@@ -54,7 +55,7 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
 
 logger = logging.getLogger(__name__)
 
-
+# Settings that are not exposed to the user
 PRE_DEFINED_SETTINGS = {
     "tinit": 0 * unit.picosecond,
     "init_step": 0,
@@ -793,6 +794,14 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         stateA_interchange: Interchange object
           The interchange object of the system.
         """
+        # Set the environment variable for using the experimental interchange
+        # functionality `from_openmm` and raise a warning
+        os.environ['INTERCHANGE_EXPERIMENTAL'] = "1"
+        war = (
+            "Environment variable INTERCHANGE_EXPERIMENTAL=1 is set for using "
+            "the interchange functionality 'from_openmm' which is not well "
+            "tested yet.")
+        warnings.warn(war)
         # Create the stateA system
         # Create a dictionary of OFFMol for each SMC for bookkeeping
         smc_components: dict[SmallMoleculeComponent, OFFMolecule]
