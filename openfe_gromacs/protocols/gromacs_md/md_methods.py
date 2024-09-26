@@ -49,6 +49,7 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
     NVTSimulationSettings,
     OpenFFPartialChargeSettings,
     OpenMMSolvationSettings,
+    GromacsMDEngineSettings,
 )
 
 logger = logging.getLogger(__name__)
@@ -112,7 +113,6 @@ def _dict2mdp(settings_dict: dict, shared_basepath):
         "edr_file",
         "log_file",
         "cpt_file",
-        "ntomp",
     ]
     for setting in non_mdps:
         settings_dict.pop(setting)
@@ -495,6 +495,7 @@ class GromacsMDProtocol(gufe.Protocol):
                 pcoupl="C-rescale",
                 gen_vel="no",  # If continuation from NVT simulation
             ),
+            engine_settings=GromacsMDEngineSettings(),
             output_settings_em=EMOutputSettings(
                 mdp_file="em.mdp",
                 tpr_file="em.tpr",
@@ -977,7 +978,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         cpt: str,
         log: str,
         edr: str,
-        ntomp: int,
+        engine_settings: GromacsMDEngineSettings,
         shared_basebath: pathlib.Path,
     ):
         """
@@ -996,6 +997,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         :param cpt: str
         :param log: str
         :param edr: str
+        :param engine_settings: GromacsMDEngineSettings
         :param shared_basebath: Pathlike, optional
           Where to run the calculation, defaults to current working directory
         """
@@ -1040,7 +1042,17 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 "-ntmpi",
                 "1",
                 "-ntomp",
-                str(ntomp),
+                str(engine_settings.ntomp),
+                "-pme",
+                str(engine_settings.pme),
+                "-pmefft",
+                str(engine_settings.pmefft),
+                "-bonded",
+                str(engine_settings.bonded),
+                "-nb",
+                str(engine_settings.nb),
+                "-update",
+                str(engine_settings.update),
             ],
             stdin=subprocess.PIPE,
             cwd=shared_basebath,
@@ -1092,6 +1104,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         sim_settings_npt: NPTSimulationSettings = (
             protocol_settings.simulation_settings_npt
         )
+        engine_settings: GromacsMDEngineSettings = protocol_settings.engine_settings
         output_settings_em: EMOutputSettings = protocol_settings.output_settings_em
         output_settings_nvt: NVTOutputSettings = protocol_settings.output_settings_nvt
         output_settings_npt: NPTOutputSettings = protocol_settings.output_settings_npt
@@ -1122,7 +1135,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 output_settings_em.cpt_file,
                 output_settings_em.log_file,
                 output_settings_em.edr_file,
-                sim_settings_em.ntomp,
+                engine_settings,
                 ctx.shared,
             )
 
@@ -1154,7 +1167,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 output_settings_nvt.cpt_file,
                 output_settings_nvt.log_file,
                 output_settings_nvt.edr_file,
-                sim_settings_nvt.ntomp,
+                engine_settings,
                 ctx.shared,
             )
 
@@ -1189,7 +1202,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 output_settings_npt.cpt_file,
                 output_settings_npt.log_file,
                 output_settings_npt.edr_file,
-                sim_settings_npt.ntomp,
+                engine_settings,
                 ctx.shared,
             )
 

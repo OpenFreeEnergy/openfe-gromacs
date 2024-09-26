@@ -205,12 +205,6 @@ class SimulationSettings(SettingsBaseModel):
     Number of iterations to correct for rotational lengthening in LINCS.
     Default 1.
     """
-    ntomp: int = 1
-    """
-    Number of threads to be used for OpenMP multithreading.
-    GROMACS must be compiled with OpenMP support if a value greater than 1 is
-    set here.
-    """
 
     @validator(
         "nsteps",
@@ -672,6 +666,39 @@ class FFSettingsOpenMM(OpenMMSystemGeneratorFFSettings):
         return v
 
 
+class GromacsMDEngineSettings(SettingsBaseModel):
+    """
+    MD engine settings for running simulations in Gromacs.
+    """
+    ntomp: int = 1
+    """
+    Number of threads to be used for OpenMP multithreading.
+    GROMACS must be compiled with OpenMP support if a value greater than 1 is
+    set here.
+    """
+    pme: Literal["auto", "cpu", "gpu"] = "auto"
+    """
+    Perform PME calculations on: auto, cpu, gpu
+    """
+    pmefft: Literal["auto", "cpu", "gpu"] = "auto"
+    """
+    Perform PME FFT calculations on: auto, cpu, gpu
+    """
+    bonded: Literal["auto", "cpu", "gpu"] = "auto"
+    """
+    Perform bonded calculations on: auto, cpu, gpu
+    """
+    nb: Literal["auto", "cpu", "gpu"] = "auto"
+    """
+    Calculate non-bonded interactions on: auto, cpu, gpu
+    """
+    update: Literal["auto", "cpu", "gpu"] = "auto"
+    """
+    Perform update and constraints on: auto, cpu, gpu
+    """
+
+
+
 class GromacsMDProtocolSettings(Settings):
     class Config:
         arbitrary_types_allowed = True
@@ -702,6 +729,9 @@ class GromacsMDProtocolSettings(Settings):
     simulation_settings_em: EMSimulationSettings
     simulation_settings_nvt: NVTSimulationSettings
     simulation_settings_npt: NPTSimulationSettings
+
+    # Gromacs run/engine settings
+    engine_settings: GromacsMDEngineSettings
 
     # Simulations output settings
     output_settings_em: EMOutputSettings
