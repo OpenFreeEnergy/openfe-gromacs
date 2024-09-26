@@ -1,5 +1,4 @@
 import pint
-
 from openff.units import unit
 
 # Settings that are not exposed to the user
@@ -11,8 +10,7 @@ PRE_DEFINED_SETTINGS = {
     "nstcomm": 100,
     "comm_grps": "system",
     "pbc": "xyz",
-    "verlet_buffer_tolerance": 0.005 * unit.kilojoule / (
-                unit.mole * unit.picosecond),
+    "verlet_buffer_tolerance": 0.005 * unit.kilojoule / (unit.mole * unit.picosecond),
     "verlet_buffer_pressure_tolerance": 0.5 * unit.bar,
     "coulomb_modifier": "Potential-shift",
     "epsilon_r": 1,
@@ -82,6 +80,7 @@ def dict2mdp(settings_dict: dict, shared_basepath):
             # Write out all the setting, value pairs
             f.write(f"{key} = {value}\n")
     return filename
+
 
 def write_mdp_files(settings: dict, shared_basepath):
     """
