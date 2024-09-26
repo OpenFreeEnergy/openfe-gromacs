@@ -665,7 +665,7 @@ class FFSettingsOpenMM(OpenMMSystemGeneratorFFSettings):
         return v
 
 
-class GromacsMDEngineSettings(SettingsBaseModel):
+class GromacsEngineSettings(SettingsBaseModel):
     """
     MD engine settings for running simulations in Gromacs.
     """
@@ -736,7 +736,7 @@ class GromacsMDProtocolSettings(Settings):
     simulation_settings_npt: NPTSimulationSettings
 
     # Gromacs run/engine settings
-    engine_settings: GromacsMDEngineSettings
+    engine_settings: GromacsEngineSettings
 
     # Simulations output settings
     output_settings_em: EMOutputSettings

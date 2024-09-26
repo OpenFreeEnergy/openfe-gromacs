@@ -49,7 +49,7 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
     NVTSimulationSettings,
     OpenFFPartialChargeSettings,
     OpenMMSolvationSettings,
-    GromacsMDEngineSettings,
+    GromacsEngineSettings,
 )
 
 logger = logging.getLogger(__name__)
@@ -495,7 +495,7 @@ class GromacsMDProtocol(gufe.Protocol):
                 pcoupl="C-rescale",
                 gen_vel="no",  # If continuation from NVT simulation
             ),
-            engine_settings=GromacsMDEngineSettings(),
+            engine_settings=GromacsEngineSettings(),
             output_settings_em=EMOutputSettings(
                 mdp_file="em.mdp",
                 tpr_file="em.tpr",
@@ -978,7 +978,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         cpt: str,
         log: str,
         edr: str,
-        engine_settings: GromacsMDEngineSettings,
+        engine_settings: GromacsEngineSettings,
         shared_basebath: pathlib.Path,
     ):
         """
@@ -997,7 +997,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         :param cpt: str
         :param log: str
         :param edr: str
-        :param engine_settings: GromacsMDEngineSettings
+        :param engine_settings: GromacsEngineSettings
         :param shared_basebath: Pathlike, optional
           Where to run the calculation, defaults to current working directory
         """
@@ -1104,7 +1104,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         sim_settings_npt: NPTSimulationSettings = (
             protocol_settings.simulation_settings_npt
         )
-        engine_settings: GromacsMDEngineSettings = protocol_settings.engine_settings
+        engine_settings: GromacsEngineSettings = protocol_settings.engine_settings
         output_settings_em: EMOutputSettings = protocol_settings.output_settings_em
         output_settings_nvt: NVTOutputSettings = protocol_settings.output_settings_nvt
         output_settings_npt: NPTOutputSettings = protocol_settings.output_settings_npt
