@@ -70,11 +70,11 @@ def create_openmm_system(
     stateA_positions: Positions
     """
     # a. assign partial charges to smcs
-    assign_partial_charges(settings.partial_charge_settings, smc_components)
+    assign_partial_charges(settings["charge_settings"], smc_components)
 
     # b. get a system generator
-    if settings.output_settings_em.forcefield_cache is not None:
-        ffcache = shared_basepath / settings.output_settings_em.forcefield_cache
+    if settings["output_settings_em"].forcefield_cache is not None:
+        ffcache = shared_basepath / settings["output_settings_em"].forcefield_cache
     else:
         ffcache = None
 
@@ -83,9 +83,9 @@ def create_openmm_system(
     # go wrong when doing rdkit->OEchem roundtripping
     with without_oechem_backend():
         system_generator = system_creation.get_system_generator(
-            forcefield_settings=settings.forcefield_settings,
-            integrator_settings=settings.integrator_settings,
-            thermo_settings=settings.thermo_settings,
+            forcefield_settings=settings["forcefield_settings"],
+            integrator_settings=settings["integrator_settings"],
+            thermo_settings=settings["thermo_settings"],
             cache=ffcache,
             has_solvent=solvent_comp is not None,
         )
@@ -102,7 +102,7 @@ def create_openmm_system(
             solvent_comp=solvent_comp,
             small_mols=smc_components,
             omm_forcefield=system_generator.forcefield,
-            solvent_settings=settings.solvation_settings,
+            solvent_settings=settings["solvation_settings"],
         )
 
         # d. get topology & positions

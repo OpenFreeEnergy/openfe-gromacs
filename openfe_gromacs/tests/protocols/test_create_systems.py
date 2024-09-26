@@ -13,7 +13,15 @@ from openfe_gromacs.protocols.gromacs_utils import create_systems
 def test_interchange_gromacs(T4_protein_component, tmpdir):
     solvent = gufe.SolventComponent()
     smc_components = {}
-    settings = GromacsMDProtocol.default_settings()
+    prot_settings = GromacsMDProtocol.default_settings()
+    # The function expects a settings dict
+    settings = {}
+    settings["forcefield_settings"] = prot_settings.forcefield_settings
+    settings["thermo_settings"] = prot_settings.thermo_settings
+    settings["solvation_settings"] = prot_settings.solvation_settings
+    settings["charge_settings"] = prot_settings.partial_charge_settings
+    settings["integrator_settings"] = prot_settings.integrator_settings
+    settings["output_settings_em"] = prot_settings.output_settings_em
     omm_system, omm_topology, omm_positions = create_systems.create_openmm_system(
         settings, solvent, T4_protein_component, smc_components, tmpdir
     )
@@ -37,7 +45,14 @@ def test_user_charges(ethane, tmpdir):
     off_ethane = ethane.to_openff()
     off_ethane.assign_partial_charges(partial_charge_method="am1bcc")
     off_charges = off_ethane.partial_charges
-    settings = GromacsMDProtocol.default_settings()
+    prot_settings = GromacsMDProtocol.default_settings()
+    settings = {}
+    settings["forcefield_settings"] = prot_settings.forcefield_settings
+    settings["thermo_settings"] = prot_settings.thermo_settings
+    settings["solvation_settings"] = prot_settings.solvation_settings
+    settings["charge_settings"] = prot_settings.partial_charge_settings
+    settings["integrator_settings"] = prot_settings.integrator_settings
+    settings["output_settings_em"] = prot_settings.output_settings_em
     smc_components = {ethane: off_ethane}
     omm_system, omm_topology, omm_positions = create_systems.create_openmm_system(
         settings, solvent, None, smc_components, tmpdir
