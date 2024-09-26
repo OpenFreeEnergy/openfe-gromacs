@@ -39,11 +39,11 @@ def test_user_charges(ethane, tmpdir):
     off_charges = off_ethane.partial_charges
     settings = GromacsMDProtocol.default_settings()
     smc_components = {ethane: off_ethane}
-    omm_system, omm_topology, omm_positions = system_creation.create_openmm_system(
+    omm_system, omm_topology, omm_positions = create_systems.create_openmm_system(
         settings, solvent, None, smc_components, tmpdir
     )
 
-    interchange = system_creation.create_interchange(
+    interchange = create_systems.create_interchange(
         omm_system, omm_topology, omm_positions, smc_components
     )
     # Save to Gromacs .top file
@@ -59,3 +59,29 @@ def test_user_charges(ethane, tmpdir):
         charge, sigma, epsilon = nonbonded.getParticleParameters(i)
         gro_charges.append(charge._value)
     np.testing.assert_almost_equal(off_charges.m, gro_charges, decimal=5)
+
+
+# def test_tip4p(ethane, tmpdir):
+#     settings = GromacsMDProtocol.default_settings()
+#     settings.forcefield_settings.forcefields = [
+#         "amber/ff14SB.xml",  # Choose ff14SB for the protein
+#         "amber/tip4pew_standard.xml",  # Choose tip4p for the water
+#     ]
+#     settings.solvation_settings.solvent_model = 'tip4pew'
+#
+#     solvent = gufe.SolventComponent()
+#     smc_components = {ethane: ethane.to_openff()}
+#     # smc_components = {}
+#     omm_system, omm_topology, omm_positions = \
+#         create_systems.create_openmm_system(
+#         settings, solvent, None, smc_components, tmpdir
+#     )
+#
+#     interchange = create_systems.create_interchange(
+#         omm_system, omm_topology, omm_positions, smc_components
+#     )
+#     # Save to Gromacs files
+#     interchange.to_top(f"{tmpdir}/test.top")
+#     interchange.to_gro(f"{tmpdir}/test.gro")
+#
+#     # Check
