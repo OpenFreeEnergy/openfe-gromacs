@@ -198,7 +198,7 @@ def test_dry_many_molecules_solvent(
         )
 
 
-#class TestProtocolResult:
+# class TestProtocolResult:
 #    @pytest.fixture()
 #    def protocolresult(self, md_json):
 #        d = json.loads(md_json, cls=gufe.tokenization.JSON_HANDLER.decoder)
