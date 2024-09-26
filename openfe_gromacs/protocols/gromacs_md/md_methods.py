@@ -167,8 +167,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         file_paths = [
             pus[0].outputs[file_type]
             for pus in self.data.values()
-            if "GromacsMDRunUnit" in pus[0].source_key and file_type in pus[
-                0].outputs
+            if "GromacsMDRunUnit" in pus[0].source_key and file_type in pus[0].outputs
         ]
         if len(file_paths) == 0:
             file_paths = None
@@ -223,7 +222,6 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         ][0]
 
         return top
-
 
     def get_mdp_filenames(self) -> list[dict[str, pathlib.Path]]:
         """
