@@ -149,6 +149,31 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         if any(len(pur_list) > 2 for pur_list in self.data.values()):
             raise NotImplementedError("Can't stitch together results yet")
 
+    def _get_filenames(self, file_type) -> list[pathlib.Path]:
+        """
+        Get a list of paths to files
+
+        Parameters
+        ----------
+        file_type: str
+          Str of the dictionary entry for which the file paths should be
+          returned
+        Returns
+        -------
+        files : list[pathlib.Path]
+          list of paths (pathlib.Path) to the files
+        """
+        file_paths = [
+            pus[0].outputs[file_type]
+            for pus in self.data.values()
+            if "GromacsMDRunUnit" in pus[0].source_key and file_type in pus[
+                0].outputs
+        ]
+        if len(file_paths) == 0:
+            file_paths = None
+
+        return file_paths
+
     def get_estimate(self):
         """Since no results as output --> returns None
 
@@ -164,7 +189,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
         return None
 
-    def get_gro_filename(self) -> list[pathlib.Path]:
+    def get_gro_filename(self) -> pathlib.Path:
         """
         Get a list of paths to the .gro file
 
@@ -177,11 +202,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
             pus[0].outputs["system_gro"]
             for pus in self.data.values()
             if "GromacsMDSetupUnit" in pus[0].source_key
-        ]
+        ][0]
 
         return gro
 
-    def get_top_filename(self) -> list[pathlib.Path]:
+    def get_top_filename(self) -> pathlib.Path:
         """
         Get a list of paths to the .gro file
 
@@ -194,11 +219,11 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
             pus[0].outputs["system_top"]
             for pus in self.data.values()
             if "GromacsMDSetupUnit" in pus[0].source_key
-        ]
+        ][0]
 
         return top
 
-    def get_mdp_filenames(self) -> list[list[pathlib.Path]]:
+    def get_mdp_filenames(self) -> list[pathlib.Path]:
         """
         Get a list of paths to the .mdp files
 
@@ -212,7 +237,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
             pus[0].outputs["mdp_files"]
             for pus in self.data.values()
             if "GromacsMDSetupUnit" in pus[0].source_key
-        ]
+        ][0]
 
         return mdps
 
@@ -231,7 +256,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
         Returns
         -------
-        dict_em : dict[str, list[pathlib.Path]]
+        dict_em : Optional[dict[str, list[pathlib.Path]]]
           dictionary containing list of paths (pathlib.Path)
           to the output files
         """
@@ -244,62 +269,40 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
             "log_em",
             "cpt_em",
         ]
-        dict_em = {}
-
+        dict_npt = {}
         for file in file_keys:
-            try:
-                file_path = [
-                    pus[0].outputs[file]
-                    for pus in self.data.values()
-                    if "GromacsMDRunUnit" in pus[0].source_key
-                ]
-                dict_em[file] = file_path
-            except KeyError:
-                dict_em[file] = None
+            file_path = self._get_filenames(file)
+            dict_npt[file] = file_path
 
-        return dict_em
+        return dict_npt
 
-    def get_gro_em_filename(self) -> list[pathlib.Path]:
+    def get_gro_em_filenames(self) -> list[pathlib.Path]:
         """
         Get a list of paths to the .gro file, last frame of the
         energy minimization
 
         Returns
         -------
-        gro : list[pathlib.Path]
+        gro : Optional[list[pathlib.Path]]
           list of paths (pathlib.Path) to the output .gro file
         """
-        try:
-            file_path = [
-                pus[0].outputs["gro_em"]
-                for pus in self.data.values()
-                if "GromacsMDRunUnit" in pus[0].source_key
-            ]
-        except KeyError:
-            file_path = None
+        file_type = "gro_em"
 
-        return file_path
+        return self._get_filenames(file_type)
 
-    def get_xtc_em_filename(self) -> list[pathlib.Path]:
+    def get_xtc_em_filenames(self) -> list[pathlib.Path]:
         """
         Get a list of paths to the .xtc file of the
         energy minimization
 
         Returns
         -------
-        file_path : list[pathlib.Path]
+        file_path : Optional[list[pathlib.Path]]
           list of paths (pathlib.Path) to the output .xtc file
         """
-        try:
-            file_path = [
-                pus[0].outputs["xtc_em"]
-                for pus in self.data.values()
-                if "GromacsMDRunUnit" in pus[0].source_key
-            ]
-        except KeyError:
-            file_path = None
+        file_type = "xtc_em"
 
-        return file_path
+        return self._get_filenames(file_type)
 
     def get_filenames_nvt(self) -> dict[str, list[pathlib.Path]]:
         """
@@ -316,7 +319,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
         Returns
         -------
-        dict_nvt : dict[str, list[pathlib.Path]]
+        dict_nvt : Optional[dict[str, list[pathlib.Path]]]
           dictionary containing list of paths (pathlib.Path)
           to the output files
         """
@@ -329,61 +332,40 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
             "log_nvt",
             "cpt_nvt",
         ]
-        dict_nvt = {}
+        dict_npt = {}
         for file in file_keys:
-            try:
-                file_path = [
-                    pus[0].outputs[file]
-                    for pus in self.data.values()
-                    if "GromacsMDRunUnit" in pus[0].source_key
-                ]
-                dict_nvt[file] = file_path
-            except KeyError:
-                dict_nvt[file] = None
+            file_path = self._get_filenames(file)
+            dict_npt[file] = file_path
 
-        return dict_nvt
+        return dict_npt
 
-    def get_gro_nvt_filename(self) -> list[pathlib.Path]:
+    def get_gro_nvt_filenames(self) -> list[pathlib.Path]:
         """
         Get a list of paths to the .gro file, last frame of the
         NVT equilibration
 
         Returns
         -------
-        gro : list[pathlib.Path]
+        gro : Optional[list[pathlib.Path]]
           list of paths (pathlib.Path) to the output .gro file
         """
-        try:
-            file_path = [
-                pus[0].outputs["gro_nvt"]
-                for pus in self.data.values()
-                if "GromacsMDRunUnit" in pus[0].source_key
-            ]
-        except KeyError:
-            file_path = None
+        file_type = "gro_nvt"
 
-        return file_path
+        return self._get_filenames(file_type)
 
-    def get_xtc_nvt_filename(self) -> list[pathlib.Path]:
+    def get_xtc_nvt_filenames(self) -> list[pathlib.Path]:
         """
         Get a list of paths to the .xtc file of the
         NVT equilibration
 
         Returns
         -------
-        file_path : list[pathlib.Path]
+        file_path : Optional[list[pathlib.Path]]
           list of paths (pathlib.Path) to the output .xtc file
         """
-        try:
-            file_path = [
-                pus[0].outputs["xtc_nvt"]
-                for pus in self.data.values()
-                if "GromacsMDRunUnit" in pus[0].source_key
-            ]
-        except KeyError:
-            file_path = None
+        file_type = "xtc_nvt"
 
-        return file_path
+        return self._get_filenames(file_type)
 
     def get_filenames_npt(self) -> dict[str, list[pathlib.Path]]:
         """
@@ -400,7 +382,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
         Returns
         -------
-        dict_npt : dict[str, list[pathlib.Path]]
+        dict_npt : Optional[dict[str, list[pathlib.Path]]]
           dictionary containing list of paths (pathlib.Path)
           to the output files
         """
@@ -415,59 +397,38 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         ]
         dict_npt = {}
         for file in file_keys:
-            try:
-                file_path = [
-                    pus[0].outputs[file]
-                    for pus in self.data.values()
-                    if "GromacsMDRunUnit" in pus[0].source_key
-                ]
-                dict_npt[file] = file_path
-            except KeyError:
-                dict_npt[file] = None
+            file_path = self._get_filenames(file)
+            dict_npt[file] = file_path
 
         return dict_npt
 
-    def get_gro_npt_filename(self) -> list[pathlib.Path]:
+    def get_gro_npt_filenames(self) -> list[pathlib.Path]:
         """
         Get a list of paths to the .gro file, last frame of the
         NPT MD simulation
 
         Returns
         -------
-        gro : list[pathlib.Path]
+        gro : Optional[list[pathlib.Path]]
           list of paths (pathlib.Path) to the output .gro file
         """
-        try:
-            file_path = [
-                pus[0].outputs["gro_npt"]
-                for pus in self.data.values()
-                if "GromacsMDRunUnit" in pus[0].source_key
-            ]
-        except KeyError:
-            file_path = None
+        file_type = "gro_npt"
 
-        return file_path
+        return self._get_filenames(file_type)
 
-    def get_xtc_npt_filename(self) -> list[pathlib.Path]:
+    def get_xtc_npt_filenames(self) -> list[pathlib.Path]:
         """
         Get a list of paths to the .xtc file of the
         NPT MD simulation
 
         Returns
         -------
-        file_path : list[pathlib.Path]
+        file_path : Optional[list[pathlib.Path]]
           list of paths (pathlib.Path) to the output .xtc file
         """
-        try:
-            file_path = [
-                pus[0].outputs["xtc_npt"]
-                for pus in self.data.values()
-                if "GromacsMDRunUnit" in pus[0].source_key
-            ]
-        except KeyError:
-            file_path = None
+        file_type = "xtc_npt"
 
-        return file_path
+        return self._get_filenames(file_type)
 
 
 class GromacsMDProtocol(gufe.Protocol):

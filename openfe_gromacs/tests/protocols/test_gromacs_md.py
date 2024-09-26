@@ -231,21 +231,18 @@ class TestProtocolResult:
     def test_get_gro_filename(self, protocolresult):
         gro = protocolresult.get_gro_filename()
 
-        assert isinstance(gro, list)
-        assert isinstance(gro[0], pathlib.Path)
+        assert isinstance(gro, pathlib.Path)
 
     def test_get_top_filename(self, protocolresult):
         top = protocolresult.get_top_filename()
 
-        assert isinstance(top, list)
-        assert isinstance(top[0], pathlib.Path)
+        assert isinstance(top, pathlib.Path)
 
     def test_get_mdp_filenames(self, protocolresult):
         mdps = protocolresult.get_mdp_filenames()
 
         assert isinstance(mdps, list)
-        assert isinstance(mdps[0], list)
-        assert isinstance(mdps[0][0], pathlib.Path)
+        assert isinstance(mdps[0], pathlib.Path)
 
     def test_get_filenames_em(self, protocolresult):
         dict_file_path = protocolresult.get_filenames_em()
@@ -257,13 +254,13 @@ class TestProtocolResult:
             assert isinstance(file_path[0], pathlib.Path)
 
     def test_get_gro_em_filename(self, protocolresult):
-        file_path = protocolresult.get_gro_em_filename()
+        file_path = protocolresult.get_gro_em_filenames()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
 
     def test_get_xtc_em_filename(self, protocolresult):
-        file_path = protocolresult.get_xtc_em_filename()
+        file_path = protocolresult.get_xtc_em_filenames()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
@@ -277,14 +274,14 @@ class TestProtocolResult:
             assert len(file_path) == 1
             assert isinstance(file_path[0], pathlib.Path)
 
-    def test_get_gro_nvt_filename(self, protocolresult):
-        file_path = protocolresult.get_gro_nvt_filename()
+    def test_get_gro_nvt_filenames(self, protocolresult):
+        file_path = protocolresult.get_gro_nvt_filenames()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
 
-    def test_get_xtc_nvt_filename(self, protocolresult):
-        file_path = protocolresult.get_xtc_nvt_filename()
+    def test_get_xtc_nvt_filenames(self, protocolresult):
+        file_path = protocolresult.get_xtc_nvt_filenames()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
@@ -298,14 +295,14 @@ class TestProtocolResult:
             assert len(file_path) == 1
             assert isinstance(file_path[0], pathlib.Path)
 
-    def test_get_gro_npt_filename(self, protocolresult):
-        file_path = protocolresult.get_gro_npt_filename()
+    def test_get_gro_npt_filenames(self, protocolresult):
+        file_path = protocolresult.get_gro_npt_filenames()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
 
-    def test_get_xtc_npt_filename(self, protocolresult):
-        file_path = protocolresult.get_xtc_npt_filename()
+    def test_get_xtc_npt_filenames(self, protocolresult):
+        file_path = protocolresult.get_xtc_npt_filenames()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
@@ -334,12 +331,12 @@ class TestProtocolResultMissing:
         for name, file_path in dict_file_path.items():
             assert isinstance(file_path, type(None))
 
-    def test_get_gro_em_filename(self, protocolresult):
-        file_path = protocolresult.get_gro_em_filename()
+    def test_get_gro_em_filenames(self, protocolresult):
+        file_path = protocolresult.get_gro_em_filenames()
 
         assert isinstance(file_path, type(None))
 
-    def test_get_xtc_em_filename(self, protocolresult):
-        file_path = protocolresult.get_xtc_em_filename()
+    def test_get_xtc_em_filenames(self, protocolresult):
+        file_path = protocolresult.get_xtc_em_filenames()
 
         assert isinstance(file_path, type(None))
