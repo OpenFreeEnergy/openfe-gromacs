@@ -9,7 +9,6 @@ This module implements the settings necessary to run MD simulations using
 """
 from typing import Literal, Optional
 
-import pint
 from gufe.settings import OpenMMSystemGeneratorFFSettings, SettingsBaseModel
 from openfe.protocols.openmm_utils.omm_settings import (
     IntegratorSettings,
@@ -678,25 +677,31 @@ class GromacsMDEngineSettings(SettingsBaseModel):
     """
     pme: Literal["auto", "cpu", "gpu"] = "auto"
     """
-    Perform PME calculations on: auto, cpu, gpu
+    Perform PME calculations on: auto, cpu, gpu. Default: "auto"
     """
     pmefft: Literal["auto", "cpu", "gpu"] = "auto"
     """
-    Perform PME FFT calculations on: auto, cpu, gpu
+    Perform PME FFT calculations on: auto, cpu, gpu. Default: "auto"
     """
     bonded: Literal["auto", "cpu", "gpu"] = "auto"
     """
-    Perform bonded calculations on: auto, cpu, gpu
+    Perform bonded calculations on: auto, cpu, gpu. Default: "auto"
     """
     nb: Literal["auto", "cpu", "gpu"] = "auto"
     """
-    Calculate non-bonded interactions on: auto, cpu, gpu
+    Calculate non-bonded interactions on: auto, cpu, gpu. Default: "auto"
     """
     update: Literal["auto", "cpu", "gpu"] = "auto"
     """
-    Perform update and constraints on: auto, cpu, gpu
+    Perform update and constraints on: auto, cpu, gpu. Default: "auto"
     """
-
+    @validator("ntomp")
+    def must_be_positive(cls, v):
+        if v <= 0:
+            errmsg = f"ntomp must be positive values, " \
+                     f"got {v}."
+            raise ValueError(errmsg)
+        return v
 
 
 class GromacsMDProtocolSettings(Settings):
