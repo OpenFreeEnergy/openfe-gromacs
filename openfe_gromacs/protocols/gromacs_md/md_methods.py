@@ -15,6 +15,7 @@ import os
 import pathlib
 import subprocess
 import uuid
+import warnings
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any
@@ -54,7 +55,7 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
 
 logger = logging.getLogger(__name__)
 
-
+# Settings that are not exposed to the user
 PRE_DEFINED_SETTINGS = {
     "tinit": 0 * unit.picosecond,
     "init_step": 0,
@@ -223,16 +224,18 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
         return top
 
-    def get_mdp_filenames(self) -> list[pathlib.Path]:
+
+    def get_mdp_filenames(self) -> list[dict[str, pathlib.Path]]:
         """
-        Get a list of paths to the .mdp files
+        Get a dictionary of paths to the .mdp files
 
         Returns
         -------
-        mdps : list[list[pathlib.Path]]
-          list of paths (pathlib.Path) to the mdp files for energy minimization,
+        mdps : list[dict[str, pathlib.Path]]
+          dictionary of paths (pathlib.Path) to the mdp files for energy minimization,
           NVT and NPT MD runs
         """
+
         mdps = [
             pus[0].outputs["mdp_files"]
             for pus in self.data.values()
@@ -545,7 +548,16 @@ class GromacsMDProtocol(gufe.Protocol):
             stateA
         )
 
-        system_name = "Solvent MD" if solvent_comp is not None else "Vacuum MD"
+        # Raise an error when no SolventComponent is provided as this Protocol
+        # currently does not support vacuum simulations
+        if solvent_comp is None:
+            errmsg = (
+                "No SolventComponent provided. This protocol currently does"
+                " not support vacuum simulations."
+            )
+            raise ValueError(errmsg)
+
+        system_name = "Solvent MD"
 
         for comp in [protein_comp] + small_mols:
             if comp is not None:
@@ -718,11 +730,11 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
 
         Returns
         -------
-        mdps: list
-          List of file paths to mdp files.
+        mdps: dict
+          Dictionary of file paths to mdp files.
         """
 
-        mdps = []
+        mdps = {}
         if settings["sim_settings_em"].nsteps > 0:
             settings_dict = (
                 settings["sim_settings_em"].dict()
@@ -731,7 +743,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 | PRE_DEFINED_SETTINGS_EM
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
-            mdps.append(mdp)
+            mdps["em"] = mdp
         if settings["sim_settings_nvt"].nsteps > 0:
             settings_dict = (
                 settings["sim_settings_nvt"].dict()
@@ -740,7 +752,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 | PRE_DEFINED_SETTINGS_MD
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
-            mdps.append(mdp)
+            mdps["nvt"] = mdp
         if settings["sim_settings_npt"].nsteps > 0:
             settings_dict = (
                 settings["sim_settings_npt"].dict()
@@ -749,7 +761,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
                 | PRE_DEFINED_SETTINGS_MD
             )
             mdp = _dict2mdp(settings_dict, shared_basepath)
-            mdps.append(mdp)
+            mdps["npt"] = mdp
 
         return mdps
 
@@ -772,6 +784,15 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         stateA_interchange: Interchange object
           The interchange object of the system.
         """
+        # Set the environment variable for using the experimental interchange
+        # functionality `from_openmm` and raise a warning
+        os.environ["INTERCHANGE_EXPERIMENTAL"] = "1"
+        war = (
+            "Environment variable INTERCHANGE_EXPERIMENTAL=1 is set for using "
+            "the interchange functionality 'from_openmm' which is not well "
+            "tested yet."
+        )
+        warnings.warn(war)
         # Create the stateA system
         # Create a dictionary of OFFMol for each SMC for bookkeeping
         smc_components: dict[SmallMoleculeComponent, OFFMolecule]
@@ -904,15 +925,6 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             "protein_comp": protein_comp,
             "small_mols": small_mols,
         }
-
-        # Raise an error when no SolventComponent is provided as this Protocol
-        # currently does not support vacuum simulations
-        if not solvent_comp:
-            errmsg = (
-                "No SolventComponent provided. This protocol currently does"
-                " not support vacuum simulations."
-            )
-            raise ValueError(errmsg)
 
         # 1. Write out .mdp files
         mdps = self._write_mdp_files(settings, shared_basepath)
@@ -1101,15 +1113,11 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         if sim_settings_em.nsteps > 0:
             if verbose:
                 self.logger.info("Running energy minimization")
-            mdp = [
-                x
-                for x in mdp_files
-                if str(x).split("/")[-1] == output_settings_em.mdp_file
-            ]
+            mdp = mdp_files["em"]
             tpr = pathlib.Path(ctx.shared / output_settings_em.tpr_file)
-            assert len(mdp) == 1
+            assert mdp.exists()
             self._run_gromacs(
-                mdp[0],
+                mdp,
                 input_gro,
                 input_top,
                 tpr,
@@ -1135,20 +1143,16 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         if sim_settings_nvt.nsteps > 0:
             if verbose:
                 self.logger.info("Running an NVT MD simulation")
-            mdp = [
-                x
-                for x in mdp_files
-                if str(x).split("/")[-1] == output_settings_nvt.mdp_file
-            ]
+            mdp = mdp_files["nvt"]
             tpr = pathlib.Path(ctx.shared / output_settings_nvt.tpr_file)
-            assert len(mdp) == 1
+            assert mdp.exists()
             # If EM was run, use the output from that to run NVT MD
             if sim_settings_em.nsteps > 0:
                 gro = pathlib.Path(ctx.shared / output_settings_em.gro_file)
             else:
                 gro = input_gro
             self._run_gromacs(
-                mdp[0],
+                mdp,
                 gro,
                 input_top,
                 tpr,
@@ -1173,13 +1177,9 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         if sim_settings_npt.nsteps > 0:
             if verbose:
                 self.logger.info("Running an NPT MD simulation")
-            mdp = [
-                x
-                for x in mdp_files
-                if str(x).split("/")[-1] == output_settings_npt.mdp_file
-            ]
+            mdp = mdp_files["npt"]
             tpr = pathlib.Path(ctx.shared / output_settings_npt.tpr_file)
-            assert len(mdp) == 1
+            assert mdp.exists()
             # If EM and/or NVT MD was run, use the output coordinate file
             # from that to run NPT MD
             if sim_settings_em.nsteps > 0:
@@ -1190,7 +1190,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             else:
                 gro = input_gro
             self._run_gromacs(
-                mdp[0],
+                mdp,
                 gro,
                 input_top,
                 tpr,

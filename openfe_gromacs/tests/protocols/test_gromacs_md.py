@@ -80,17 +80,14 @@ def test_no_SolventComponent(benzene_vacuum_system, tmpdir):
         settings=settings,
     )
 
-    dag = p.create(
-        stateA=benzene_vacuum_system,
-        stateB=benzene_vacuum_system,
-        mapping=None,
-    )
-    dag_unit = list(dag.protocol_units)[0]
-
     errmsg = "No SolventComponent provided. This protocol currently"
     with tmpdir.as_cwd():
         with pytest.raises(ValueError, match=errmsg):
-            dag_unit.run(dry=True)
+            p.create(
+                stateA=benzene_vacuum_system,
+                stateB=benzene_vacuum_system,
+                mapping=None,
+            )
 
 
 @pytest.fixture
@@ -135,7 +132,6 @@ def test_unit_tagging_setup_unit(solvent_protocol_dag, tmpdir):
 
 
 def test_dry_run_ffcache_none(benzene_system, monkeypatch, tmp_path_factory):
-    monkeypatch.setenv("INTERCHANGE_EXPERIMENTAL", "1")
     settings = GromacsMDProtocol.default_settings()
     settings.output_settings_em.forcefield_cache = None
     settings.simulation_settings_em.nsteps = 10
@@ -173,33 +169,33 @@ def test_dry_many_molecules_solvent(
     """
     A basic test flushing "will it work if you pass multiple molecules"
     """
-    monkeypatch.setenv("INTERCHANGE_EXPERIMENTAL", "1")
-    settings = GromacsMDProtocol.default_settings()
-    # Only run an EM, no MD, to make the test faster
-    settings.simulation_settings_em.nsteps = 1
-    settings.simulation_settings_nvt.nsteps = 0
-    settings.simulation_settings_npt.nsteps = 0
-    settings.simulation_settings_em.rcoulomb = 1.0 * off_unit.nanometer
-    protocol = GromacsMDProtocol(
-        settings=settings,
-    )
+    with pytest.warns(UserWarning, match="Environment variabl"):
+        settings = GromacsMDProtocol.default_settings()
+        # Only run an EM, no MD, to make the test faster
+        settings.simulation_settings_em.nsteps = 1
+        settings.simulation_settings_nvt.nsteps = 0
+        settings.simulation_settings_npt.nsteps = 0
+        settings.simulation_settings_em.rcoulomb = 1.0 * off_unit.nanometer
+        protocol = GromacsMDProtocol(
+            settings=settings,
+        )
 
-    # create DAG from protocol and take first (and only) work unit from within
-    dag = protocol.create(
-        stateA=benzene_many_solv_system,
-        stateB=benzene_many_solv_system,
-        mapping=None,
-    )
+        # create DAG from protocol and take first (and only) work unit from within
+        dag = protocol.create(
+            stateA=benzene_many_solv_system,
+            stateB=benzene_many_solv_system,
+            mapping=None,
+        )
 
-    shared_temp = tmp_path_factory.mktemp("shared")
-    scratch_temp = tmp_path_factory.mktemp("scratch")
-    gufe.protocols.execute_DAG(
-        dag,
-        shared_basedir=shared_temp,
-        scratch_basedir=scratch_temp,
-        keep_shared=False,
-        n_retries=3,
-    )
+        shared_temp = tmp_path_factory.mktemp("shared")
+        scratch_temp = tmp_path_factory.mktemp("scratch")
+        gufe.protocols.execute_DAG(
+            dag,
+            shared_basedir=shared_temp,
+            scratch_basedir=scratch_temp,
+            keep_shared=False,
+            n_retries=3,
+        )
 
 
 class TestProtocolResult:
@@ -242,7 +238,8 @@ class TestProtocolResult:
         mdps = protocolresult.get_mdp_filenames()
 
         assert isinstance(mdps, list)
-        assert isinstance(mdps[0], pathlib.Path)
+        assert isinstance(mdps[0], dict)
+        assert all(isinstance(mdp, pathlib.Path) for mdp in mdps[0].values())
 
     def test_get_filenames_em(self, protocolresult):
         dict_file_path = protocolresult.get_filenames_em()
