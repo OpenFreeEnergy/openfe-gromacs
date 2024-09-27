@@ -64,7 +64,7 @@ class TestMDSetupUnit(GufeTokenizableTestsMixin):
 
 class TestGromacsMDProtocolResult(GufeTokenizableTestsMixin):
     cls = gromacs_md.GromacsMDProtocolResult
-    key = "GromacsMDProtocolResult-4739ae9a56f36a1e7c95c503601769f4"
+    key = "GromacsMDProtocolResult-7d0af023b93f9b8d42bbd3289a886875"
     repr = f"<{key}>"
 
     @pytest.fixture()

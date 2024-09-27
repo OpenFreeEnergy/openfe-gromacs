@@ -191,12 +191,14 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
     def get_gro_filename(self) -> pathlib.Path:
         """
-        Get a list of paths to the .gro file
+        Get the path to the input coordinate .gro file.
+        This returns a single path even if multiple repeats are run since
+        the GromacsMDSetupUnit is only run ones.
 
         Returns
         -------
-        traj : list[pathlib.Path]
-          list of paths (pathlib.Path) to the simulation trajectory
+        gro : pathlib.Path
+          Path to the input coordinate .gro file
         """
         gro = [
             pus[0].outputs["system_gro"]
@@ -208,12 +210,14 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
     def get_top_filename(self) -> pathlib.Path:
         """
-        Get a list of paths to the .gro file
+        Get the path to the .top file.
+        This returns a single path even if multiple repeats are run since
+        the GromacsMDSetupUnit is only run ones.
 
         Returns
         -------
-        traj : list[pathlib.Path]
-          list of paths (pathlib.Path) to the simulation trajectory
+        top : pathlib.Path
+          Path to the input topology .top file
         """
         top = [
             pus[0].outputs["system_top"]
@@ -223,13 +227,15 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
 
         return top
 
-    def get_mdp_filenames(self) -> list[dict[str, pathlib.Path]]:
+    def get_mdp_filenames(self) -> dict[str, pathlib.Path]:
         """
-        Get a dictionary of paths to the .mdp files
+        Get a dictionary of paths to the .mdp files.
+        This returns a single dictionary with paths even if multiple repeats
+        are run since the GromacsMDSetupUnit is only run ones.
 
         Returns
         -------
-        mdps : list[dict[str, pathlib.Path]]
+        mdps : dict[str, pathlib.Path]
           dictionary of paths (pathlib.Path) to the mdp files for energy minimization,
           NVT and NPT MD runs
         """
