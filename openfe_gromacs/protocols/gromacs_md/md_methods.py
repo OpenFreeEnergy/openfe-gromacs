@@ -169,8 +169,8 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
             for pus in self.data.values()
             if "GromacsMDRunUnit" in pus[0].source_key and file_type in pus[0].outputs
         ]
-        if len(file_paths) == 0:
-            file_paths = None
+        if not file_paths:
+            return None
 
         return file_paths
 
