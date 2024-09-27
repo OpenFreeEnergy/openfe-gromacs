@@ -5,12 +5,13 @@ import os
 from importlib import resources
 
 import gufe
-import openfe
+import openfe_gromacs
 import pytest
 from gufe import SmallMoleculeComponent
 from openff.units import unit
 from rdkit import Chem
 from rdkit.Chem import AllChem
+import pathlib
 
 
 class SlowTests:
@@ -125,7 +126,7 @@ def ethane():
 @pytest.fixture(scope="session")
 def benzene_modifications():
     files = {}
-    with importlib.resources.files("openfe.tests.data") as d:
+    with importlib.resources.files("openfe_gromacs.tests.data") as d:
         fn = str(d / "benzene_modifications.sdf")
         supp = Chem.SDMolSupplier(str(fn), removeHs=False)
         for rdmol in supp:
@@ -135,34 +136,43 @@ def benzene_modifications():
 
 @pytest.fixture(scope="session")
 def T4_protein_component():
-    with resources.files("openfe.tests.data") as d:
+    with resources.files("openfe_gromacs.tests.data") as d:
         fn = str(d / "181l_only.pdb")
         comp = gufe.ProteinComponent.from_pdb_file(fn, name="T4_protein")
 
     return comp
 
 
+@pytest.fixture(scope="session")
+def alanine_dipeptide_component():
+    with resources.files("openfe_gromacs.tests.data") as d:
+        fn = str(d / "alanine-dipeptide.pdb")
+        comp = gufe.ProteinComponent.from_pdb_file(fn, name="Alanine_dipeptide")
+
+    return comp
+
+
 @pytest.fixture()
 def eg5_protein_pdb():
-    with resources.files("openfe.tests.data.eg5") as d:
+    with resources.files("openfe_gromacs.tests.data.eg5") as d:
         yield str(d / "eg5_protein.pdb")
 
 
 @pytest.fixture()
 def eg5_ligands_sdf():
-    with resources.files("openfe.tests.data.eg5") as d:
+    with resources.files("openfe_gromacs.tests.data.eg5") as d:
         yield str(d / "eg5_ligands.sdf")
 
 
 @pytest.fixture()
 def eg5_cofactor_sdf():
-    with resources.files("openfe.tests.data.eg5") as d:
+    with resources.files("openfe_gromacs.tests.data.eg5") as d:
         yield str(d / "eg5_cofactor.sdf")
 
 
 @pytest.fixture()
-def eg5_protein(eg5_protein_pdb) -> openfe.ProteinComponent:
-    return openfe.ProteinComponent.from_pdb_file(eg5_protein_pdb)
+def eg5_protein(eg5_protein_pdb) -> openfe_gromacs.ProteinComponent:
+    return openfe_gromacs.ProteinComponent.from_pdb_file(eg5_protein_pdb)
 
 
 @pytest.fixture()
@@ -183,7 +193,7 @@ def CN_molecule():
     """
     A basic CH3NH2 molecule for quick testing.
     """
-    with resources.files("openfe.tests.data") as d:
+    with resources.files("openfe-gromacs.tests.data") as d:
         fn = str(d / "CN.sdf")
         supp = Chem.SDMolSupplier(str(fn), removeHs=False)
 

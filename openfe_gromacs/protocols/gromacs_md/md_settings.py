@@ -673,6 +673,15 @@ class FFSettingsOpenMM(OpenMMSystemGeneratorFFSettings):
         return v
 
 
+class SolvationSettings(OpenMMSolvationSettings):
+    """
+    Solvation settings for solvating the system using OpenMM. For now,
+    water models with virtual sites are not supported when creating an
+    Interchange object `from_openmm`.
+    """
+    solvent_model: Literal['tip3p'] = 'tip3p'
+
+
 class GromacsMDProtocolSettings(Settings):
     class Config:
         arbitrary_types_allowed = True
@@ -696,7 +705,7 @@ class GromacsMDProtocolSettings(Settings):
     # Things for creating the OpenMM systems
     forcefield_settings: FFSettingsOpenMM
     partial_charge_settings: OpenFFPartialChargeSettings
-    solvation_settings: OpenMMSolvationSettings
+    solvation_settings: SolvationSettings
 
     # MD Engine things
     engine_settings: OpenMMEngineSettings

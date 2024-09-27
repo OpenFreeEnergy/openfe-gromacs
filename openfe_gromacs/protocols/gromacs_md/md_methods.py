@@ -37,7 +37,7 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
     NVTSimulationSettings,
     OpenFFPartialChargeSettings,
     OpenMMEngineSettings,
-    OpenMMSolvationSettings,
+    SolvationSettings,
 )
 from openfe_gromacs.protocols.gromacs_utils import create_systems, write_mdp
 
@@ -390,7 +390,7 @@ class GromacsMDProtocol(gufe.Protocol):
                 pressure=1 * unit.bar,
             ),
             partial_charge_settings=OpenFFPartialChargeSettings(),
-            solvation_settings=OpenMMSolvationSettings(),
+            solvation_settings=SolvationSettings(),
             engine_settings=OpenMMEngineSettings(),
             integrator_settings=IntegratorSettings(),
             simulation_settings_em=EMSimulationSettings(

@@ -2,7 +2,6 @@
 # For details, see https://github.com/OpenFreeEnergy/openfe-gromacs
 import gufe
 import numpy as np
-import pytest
 from openmm import NonbondedForce
 from openmm.app import GromacsGroFile, GromacsTopFile
 
@@ -10,7 +9,7 @@ from openfe_gromacs.protocols.gromacs_md.md_methods import GromacsMDProtocol
 from openfe_gromacs.protocols.gromacs_utils import create_systems
 
 
-def test_interchange_gromacs(T4_protein_component, tmpdir):
+def test_interchange_gromacs(alanine_dipeptide_component, tmpdir):
     solvent = gufe.SolventComponent()
     smc_components = {}
     prot_settings = GromacsMDProtocol.default_settings()
@@ -23,7 +22,7 @@ def test_interchange_gromacs(T4_protein_component, tmpdir):
     settings["integrator_settings"] = prot_settings.integrator_settings
     settings["output_settings_em"] = prot_settings.output_settings_em
     omm_system, omm_topology, omm_positions = create_systems.create_openmm_system(
-        settings, solvent, T4_protein_component, smc_components, tmpdir
+        settings, solvent, alanine_dipeptide_component, smc_components, tmpdir
     )
     omm_atom_names = [atom.name for atom in omm_topology.atoms()]
     interchange = create_systems.create_interchange(
@@ -74,29 +73,3 @@ def test_user_charges(ethane, tmpdir):
         charge, sigma, epsilon = nonbonded.getParticleParameters(i)
         gro_charges.append(charge._value)
     np.testing.assert_almost_equal(off_charges.m, gro_charges, decimal=5)
-
-
-# def test_tip4p(ethane, tmpdir):
-#     settings = GromacsMDProtocol.default_settings()
-#     settings.forcefield_settings.forcefields = [
-#         "amber/ff14SB.xml",  # Choose ff14SB for the protein
-#         "amber/tip4pew_standard.xml",  # Choose tip4p for the water
-#     ]
-#     settings.solvation_settings.solvent_model = 'tip4pew'
-#
-#     solvent = gufe.SolventComponent()
-#     smc_components = {ethane: ethane.to_openff()}
-#     # smc_components = {}
-#     omm_system, omm_topology, omm_positions = \
-#         create_systems.create_openmm_system(
-#         settings, solvent, None, smc_components, tmpdir
-#     )
-#
-#     interchange = create_systems.create_interchange(
-#         omm_system, omm_topology, omm_positions, smc_components
-#     )
-#     # Save to Gromacs files
-#     interchange.to_top(f"{tmpdir}/test.top")
-#     interchange.to_gro(f"{tmpdir}/test.gro")
-#
-#     # Check
