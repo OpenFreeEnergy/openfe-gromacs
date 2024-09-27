@@ -42,6 +42,7 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
     EMOutputSettings,
     EMSimulationSettings,
     FFSettingsOpenMM,
+    GromacsEngineSettings,
     GromacsMDProtocolSettings,
     IntegratorSettings,
     NPTOutputSettings,
@@ -50,7 +51,6 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
     NVTSimulationSettings,
     OpenFFPartialChargeSettings,
     OpenMMSolvationSettings,
-    GromacsEngineSettings,
 )
 
 logger = logging.getLogger(__name__)

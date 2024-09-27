@@ -669,6 +669,7 @@ class GromacsEngineSettings(SettingsBaseModel):
     """
     MD engine settings for running simulations in Gromacs.
     """
+
     ntomp: int = 1
     """
     Number of threads to be used for OpenMP multithreading.
@@ -695,11 +696,11 @@ class GromacsEngineSettings(SettingsBaseModel):
     """
     Perform update and constraints on: auto, cpu, gpu. Default: "auto"
     """
+
     @validator("ntomp")
     def must_be_positive(cls, v):
         if v <= 0:
-            errmsg = f"ntomp must be positive values, " \
-                     f"got {v}."
+            errmsg = f"ntomp must be positive values, " f"got {v}."
             raise ValueError(errmsg)
         return v
 
