@@ -1,4 +1,4 @@
-REMARK  ACE                                                         
+REMARK  ACE
 ATOM      1 1HH3 ACE     1       2.000   1.000  -0.000
 ATOM      2  CH3 ACE     1       2.000   2.090   0.000
 ATOM      3 2HH3 ACE     1       1.486   2.454   0.890
@@ -21,5 +21,5 @@ ATOM     19  CH3 NME     3       5.846   8.284   0.000
 ATOM     20 1HH3 NME     3       4.819   8.648   0.000
 ATOM     21 2HH3 NME     3       6.360   8.648   0.890
 ATOM     22 3HH3 NME     3       6.360   8.648  -0.890
-TER   
-END   
+TER
+END

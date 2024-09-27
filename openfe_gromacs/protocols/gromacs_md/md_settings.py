@@ -671,7 +671,9 @@ class SolvationSettings(OpenMMSolvationSettings):
     water models with virtual sites are not supported when creating an
     Interchange object `from_openmm`.
     """
-    solvent_model: Literal['tip3p'] = 'tip3p'
+
+    solvent_model: Literal["tip3p"] = "tip3p"
+
 
 class GromacsEngineSettings(SettingsBaseModel):
     """

@@ -2,16 +2,17 @@
 # For details, see https://github.com/OpenFreeEnergy/openfe
 import importlib
 import os
+import pathlib
 from importlib import resources
 
 import gufe
-import openfe_gromacs
 import pytest
 from gufe import SmallMoleculeComponent
 from openff.units import unit
 from rdkit import Chem
 from rdkit.Chem import AllChem
-import pathlib
+
+import openfe_gromacs
 
 
 class SlowTests:
