@@ -211,7 +211,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         """
         Get the path to the .top file.
         This returns a single path even if multiple repeats are run since
-        the GromacsMDSetupUnit is only run ones.
+        the GromacsMDSetupUnit is only run once.
 
         Returns
         -------
