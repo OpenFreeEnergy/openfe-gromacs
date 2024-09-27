@@ -230,7 +230,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         """
         Get a dictionary of paths to the .mdp files.
         This returns a single dictionary with paths even if multiple repeats
-        are run since the GromacsMDSetupUnit is only run ones.
+        are run since the GromacsMDSetupUnit is only run once.
 
         Returns
         -------
