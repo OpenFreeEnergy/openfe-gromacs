@@ -9,12 +9,10 @@ This module implements the settings necessary to run MD simulations using
 """
 from typing import Literal, Optional
 
-import pint
 from gufe.settings import OpenMMSystemGeneratorFFSettings, SettingsBaseModel
 from openfe.protocols.openmm_utils.omm_settings import (
     IntegratorSettings,
     OpenFFPartialChargeSettings,
-    OpenMMEngineSettings,
     OpenMMSolvationSettings,
     Settings,
 )
@@ -205,12 +203,6 @@ class SimulationSettings(SettingsBaseModel):
     """
     Number of iterations to correct for rotational lengthening in LINCS.
     Default 1.
-    """
-    ntomp: int = 1
-    """
-    Number of threads to be used for OpenMP multithreading.
-    GROMACS must be compiled with OpenMP support if a value greater than 1 is
-    set here.
     """
 
     @validator(
@@ -681,6 +673,45 @@ class SolvationSettings(OpenMMSolvationSettings):
     """
     solvent_model: Literal['tip3p'] = 'tip3p'
 
+class GromacsEngineSettings(SettingsBaseModel):
+    """
+    MD engine settings for running simulations in Gromacs.
+    """
+
+    ntomp: int = 1
+    """
+    Number of threads to be used for OpenMP multithreading.
+    GROMACS must be compiled with OpenMP support if a value greater than 1 is
+    set here.
+    """
+    pme: Literal["auto", "cpu", "gpu"] = "auto"
+    """
+    Perform PME calculations on: auto, cpu, gpu. Default: "auto"
+    """
+    pmefft: Literal["auto", "cpu", "gpu"] = "auto"
+    """
+    Perform PME FFT calculations on: auto, cpu, gpu. Default: "auto"
+    """
+    bonded: Literal["auto", "cpu", "gpu"] = "auto"
+    """
+    Perform bonded calculations on: auto, cpu, gpu. Default: "auto"
+    """
+    nb: Literal["auto", "cpu", "gpu"] = "auto"
+    """
+    Calculate non-bonded interactions on: auto, cpu, gpu. Default: "auto"
+    """
+    update: Literal["auto", "cpu", "gpu"] = "auto"
+    """
+    Perform update and constraints on: auto, cpu, gpu. Default: "auto"
+    """
+
+    @validator("ntomp")
+    def must_be_positive(cls, v):
+        if v <= 0:
+            errmsg = f"ntomp must be positive values, " f"got {v}."
+            raise ValueError(errmsg)
+        return v
+
 
 class GromacsMDProtocolSettings(Settings):
     class Config:
@@ -702,21 +733,19 @@ class GromacsMDProtocolSettings(Settings):
     gro: str
     top: str
 
-    # Things for creating the OpenMM systems
+    # Settings for creating the OpenMM systems
     forcefield_settings: FFSettingsOpenMM
     partial_charge_settings: OpenFFPartialChargeSettings
     solvation_settings: SolvationSettings
-
-    # MD Engine things
-    engine_settings: OpenMMEngineSettings
-
-    # Sampling State defining things
     integrator_settings: IntegratorSettings
 
     # Simulation run settings
     simulation_settings_em: EMSimulationSettings
     simulation_settings_nvt: NVTSimulationSettings
     simulation_settings_npt: NPTSimulationSettings
+
+    # Gromacs run/engine settings
+    engine_settings: GromacsEngineSettings
 
     # Simulations output settings
     output_settings_em: EMOutputSettings

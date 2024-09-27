@@ -60,7 +60,6 @@ def dict2mdp(settings_dict: dict, shared_basepath):
         "edr_file",
         "log_file",
         "cpt_file",
-        "ntomp",
     ]
     for setting in non_mdps:
         settings_dict.pop(setting)

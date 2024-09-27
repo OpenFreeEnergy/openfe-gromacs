@@ -9,7 +9,7 @@ from openfe_gromacs.protocols.gromacs_md.md_methods import GromacsMDProtocol
 from openfe_gromacs.protocols.gromacs_utils import create_systems
 
 
-def test_interchange_gromacs(alanine_dipeptide_component, tmpdir):
+def test_interchange_gromacs(T4_protein_component, tmpdir):
     solvent = gufe.SolventComponent()
     smc_components = {}
     prot_settings = GromacsMDProtocol.default_settings()
@@ -22,7 +22,7 @@ def test_interchange_gromacs(alanine_dipeptide_component, tmpdir):
     settings["integrator_settings"] = prot_settings.integrator_settings
     settings["output_settings_em"] = prot_settings.output_settings_em
     omm_system, omm_topology, omm_positions = create_systems.create_openmm_system(
-        settings, solvent, alanine_dipeptide_component, smc_components, tmpdir
+        settings, solvent, T4_protein_component, smc_components, tmpdir
     )
     omm_atom_names = [atom.name for atom in omm_topology.atoms()]
     interchange = create_systems.create_interchange(

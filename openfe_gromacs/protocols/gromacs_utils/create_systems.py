@@ -12,8 +12,6 @@ from openmmtools import forces
 from openfe_gromacs.protocols.gromacs_md.md_settings import (
     IntegratorSettings,
     OpenFFPartialChargeSettings,
-    OpenMMEngineSettings,
-    OpenMMSolvationSettings,
 )
 
 
