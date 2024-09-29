@@ -12,6 +12,7 @@ Welcome to openfe-gromacs's documentation!
 
    getting_started
    api
+   tutorials/index
 
 
 
