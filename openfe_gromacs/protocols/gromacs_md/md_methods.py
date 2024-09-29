@@ -880,7 +880,7 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         """
         Write out all the files necessary to run the Gromacs MD simulation.
         MDP files, Gromacs coordinate and topology files are written.
-        This SetupUnit does not actually run the MD simulation.
+
         Parameters
         ----------
         dry : bool
@@ -891,9 +891,9 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
           Verbose output of the simulation progress. Output is provided via
           INFO level logging.
         scratch_basepath: Pathlike, optional
-          Where to store temporary files, defaults to current working directory
+          Where to store temporary files, defaults to current working directory.
         shared_basepath : Pathlike, optional
-          Where to run the calculation, defaults to current working directory
+          Where to run the calculation, defaults to current working directory.
 
         Returns
         -------
@@ -904,7 +904,11 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         Raises
         ------
         error
-          Exception if anything failed
+          Exception if anything failed.
+
+        Notes
+        -----
+        * This SetupUnit does not actually run the MD simulation.
         """
         if verbose:
             self.logger.info("Creating system")

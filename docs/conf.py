@@ -101,6 +101,7 @@ exclude_patterns = [
     "**/.DS_Store",
     "_ext",
     "_sass",
+    "README.md",
     "**/README.md",
     "ExampleNotebooks",
 ]
