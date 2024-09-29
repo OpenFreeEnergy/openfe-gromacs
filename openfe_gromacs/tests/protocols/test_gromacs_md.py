@@ -80,17 +80,14 @@ def test_no_SolventComponent(benzene_vacuum_system, tmpdir):
         settings=settings,
     )
 
-    dag = p.create(
-        stateA=benzene_vacuum_system,
-        stateB=benzene_vacuum_system,
-        mapping=None,
-    )
-    dag_unit = list(dag.protocol_units)[0]
-
     errmsg = "No SolventComponent provided. This protocol currently"
     with tmpdir.as_cwd():
         with pytest.raises(ValueError, match=errmsg):
-            dag_unit.run(dry=True)
+            p.create(
+                stateA=benzene_vacuum_system,
+                stateB=benzene_vacuum_system,
+                mapping=None,
+            )
 
 
 @pytest.fixture
@@ -135,7 +132,6 @@ def test_unit_tagging_setup_unit(solvent_protocol_dag, tmpdir):
 
 
 def test_dry_run_ffcache_none(benzene_system, monkeypatch, tmp_path_factory):
-    monkeypatch.setenv("INTERCHANGE_EXPERIMENTAL", "1")
     settings = GromacsMDProtocol.default_settings()
     settings.output_settings_em.forcefield_cache = None
     settings.simulation_settings_em.nsteps = 10
@@ -173,33 +169,33 @@ def test_dry_many_molecules_solvent(
     """
     A basic test flushing "will it work if you pass multiple molecules"
     """
-    monkeypatch.setenv("INTERCHANGE_EXPERIMENTAL", "1")
-    settings = GromacsMDProtocol.default_settings()
-    # Only run an EM, no MD, to make the test faster
-    settings.simulation_settings_em.nsteps = 1
-    settings.simulation_settings_nvt.nsteps = 0
-    settings.simulation_settings_npt.nsteps = 0
-    settings.simulation_settings_em.rcoulomb = 1.0 * off_unit.nanometer
-    protocol = GromacsMDProtocol(
-        settings=settings,
-    )
+    with pytest.warns(UserWarning, match="Environment variabl"):
+        settings = GromacsMDProtocol.default_settings()
+        # Only run an EM, no MD, to make the test faster
+        settings.simulation_settings_em.nsteps = 1
+        settings.simulation_settings_nvt.nsteps = 0
+        settings.simulation_settings_npt.nsteps = 0
+        settings.simulation_settings_em.rcoulomb = 1.0 * off_unit.nanometer
+        protocol = GromacsMDProtocol(
+            settings=settings,
+        )
 
-    # create DAG from protocol and take first (and only) work unit from within
-    dag = protocol.create(
-        stateA=benzene_many_solv_system,
-        stateB=benzene_many_solv_system,
-        mapping=None,
-    )
+        # create DAG from protocol and take first (and only) work unit from within
+        dag = protocol.create(
+            stateA=benzene_many_solv_system,
+            stateB=benzene_many_solv_system,
+            mapping=None,
+        )
 
-    shared_temp = tmp_path_factory.mktemp("shared")
-    scratch_temp = tmp_path_factory.mktemp("scratch")
-    gufe.protocols.execute_DAG(
-        dag,
-        shared_basedir=shared_temp,
-        scratch_basedir=scratch_temp,
-        keep_shared=False,
-        n_retries=3,
-    )
+        shared_temp = tmp_path_factory.mktemp("shared")
+        scratch_temp = tmp_path_factory.mktemp("scratch")
+        gufe.protocols.execute_DAG(
+            dag,
+            shared_basedir=shared_temp,
+            scratch_basedir=scratch_temp,
+            keep_shared=False,
+            n_retries=3,
+        )
 
 
 class TestProtocolResult:
@@ -231,21 +227,18 @@ class TestProtocolResult:
     def test_get_gro_filename(self, protocolresult):
         gro = protocolresult.get_gro_filename()
 
-        assert isinstance(gro, list)
-        assert isinstance(gro[0], pathlib.Path)
+        assert isinstance(gro, pathlib.Path)
 
     def test_get_top_filename(self, protocolresult):
         top = protocolresult.get_top_filename()
 
-        assert isinstance(top, list)
-        assert isinstance(top[0], pathlib.Path)
+        assert isinstance(top, pathlib.Path)
 
     def test_get_mdp_filenames(self, protocolresult):
         mdps = protocolresult.get_mdp_filenames()
 
-        assert isinstance(mdps, list)
-        assert isinstance(mdps[0], list)
-        assert isinstance(mdps[0][0], pathlib.Path)
+        assert isinstance(mdps, dict)
+        assert all(isinstance(mdp, pathlib.Path) for mdp in mdps.values())
 
     def test_get_filenames_em(self, protocolresult):
         dict_file_path = protocolresult.get_filenames_em()
@@ -257,13 +250,13 @@ class TestProtocolResult:
             assert isinstance(file_path[0], pathlib.Path)
 
     def test_get_gro_em_filename(self, protocolresult):
-        file_path = protocolresult.get_gro_em_filename()
+        file_path = protocolresult.get_gro_em_filenames()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
 
     def test_get_xtc_em_filename(self, protocolresult):
-        file_path = protocolresult.get_xtc_em_filename()
+        file_path = protocolresult.get_xtc_em_filenames()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
@@ -277,14 +270,14 @@ class TestProtocolResult:
             assert len(file_path) == 1
             assert isinstance(file_path[0], pathlib.Path)
 
-    def test_get_gro_nvt_filename(self, protocolresult):
-        file_path = protocolresult.get_gro_nvt_filename()
+    def test_get_gro_nvt_filenames(self, protocolresult):
+        file_path = protocolresult.get_gro_nvt_filenames()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
 
-    def test_get_xtc_nvt_filename(self, protocolresult):
-        file_path = protocolresult.get_xtc_nvt_filename()
+    def test_get_xtc_nvt_filenames(self, protocolresult):
+        file_path = protocolresult.get_xtc_nvt_filenames()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
@@ -298,14 +291,48 @@ class TestProtocolResult:
             assert len(file_path) == 1
             assert isinstance(file_path[0], pathlib.Path)
 
-    def test_get_gro_npt_filename(self, protocolresult):
-        file_path = protocolresult.get_gro_npt_filename()
+    def test_get_gro_npt_filenames(self, protocolresult):
+        file_path = protocolresult.get_gro_npt_filenames()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
 
-    def test_get_xtc_npt_filename(self, protocolresult):
-        file_path = protocolresult.get_xtc_npt_filename()
+    def test_get_xtc_npt_filenames(self, protocolresult):
+        file_path = protocolresult.get_xtc_npt_filenames()
 
         assert isinstance(file_path, list)
         assert isinstance(file_path[0], pathlib.Path)
+
+
+class TestProtocolResultMissing:
+    @pytest.fixture()
+    def protocolresult(self, md_json_no_em):
+        d = json.loads(md_json_no_em, cls=gufe.tokenization.JSON_HANDLER.decoder)
+
+        pr = openfe_gromacs.ProtocolResult.from_dict(d["protocol_result"])
+
+        return pr
+
+    def test_reload_protocol_result(self, md_json_no_em):
+        d = json.loads(md_json_no_em, cls=gufe.tokenization.JSON_HANDLER.decoder)
+
+        pr = GromacsMDProtocolResult.from_dict(d["protocol_result"])
+
+        assert pr
+
+    def test_get_filenames_em(self, protocolresult):
+        dict_file_path = protocolresult.get_filenames_em()
+        assert isinstance(dict_file_path, dict)
+        assert len(dict_file_path) == 7
+        for name, file_path in dict_file_path.items():
+            assert isinstance(file_path, type(None))
+
+    def test_get_gro_em_filenames(self, protocolresult):
+        file_path = protocolresult.get_gro_em_filenames()
+
+        assert isinstance(file_path, type(None))
+
+    def test_get_xtc_em_filenames(self, protocolresult):
+        file_path = protocolresult.get_xtc_em_filenames()
+
+        assert isinstance(file_path, type(None))
