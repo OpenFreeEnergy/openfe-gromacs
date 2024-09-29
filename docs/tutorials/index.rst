@@ -5,7 +5,7 @@ Here is a list of tutorials for the OpenFE GROMACS Protocols:
 
 
 Molecular Dynamics (MD)
-----------------------
+-----------------------
 
 
 The :any:`MD protocol <md_tutorial>`
