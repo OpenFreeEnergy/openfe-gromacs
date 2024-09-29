@@ -13,6 +13,7 @@
 
 # Incase the project was not installed
 import os
+from pathlib import Path
 import shutil
 import sys
 sys.path.insert(0, os.path.abspath('..'))
