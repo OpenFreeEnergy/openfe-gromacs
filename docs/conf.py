@@ -174,4 +174,4 @@ try:
         source = Path("../examples")
         shutil.copytree(source, example_notebooks_path)
 except Exception as e:
-    raise IOError("Could not copy over example notebooks")
+    raise OSError("Could not copy over example notebooks")
