@@ -1,4 +1,4 @@
-name: test
+name: openfe_gromacs
 channels:
   - conda-forge
 dependencies:

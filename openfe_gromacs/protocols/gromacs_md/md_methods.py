@@ -19,7 +19,6 @@ from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any
 
-import gmxapi as gmx
 import gufe
 import pint
 from gufe import ChemicalSystem, SmallMoleculeComponent, settings
