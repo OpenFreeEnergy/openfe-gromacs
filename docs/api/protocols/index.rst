@@ -8,4 +8,3 @@ OpenFE GROMACS Protocols API Reference
     :maxdepth: 2
 
     md_protocol
-

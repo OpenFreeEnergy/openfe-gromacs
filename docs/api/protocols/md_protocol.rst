@@ -38,4 +38,3 @@ Protocol Settings
    :inherited-members: SettingsBaseModel
    :exclude-members: get_defaults
    :member-order: bysource
-
