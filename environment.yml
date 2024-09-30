@@ -9,3 +9,5 @@ dependencies:
   - pytest
   - pytest-xdist
   - pytest-cov
+  - pip:
+    - git+https://github.com/openforcefield/openff-interchange.git
