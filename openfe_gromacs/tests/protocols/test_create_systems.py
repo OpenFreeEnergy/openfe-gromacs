@@ -40,18 +40,19 @@ def test_interchange_gromacs(alanine_dipeptide_component, tmpdir):
     # Testing that atom names are the same
     assert omm_atom_names == interchange_atom_names == gro_atom_names
     # Testing that residue names are the same
-    interchange_res_names = [atom.metadata["residue_name"] for atom in
-                             interchange.topology.atoms]
+    interchange_res_names = [
+        atom.metadata["residue_name"] for atom in interchange.topology.atoms
+    ]
     gro_res_names = GromacsGroFile(f"{tmpdir}/test.gro").residueNames
     combined_res_names = interchange_res_names + gro_res_names
     assert len(set(combined_res_names)) == len(set(gro_res_names))
     # Testing that residue numbers are the same
-    interchange_res_numbers = [atom.metadata["residue_number"] for atom in
-                               interchange.topology.atoms]
+    interchange_res_numbers = [
+        atom.metadata["residue_number"] for atom in interchange.topology.atoms
+    ]
     with open(f"{tmpdir}/test.gro") as f:
         gromacs_res_numbers = [int(line[:5].strip()) for line in f.readlines()[2:-1]]
     assert interchange_res_numbers == gromacs_res_numbers
-
 
     # check a few atom names to ensure these are not empty sets
     for atom_name in ("HA", "CH3", "CA", "CB"):
