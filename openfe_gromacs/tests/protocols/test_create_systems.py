@@ -13,16 +13,18 @@ def test_interchange_gromacs(alanine_dipeptide_component, tmpdir):
     solvent = gufe.SolventComponent()
     smc_components = {}
     prot_settings = GromacsMDProtocol.default_settings()
-    # The function expects a settings dict
-    settings = {}
-    settings["forcefield_settings"] = prot_settings.forcefield_settings
-    settings["thermo_settings"] = prot_settings.thermo_settings
-    settings["solvation_settings"] = prot_settings.solvation_settings
-    settings["charge_settings"] = prot_settings.partial_charge_settings
-    settings["integrator_settings"] = prot_settings.integrator_settings
-    settings["output_settings_em"] = prot_settings.output_settings_em
+
     omm_system, omm_topology, omm_positions = create_systems.create_openmm_system(
-        settings, solvent, alanine_dipeptide_component, smc_components, tmpdir
+        solvent,
+        alanine_dipeptide_component,
+        smc_components,
+        prot_settings.partial_charge_settings,
+        prot_settings.forcefield_settings,
+        prot_settings.integrator_settings,
+        prot_settings.thermo_settings,
+        prot_settings.solvation_settings,
+        prot_settings.output_settings_em,
+        tmpdir,
     )
     omm_atom_names = [atom.name for atom in omm_topology.atoms()]
     interchange = create_systems.create_interchange(
@@ -45,16 +47,18 @@ def test_user_charges(CN_molecule, tmpdir):
     off_cn.assign_partial_charges(partial_charge_method="am1-mulliken")
     off_charges = off_cn.partial_charges
     prot_settings = GromacsMDProtocol.default_settings()
-    settings = {}
-    settings["forcefield_settings"] = prot_settings.forcefield_settings
-    settings["thermo_settings"] = prot_settings.thermo_settings
-    settings["solvation_settings"] = prot_settings.solvation_settings
-    settings["charge_settings"] = prot_settings.partial_charge_settings
-    settings["integrator_settings"] = prot_settings.integrator_settings
-    settings["output_settings_em"] = prot_settings.output_settings_em
     smc_components = {CN_molecule: off_cn}
     omm_system, omm_topology, omm_positions = create_systems.create_openmm_system(
-        settings, solvent, None, smc_components, tmpdir
+        solvent,
+        None,
+        smc_components,
+        prot_settings.partial_charge_settings,
+        prot_settings.forcefield_settings,
+        prot_settings.integrator_settings,
+        prot_settings.thermo_settings,
+        prot_settings.solvation_settings,
+        prot_settings.output_settings_em,
+        tmpdir,
     )
 
     interchange = create_systems.create_interchange(

@@ -670,10 +670,15 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             stateA_topology,
             stateA_positions,
         ) = create_systems.create_openmm_system(
-            settings,
             solvent_comp,
             protein_comp,
             smc_components,
+            settings["charge_settings"],
+            settings["forcefield_settings"],
+            settings["integrator_settings"],
+            settings["thermo_settings"],
+            settings["solvation_settings"],
+            settings["output_settings_em"],
             shared_basepath,
         )
         # 3. Create the Interchange object

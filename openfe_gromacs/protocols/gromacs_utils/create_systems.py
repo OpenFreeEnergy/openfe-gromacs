@@ -10,8 +10,11 @@ from openff.units.openmm import from_openmm, to_openmm
 from openmmtools import forces
 
 from openfe_gromacs.protocols.gromacs_md.md_settings import (
+    EMOutputSettings,
+    FFSettingsOpenMM,
     IntegratorSettings,
     OpenFFPartialChargeSettings,
+    SolvationSettings,
 )
 
 
@@ -42,15 +45,22 @@ def assign_partial_charges(
 
 
 def create_openmm_system(
-    settings, solvent_comp, protein_comp, smc_components, shared_basepath
+        solvent_comp,
+        protein_comp,
+        smc_components,
+        partial_charge_settings,
+        forcefield_settings,
+        integrator_settings,
+        thermo_settings,
+        solvation_settings,
+        output_settings_em,
+        shared_basepath,
 ):
     """
     Creates the OpenMM system.
 
     Parameters
     ----------
-    settings: dict
-      Dictionary of all the settings
     solvent_comp: gufe.SolventComponent
       The SolventComponent for the system
     protein_comp: gufe.ProteinComponent
@@ -58,6 +68,12 @@ def create_openmm_system(
     smc_components: dict[gufe.SmallMoleculeComponent, OFFMolecule]
       A dictionary with SmallMoleculeComponents as keys and OpenFF molecules
       as values
+    partial_charge_settings: OpenFFPartialChargeSettings
+    forcefield_settings: FFSettingsOpenMM
+    integrator_settings: IntegratorSettings
+    thermo_settings: gufe.settings.ThermoSettings
+    solvation_settings: SolvationSettings
+    output_settings_em: EMOutputSettings
     shared_basepath : Pathlike, optional
       Where to run the calculation, defaults to current working directory
 
@@ -68,11 +84,11 @@ def create_openmm_system(
     stateA_positions: Positions
     """
     # a. assign partial charges to smcs
-    assign_partial_charges(settings["charge_settings"], smc_components)
+    assign_partial_charges(partial_charge_settings, smc_components)
 
     # b. get a system generator
-    if settings["output_settings_em"].forcefield_cache is not None:
-        ffcache = shared_basepath / settings["output_settings_em"].forcefield_cache
+    if output_settings_em.forcefield_cache is not None:
+        ffcache = shared_basepath / output_settings_em.forcefield_cache
     else:
         ffcache = None
 
@@ -81,9 +97,9 @@ def create_openmm_system(
     # go wrong when doing rdkit->OEchem roundtripping
     with without_oechem_backend():
         system_generator = system_creation.get_system_generator(
-            forcefield_settings=settings["forcefield_settings"],
-            integrator_settings=settings["integrator_settings"],
-            thermo_settings=settings["thermo_settings"],
+            forcefield_settings=forcefield_settings,
+            integrator_settings=integrator_settings,
+            thermo_settings=thermo_settings,
             cache=ffcache,
             has_solvent=solvent_comp is not None,
         )
@@ -100,7 +116,7 @@ def create_openmm_system(
             solvent_comp=solvent_comp,
             small_mols=smc_components,
             omm_forcefield=system_generator.forcefield,
-            solvent_settings=settings["solvation_settings"],
+            solvent_settings=solvation_settings,
         )
 
         # d. get topology & positions
