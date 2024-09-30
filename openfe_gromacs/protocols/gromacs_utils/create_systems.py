@@ -45,16 +45,16 @@ def assign_partial_charges(
 
 
 def create_openmm_system(
-        solvent_comp,
-        protein_comp,
-        smc_components,
-        partial_charge_settings,
-        forcefield_settings,
-        integrator_settings,
-        thermo_settings,
-        solvation_settings,
-        output_settings_em,
-        shared_basepath,
+    solvent_comp,
+    protein_comp,
+    smc_components,
+    partial_charge_settings,
+    forcefield_settings,
+    integrator_settings,
+    thermo_settings,
+    solvation_settings,
+    output_settings_em,
+    shared_basepath,
 ):
     """
     Creates the OpenMM system.
