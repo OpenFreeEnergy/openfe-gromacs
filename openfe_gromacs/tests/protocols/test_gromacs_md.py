@@ -197,9 +197,10 @@ def test_dry_many_molecules_solvent(benzene_many_solv_system, tmp_path_factory):
 
 
 def test_gather(benzene_system, tmp_path_factory):
-    # check .gather behaves as expected
-    # Can't use mock.path since we need the outputs from the Setup Unit
-    # to execute the Run Unit
+    # check .gather behaves as expected: That gather correctly creates the
+    # results object
+    # This is running a full (short) simulation of benzene in water which is ok
+    # since this is a cheap simulation.
     settings = GromacsMDProtocol.default_settings()
     settings.output_settings_em.forcefield_cache = None
     settings.simulation_settings_em.nsteps = 10

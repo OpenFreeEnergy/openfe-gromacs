@@ -13,10 +13,7 @@ def test_protein_ligand_md(toluene_complex_system, tmp_path_factory):
     settings = GromacsMDProtocol.default_settings()
     settings.simulation_settings_em.nsteps = 10
     settings.simulation_settings_nvt.nsteps = 10
-    settings.simulation_settings_npt.nsteps = 100
-    settings.simulation_settings_em.rcoulomb = 1.0 * off_unit.nanometer
-    settings.simulation_settings_nvt.rcoulomb = 1.0 * off_unit.nanometer
-    settings.simulation_settings_npt.rcoulomb = 1.0 * off_unit.nanometer
+    settings.simulation_settings_npt.nsteps = 10000
     protocol = GromacsMDProtocol(
         settings=settings,
     )
