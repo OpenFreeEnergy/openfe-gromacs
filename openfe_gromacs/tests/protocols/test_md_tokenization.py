@@ -41,7 +41,7 @@ def protocol_result(md_json):
 
 class TestGromacsMDProtocol(GufeTokenizableTestsMixin):
     cls = gromacs_md.GromacsMDProtocol
-    key = "GromacsMDProtocol-76fa290de019030035f2010e9155f57f"
+    key = "GromacsMDProtocol-ec824b46b95c4ee8393d59287cf2feab"
     repr = f"<{key}>"
 
     @pytest.fixture()
@@ -64,7 +64,7 @@ class TestMDSetupUnit(GufeTokenizableTestsMixin):
 
 class TestGromacsMDProtocolResult(GufeTokenizableTestsMixin):
     cls = gromacs_md.GromacsMDProtocolResult
-    key = "GromacsMDProtocolResult-4739ae9a56f36a1e7c95c503601769f4"
+    key = "GromacsMDProtocolResult-ba53ff35cb02f1d9869f22955141e250"
     repr = f"<{key}>"
 
     @pytest.fixture()

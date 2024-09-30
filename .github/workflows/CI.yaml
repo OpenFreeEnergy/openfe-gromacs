@@ -57,7 +57,7 @@ jobs:
         with:
           #environment-file: devtools/conda-envs/test_env.yaml
           environment-file: environment.yml
-          environment-name: test
+          environment-name: openfe_gromacs
           cache-environment: true
           cache-downloads: true
           create-args: >-
