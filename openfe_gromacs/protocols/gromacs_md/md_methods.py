@@ -738,19 +738,19 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
 
         Parameters
         ----------
-        :param mdp: pathlib.Path
+        mdp: pathlib.Path
           Path to the mdp file
-        :param in_gro: pathlib.Path
-        :param top: pathlib.Path
-        :param tpr: pathlib.Path
-        :param out_gro: str
-        :param xtc: str
-        :param trr: str
-        :param cpt: str
-        :param log: str
-        :param edr: str
-        :param engine_settings: GromacsEngineSettings
-        :param shared_basebath: Pathlike, optional
+        in_gro: pathlib.Path
+        top: pathlib.Path
+        tpr: pathlib.Path
+        out_gro: str
+        xtc: str
+        trr: str
+        cpt: str
+        log: str
+        edr: str
+        engine_settings: GromacsEngineSettings
+        shared_basebath: Pathlike, optional
           Where to run the calculation, defaults to current working directory
         """
         assert os.path.exists(in_gro)

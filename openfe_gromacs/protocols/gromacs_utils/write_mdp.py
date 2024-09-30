@@ -43,10 +43,13 @@ PRE_DEFINED_SETTINGS_MD = {
 def dict2mdp(settings_dict: dict, shared_basepath):
     """
     Write out a Gromacs .mdp file given a settings dictionary
-    :param settings_dict: dict
-          Dictionary of settings
-    :param shared_basepath: Pathlike
-          Where to save the .mdp files
+
+    Parameters
+    ----------
+    settings_dict: dict
+      Dictionary of settings
+    shared_basepath: Pathlike
+      Where to save the .mdp files
     """
     filename = shared_basepath / settings_dict["mdp_file"]
     # Remove non-mdp settings from the dictionary
