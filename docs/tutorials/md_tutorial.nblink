@@ -1,0 +1,6 @@
+{
+   "path": "../ExampleNotebooks/md/gromacs_md.ipynb",
+   "extra-media": [
+      "../ExampleNotebooks/md/assets/"
+   ]
+}
