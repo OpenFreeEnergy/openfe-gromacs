@@ -1,18 +1,10 @@
 # This code is part of OpenFE and is licensed under the MIT license.
 # For details, see https://github.com/OpenFreeEnergy/openfe-gromacs
-import json
-import pathlib
-from unittest import mock
-
-import gufe
 import pytest
 from openff.units import unit
 
-import openfe_gromacs
 from openfe_gromacs.protocols.gromacs_md.md_methods import (
     GromacsMDProtocol,
-    GromacsMDProtocolResult,
-    GromacsMDSetupUnit,
 )
 
 
