@@ -146,9 +146,9 @@ class SimulationSettings(SettingsBaseModel):
     """
 
     # # # Bonds # # #
-    constraints: Literal[
-        "none", "h-bonds", "all-bonds", "h-angles", "all-angles"
-    ] = "h-bonds"
+    constraints: Literal["none", "h-bonds", "all-bonds", "h-angles", "all-angles"] = (
+        "h-bonds"
+    )
     """
     Controls which bonds in the topology will be converted to rigid holonomic
     constraints. Note that typical rigid water models do not have bonds, but
