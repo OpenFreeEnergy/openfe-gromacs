@@ -9,6 +9,7 @@ from .md_methods import (
     GromacsMDProtocol,
     GromacsMDProtocolResult,
     GromacsMDProtocolSettings,
+    GromacsMDRunUnit,
     GromacsMDSetupUnit,
 )
 
@@ -17,4 +18,5 @@ __all__ = [
     "GromacsMDProtocolSettings",
     "GromacsMDProtocolResult",
     "GromacsMDProtocolUnit",
+    "GromacsMDRunUnit",
 ]
