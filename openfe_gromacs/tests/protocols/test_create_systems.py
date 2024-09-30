@@ -9,7 +9,7 @@ from openfe_gromacs.protocols.gromacs_md.md_methods import GromacsMDProtocol
 from openfe_gromacs.protocols.gromacs_utils import create_systems
 
 
-def test_interchange_gromacs(T4_protein_component, tmpdir):
+def test_interchange_gromacs(alanine_dipeptide_component, tmpdir):
     solvent = gufe.SolventComponent()
     smc_components = {}
     prot_settings = GromacsMDProtocol.default_settings()
@@ -22,7 +22,7 @@ def test_interchange_gromacs(T4_protein_component, tmpdir):
     settings["integrator_settings"] = prot_settings.integrator_settings
     settings["output_settings_em"] = prot_settings.output_settings_em
     omm_system, omm_topology, omm_positions = create_systems.create_openmm_system(
-        settings, solvent, T4_protein_component, smc_components, tmpdir
+        settings, solvent, alanine_dipeptide_component, smc_components, tmpdir
     )
     omm_atom_names = [atom.name for atom in omm_topology.atoms()]
     interchange = create_systems.create_interchange(
@@ -39,11 +39,11 @@ def test_interchange_gromacs(T4_protein_component, tmpdir):
         assert atom_name in interchange_atom_names
 
 
-def test_user_charges(ethane, tmpdir):
+def test_user_charges(CN_molecule, tmpdir):
     solvent = gufe.SolventComponent()
-    off_ethane = ethane.to_openff()
-    off_ethane.assign_partial_charges(partial_charge_method="am1bcc")
-    off_charges = off_ethane.partial_charges
+    off_cn = CN_molecule.to_openff()
+    off_cn.assign_partial_charges(partial_charge_method="am1-mulliken")
+    off_charges = off_cn.partial_charges
     prot_settings = GromacsMDProtocol.default_settings()
     settings = {}
     settings["forcefield_settings"] = prot_settings.forcefield_settings
@@ -52,7 +52,7 @@ def test_user_charges(ethane, tmpdir):
     settings["charge_settings"] = prot_settings.partial_charge_settings
     settings["integrator_settings"] = prot_settings.integrator_settings
     settings["output_settings_em"] = prot_settings.output_settings_em
-    smc_components = {ethane: off_ethane}
+    smc_components = {CN_molecule: off_cn}
     omm_system, omm_topology, omm_positions = create_systems.create_openmm_system(
         settings, solvent, None, smc_components, tmpdir
     )

@@ -127,7 +127,7 @@ def ethane():
 @pytest.fixture(scope="session")
 def benzene_modifications():
     files = {}
-    with importlib.resources.files("openfe.tests.data") as d:
+    with importlib.resources.files("openfe_gromacs.tests.data") as d:
         fn = str(d / "benzene_modifications.sdf")
         supp = Chem.SDMolSupplier(str(fn), removeHs=False)
         for rdmol in supp:
@@ -137,7 +137,7 @@ def benzene_modifications():
 
 @pytest.fixture(scope="session")
 def T4_protein_component():
-    with resources.files("openfe.tests.data") as d:
+    with resources.files("openfe_gromacs.tests.data") as d:
         fn = str(d / "181l_only.pdb")
         comp = gufe.ProteinComponent.from_pdb_file(fn, name="T4_protein")
 
@@ -155,19 +155,19 @@ def alanine_dipeptide_component():
 
 @pytest.fixture()
 def eg5_protein_pdb():
-    with resources.files("openfe.tests.data.eg5") as d:
+    with resources.files("openfe_gromacs.tests.data.eg5") as d:
         yield str(d / "eg5_protein.pdb")
 
 
 @pytest.fixture()
 def eg5_ligands_sdf():
-    with resources.files("openfe.tests.data.eg5") as d:
+    with resources.files("openfe_gromacs.tests.data.eg5") as d:
         yield str(d / "eg5_ligands.sdf")
 
 
 @pytest.fixture()
 def eg5_cofactor_sdf():
-    with resources.files("openfe.tests.data.eg5") as d:
+    with resources.files("openfe_gromacs.tests.data.eg5") as d:
         yield str(d / "eg5_cofactor.sdf")
 
 
@@ -194,7 +194,7 @@ def CN_molecule():
     """
     A basic CH3NH2 molecule for quick testing.
     """
-    with resources.files("openfe-gromacs.tests.data") as d:
+    with resources.files("openfe_gromacs.tests.data") as d:
         fn = str(d / "CN.sdf")
         supp = Chem.SDMolSupplier(str(fn), removeHs=False)
 
