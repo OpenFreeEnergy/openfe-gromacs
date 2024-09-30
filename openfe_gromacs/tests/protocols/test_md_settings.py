@@ -3,9 +3,7 @@
 import pytest
 from openff.units import unit
 
-from openfe_gromacs.protocols.gromacs_md.md_methods import (
-    GromacsMDProtocol,
-)
+from openfe_gromacs.protocols.gromacs_md.md_methods import GromacsMDProtocol
 
 
 def test_settings_pos_or_zero_error():
