@@ -9,3 +9,4 @@ dependencies:
   - pytest
   - pytest-xdist
   - pytest-cov
+  - openff-interchange>=0.4
