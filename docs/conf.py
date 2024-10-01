@@ -18,8 +18,6 @@ import shutil
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
-import openfe_gromacs
-
 
 # -- Project information -----------------------------------------------------
 
