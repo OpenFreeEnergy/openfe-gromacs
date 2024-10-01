@@ -51,7 +51,6 @@ extensions = [
     "sphinx_design",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosummary",
-    "../docs._ext.sass",
     "myst_parser",
     "nbsphinx",
     "nbsphinx_link",
