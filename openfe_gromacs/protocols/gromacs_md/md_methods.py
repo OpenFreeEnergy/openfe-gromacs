@@ -25,11 +25,9 @@ import pint
 from gufe import ChemicalSystem, SmallMoleculeComponent, settings
 from openfe.protocols.openmm_utils import (
     charge_generation,
-    settings_validation,
     system_creation,
     system_validation,
 )
-from openfe.protocols.openmm_utils.omm_settings import BasePartialChargeSettings
 from openfe.utils import log_system_probe, without_oechem_backend
 from openff.interchange import Interchange
 from openff.toolkit.topology import Molecule as OFFMolecule
