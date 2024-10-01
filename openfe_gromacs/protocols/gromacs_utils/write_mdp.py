@@ -56,6 +56,7 @@ def dict2mdp(settings_dict: dict, shared_basepath):
     non_mdps = [
         "forcefield_cache",
         "mdp_file",
+        "grompp_mdp_file",
         "tpr_file",
         "trr_file",
         "xtc_file",

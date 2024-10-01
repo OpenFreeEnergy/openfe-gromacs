@@ -243,7 +243,7 @@ class TestProtocolResult:
     def test_get_filenames_em(self, protocolresult):
         dict_file_path = protocolresult.get_filenames_em()
         assert isinstance(dict_file_path, dict)
-        assert len(dict_file_path) == 7
+        assert len(dict_file_path) == 8
         for name, file_path in dict_file_path.items():
             assert isinstance(file_path, list)
             assert len(file_path) == 1
@@ -264,7 +264,7 @@ class TestProtocolResult:
     def test_get_filenames_nvt(self, protocolresult):
         dict_file_path = protocolresult.get_filenames_nvt()
         assert isinstance(dict_file_path, dict)
-        assert len(dict_file_path) == 7
+        assert len(dict_file_path) == 8
         for name, file_path in dict_file_path.items():
             assert isinstance(file_path, list)
             assert len(file_path) == 1
@@ -285,7 +285,7 @@ class TestProtocolResult:
     def test_get_filenames_npt(self, protocolresult):
         dict_file_path = protocolresult.get_filenames_npt()
         assert isinstance(dict_file_path, dict)
-        assert len(dict_file_path) == 7
+        assert len(dict_file_path) == 8
         for name, file_path in dict_file_path.items():
             assert isinstance(file_path, list)
             assert len(file_path) == 1
@@ -323,7 +323,7 @@ class TestProtocolResultMissing:
     def test_get_filenames_em(self, protocolresult):
         dict_file_path = protocolresult.get_filenames_em()
         assert isinstance(dict_file_path, dict)
-        assert len(dict_file_path) == 7
+        assert len(dict_file_path) == 8
         for name, file_path in dict_file_path.items():
             assert isinstance(file_path, type(None))
 

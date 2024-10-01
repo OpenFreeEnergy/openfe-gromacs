@@ -168,6 +168,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         - "edr_em"
         - "log_em"
         - "cpt_em"
+        - "grompp_mdp_em"
 
         Returns
         -------
@@ -183,6 +184,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
             "edr_em",
             "log_em",
             "cpt_em",
+            "grompp_mdp_em",
         ]
         dict_npt = {}
         for file in file_keys:
@@ -231,6 +233,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         - "edr_nvt"
         - "log_nvt"
         - "cpt_nvt"
+        - "grompp_mdp_nvt"
 
         Returns
         -------
@@ -246,6 +249,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
             "edr_nvt",
             "log_nvt",
             "cpt_nvt",
+            "grompp_mdp_nvt",
         ]
         dict_npt = {}
         for file in file_keys:
@@ -294,6 +298,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         - "edr_npt"
         - "log_npt"
         - "cpt_npt"
+        - "grompp_mdp_npt"
 
         Returns
         -------
@@ -309,6 +314,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
             "edr_npt",
             "log_npt",
             "cpt_npt",
+            "grompp_mdp_em",
         ]
         dict_npt = {}
         for file in file_keys:
@@ -403,6 +409,7 @@ class GromacsMDProtocol(gufe.Protocol):
             engine_settings=GromacsEngineSettings(),
             output_settings_em=EMOutputSettings(
                 mdp_file="em.mdp",
+                grompp_mdp_file="mdout_em.mdp",
                 tpr_file="em.tpr",
                 gro_file="em.gro",
                 trr_file="em.trr",
@@ -413,6 +420,7 @@ class GromacsMDProtocol(gufe.Protocol):
             ),
             output_settings_nvt=NVTOutputSettings(
                 mdp_file="nvt.mdp",
+                grompp_mdp_file="mdout_nvt.mdp",
                 tpr_file="nvt.tpr",
                 gro_file="nvt.gro",
                 trr_file="nvt.trr",
@@ -423,6 +431,7 @@ class GromacsMDProtocol(gufe.Protocol):
             ),
             output_settings_npt=NPTOutputSettings(
                 mdp_file="npt.mdp",
+                grompp_mdp_file="mdout_npt.mdp",
                 tpr_file="npt.tpr",
                 gro_file="npt.gro",
                 trr_file="npt.trr",
@@ -735,6 +744,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         cpt: str,
         log: str,
         edr: str,
+        out_mdp: str,
         engine_settings: GromacsEngineSettings,
         shared_basebath: pathlib.Path,
     ):
@@ -754,6 +764,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         cpt: str
         log: str
         edr: str
+        out_mdp: str
         engine_settings: GromacsEngineSettings
         shared_basebath: Pathlike, optional
           Where to run the calculation, defaults to current working directory
@@ -773,6 +784,8 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 top,
                 "-o",
                 tpr,
+                "-po",
+                shared_basebath / out_mdp,
             ],
             stdin=subprocess.PIPE,
         )
@@ -894,6 +907,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 output_settings_em.cpt_file,
                 output_settings_em.log_file,
                 output_settings_em.edr_file,
+                output_settings_em.grompp_mdp_file,
                 engine_settings,
                 ctx.shared,
             )
@@ -904,6 +918,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             output_dict["edr_em"] = shared_basepath / output_settings_em.edr_file
             output_dict["log_em"] = shared_basepath / output_settings_em.log_file
             output_dict["cpt_em"] = shared_basepath / output_settings_em.cpt_file
+            output_dict["grompp_mdp_em"] = shared_basepath / output_settings_em.grompp_mdp_file
 
         # ToDo: Should we disallow running MD without EM?
         # Run NVT
@@ -929,6 +944,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 output_settings_nvt.cpt_file,
                 output_settings_nvt.log_file,
                 output_settings_nvt.edr_file,
+                output_settings_nvt.grompp_mdp_file,
                 engine_settings,
                 ctx.shared,
             )
@@ -939,6 +955,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             output_dict["edr_nvt"] = shared_basepath / output_settings_nvt.edr_file
             output_dict["log_nvt"] = shared_basepath / output_settings_nvt.log_file
             output_dict["cpt_nvt"] = shared_basepath / output_settings_nvt.cpt_file
+            output_dict["grompp_mdp_nvt"] = shared_basepath / output_settings_nvt.grompp_mdp_file
 
         # Run NPT MD simulation
         if sim_settings_npt.nsteps > 0:
@@ -967,6 +984,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 output_settings_npt.cpt_file,
                 output_settings_npt.log_file,
                 output_settings_npt.edr_file,
+                output_settings_npt.grompp_mdp_file,
                 engine_settings,
                 ctx.shared,
             )
@@ -977,5 +995,6 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             output_dict["edr_npt"] = shared_basepath / output_settings_npt.edr_file
             output_dict["log_npt"] = shared_basepath / output_settings_npt.log_file
             output_dict["cpt_npt"] = shared_basepath / output_settings_npt.cpt_file
+            output_dict["grompp_mdp_nvt"] = shared_basepath / output_settings_nvt.grompp_mdp_file
 
         return output_dict

@@ -265,6 +265,12 @@ class OutputSettings(SettingsBaseModel):
     Filename for the mdp file for running simulations in Gromacs.
     Default 'em.mdp'
     """
+    grompp_mdp_file: str = "mdout_em.mdp"
+    """
+    Filename for the mdp file that gmx grompp outputs. This file contains 
+    comment lines, as well as the input that gmx grompp has read.
+    Default 'mdout_em.mdp'
+    """
     tpr_file: str = "em.tpr"
     """
     Filename for the tpr file for running simulations in Gromacs.
