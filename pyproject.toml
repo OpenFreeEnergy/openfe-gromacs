@@ -97,6 +97,15 @@ omit = [
 [tool.flake8]
 max-line-length = 88
 extend-ignore = ['E203',]
+per-file-ignores = [
+    '__init__.py:F401',
+]
+builtins = [
+    "nanometer",
+    "picosecond",
+    "kelvin",
+    "bar",
+]
 
 [tool.isort]
 profile = "black"
