@@ -2,7 +2,6 @@
 # For details, see https://github.com/OpenFreeEnergy/openfe
 import importlib
 import os
-import pathlib
 from importlib import resources
 
 import gufe

@@ -20,15 +20,9 @@ from collections.abc import Iterable
 from typing import Any
 
 import gufe
-import pint
-from gufe import ChemicalSystem, SmallMoleculeComponent, settings
-from openfe.protocols.openmm_utils import (
-    charge_generation,
-    system_creation,
-    system_validation,
-)
-from openfe.utils import log_system_probe, without_oechem_backend
-from openff.interchange import Interchange
+from gufe import ChemicalSystem, settings
+from openfe.protocols.openmm_utils import system_validation
+from openfe.utils import log_system_probe
 from openff.toolkit.topology import Molecule as OFFMolecule
 from openff.units import unit
 

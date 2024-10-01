@@ -3,7 +3,6 @@
 import json
 
 import gufe
-import openfe
 import pytest
 from gufe.tests.test_tokenization import GufeTokenizableTestsMixin
 

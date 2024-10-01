@@ -9,13 +9,7 @@ from openff.toolkit.topology import Molecule as OFFMolecule
 from openff.units.openmm import from_openmm, to_openmm
 from openmmtools import forces
 
-from openfe_gromacs.protocols.gromacs_md.md_settings import (
-    EMOutputSettings,
-    FFSettingsOpenMM,
-    IntegratorSettings,
-    OpenFFPartialChargeSettings,
-    SolvationSettings,
-)
+from openfe_gromacs.protocols.gromacs_md.md_settings import OpenFFPartialChargeSettings
 
 
 def assign_partial_charges(
