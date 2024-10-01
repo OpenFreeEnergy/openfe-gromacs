@@ -82,7 +82,7 @@ match = ["*"]
 default-tag = "0.0.0"
 
 [tool.versioningit.write]
-file = "openfe_gromacs/_version.py"
+file = "src/openfe_gromacs/_version.py"
 
 
 [tool.coverage.run]
@@ -91,7 +91,7 @@ omit = [
     # Omit the tests
     "*/tests/*",
     # Omit generated versioneer
-    "openfe_gromacs/_version.py"
+    "src/openfe_gromacs/_version.py"
 ]
 
 [tool.flake8]

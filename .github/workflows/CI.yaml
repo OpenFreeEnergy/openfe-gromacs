@@ -76,7 +76,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest -n logical -v --cov=openfe_gromacs --cov-report=xml --color=yes openfe_gromacs/tests/
+          pytest -n logical -v --cov=src/openfe_gromacs --cov-report=xml --color=yes src/openfe_gromacs/tests/
 
       - name: CodeCov
         uses: codecov/codecov-action@v3

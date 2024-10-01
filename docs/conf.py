@@ -16,9 +16,7 @@ import os
 from pathlib import Path
 import shutil
 import sys
-sys.path.insert(0, os.path.abspath('..'))
-
-import openfe_gromacs
+sys.path.insert(0, os.path.abspath('../src'))
 
 
 # -- Project information -----------------------------------------------------
@@ -53,7 +51,6 @@ extensions = [
     "sphinx_design",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosummary",
-    "docs._ext.sass",
     "myst_parser",
     "nbsphinx",
     "nbsphinx_link",
