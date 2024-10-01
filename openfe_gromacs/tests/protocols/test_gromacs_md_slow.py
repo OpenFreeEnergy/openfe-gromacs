@@ -3,7 +3,6 @@
 
 import gufe
 import pytest
-from openff.units import unit as off_unit
 
 from openfe_gromacs.protocols.gromacs_md.md_methods import GromacsMDProtocol
 
