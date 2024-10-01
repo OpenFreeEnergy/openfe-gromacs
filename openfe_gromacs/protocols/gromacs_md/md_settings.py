@@ -267,7 +267,7 @@ class OutputSettings(SettingsBaseModel):
     """
     grompp_mdp_file: str = "mdout_em.mdp"
     """
-    Filename for the mdp file that gmx grompp outputs. This file contains 
+    Filename for the mdp file that gmx grompp outputs. This file contains
     comment lines, as well as the input that gmx grompp has read.
     Default 'mdout_em.mdp'
     """
