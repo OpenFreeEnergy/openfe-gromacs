@@ -45,7 +45,8 @@ def test_serialize_protocol():
 
 def test_create_independent_repeat_ids(benzene_system):
     # if we create two dags each with 3 repeats, they should give 6 repeat_ids
-    # this allows multiple DAGs in flight for one Transformation that don't clash on gather
+    # this allows multiple DAGs in flight for one Transformation that don't
+    # clash on gather
     settings = GromacsMDProtocol.default_settings()
     # Default protocol is 1 repeat, change to 3 repeats
     settings.protocol_repeats = 3
