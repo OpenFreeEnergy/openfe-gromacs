@@ -925,7 +925,9 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             output_dict["edr_em"] = shared_basepath / output_settings_em.edr_file
             output_dict["log_em"] = shared_basepath / output_settings_em.log_file
             output_dict["cpt_em"] = shared_basepath / output_settings_em.cpt_file
-            output_dict["grompp_mdp_em"] = shared_basepath / output_settings_em.grompp_mdp_file
+            output_dict["grompp_mdp_em"] = (
+                shared_basepath / output_settings_em.grompp_mdp_file
+            )
 
         # ToDo: Should we disallow running MD without EM?
         # Run NVT
@@ -962,7 +964,9 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             output_dict["edr_nvt"] = shared_basepath / output_settings_nvt.edr_file
             output_dict["log_nvt"] = shared_basepath / output_settings_nvt.log_file
             output_dict["cpt_nvt"] = shared_basepath / output_settings_nvt.cpt_file
-            output_dict["grompp_mdp_nvt"] = shared_basepath / output_settings_nvt.grompp_mdp_file
+            output_dict["grompp_mdp_nvt"] = (
+                shared_basepath / output_settings_nvt.grompp_mdp_file
+            )
 
         # Run NPT MD simulation
         if sim_settings_npt.nsteps > 0:
@@ -1002,6 +1006,8 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             output_dict["edr_npt"] = shared_basepath / output_settings_npt.edr_file
             output_dict["log_npt"] = shared_basepath / output_settings_npt.log_file
             output_dict["cpt_npt"] = shared_basepath / output_settings_npt.cpt_file
-            output_dict["grompp_mdp_nvt"] = shared_basepath / output_settings_nvt.grompp_mdp_file
+            output_dict["grompp_mdp_nvt"] = (
+                shared_basepath / output_settings_nvt.grompp_mdp_file
+            )
 
         return output_dict
