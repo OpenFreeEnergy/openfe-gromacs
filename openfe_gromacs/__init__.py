@@ -1,3 +1,5 @@
+from importlib.metadata import version
+
 from gufe import (
     AlchemicalNetwork,
     ChemicalSystem,
@@ -19,3 +21,5 @@ from gufe.protocols import (
     ProtocolUnitResult,
     execute_DAG,
 )
+
+__version__ = version("openfe_gromacs")

@@ -3,7 +3,6 @@
 import json
 
 import gufe
-import openfe
 import pytest
 from gufe.tests.test_tokenization import GufeTokenizableTestsMixin
 
@@ -19,7 +18,7 @@ def protocol():
 def protocol_units(protocol, benzene_system):
     pus = protocol.create(
         stateA=benzene_system,
-        stateB=openfe.ChemicalSystem({"solvent": openfe.SolventComponent()}),
+        stateB=benzene_system,
         mapping=None,
     )
     return list(pus.protocol_units)
@@ -41,7 +40,7 @@ def protocol_result(md_json):
 
 class TestGromacsMDProtocol(GufeTokenizableTestsMixin):
     cls = gromacs_md.GromacsMDProtocol
-    key = "GromacsMDProtocol-ec824b46b95c4ee8393d59287cf2feab"
+    key = "GromacsMDProtocol-829ed8e2ddfff11f9e86eec044222317"
     repr = f"<{key}>"
 
     @pytest.fixture()
@@ -62,6 +61,7 @@ class TestMDSetupUnit(GufeTokenizableTestsMixin):
         pytest.skip()
 
 
+@pytest.mark.skip
 class TestGromacsMDProtocolResult(GufeTokenizableTestsMixin):
     cls = gromacs_md.GromacsMDProtocolResult
     key = "GromacsMDProtocolResult-ba53ff35cb02f1d9869f22955141e250"

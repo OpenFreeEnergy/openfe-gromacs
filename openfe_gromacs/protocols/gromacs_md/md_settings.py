@@ -146,9 +146,9 @@ class SimulationSettings(SettingsBaseModel):
     """
 
     # # # Bonds # # #
-    constraints: Literal[
-        "none", "h-bonds", "all-bonds", "h-angles", "all-angles"
-    ] = "h-bonds"
+    constraints: Literal["none", "h-bonds", "all-bonds", "h-angles", "all-angles"] = (
+        "h-bonds"
+    )
     """
     Controls which bonds in the topology will be converted to rigid holonomic
     constraints. Note that typical rigid water models do not have bonds, but
@@ -264,6 +264,12 @@ class OutputSettings(SettingsBaseModel):
     """
     Filename for the mdp file for running simulations in Gromacs.
     Default 'em.mdp'
+    """
+    grompp_mdp_file: str = "mdout_em.mdp"
+    """
+    Filename for the mdp file that gmx grompp outputs. This file contains
+    comment lines, as well as the input that gmx grompp has read.
+    Default 'mdout_em.mdp'
     """
     tpr_file: str = "em.tpr"
     """
@@ -665,6 +671,16 @@ class FFSettingsOpenMM(OpenMMSystemGeneratorFFSettings):
         return v
 
 
+class SolvationSettings(OpenMMSolvationSettings):
+    """
+    Solvation settings for solvating the system using OpenMM. For now,
+    water models with virtual sites are not supported when creating an
+    Interchange object `from_openmm`.
+    """
+
+    solvent_model: Literal["tip3p"] = "tip3p"
+
+
 class GromacsEngineSettings(SettingsBaseModel):
     """
     MD engine settings for running simulations in Gromacs.
@@ -728,7 +744,7 @@ class GromacsMDProtocolSettings(Settings):
     # Settings for creating the OpenMM systems
     forcefield_settings: FFSettingsOpenMM
     partial_charge_settings: OpenFFPartialChargeSettings
-    solvation_settings: OpenMMSolvationSettings
+    solvation_settings: SolvationSettings
     integrator_settings: IntegratorSettings
 
     # Simulation run settings

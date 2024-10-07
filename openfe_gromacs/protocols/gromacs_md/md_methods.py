@@ -15,25 +15,16 @@ import os
 import pathlib
 import subprocess
 import uuid
-import warnings
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any
 
 import gufe
-import pint
-from gufe import ChemicalSystem, SmallMoleculeComponent, settings
-from openfe.protocols.openmm_utils import (
-    charge_generation,
-    system_creation,
-    system_validation,
-)
-from openfe.utils import log_system_probe, without_oechem_backend
-from openff.interchange import Interchange
+from gufe import ChemicalSystem, settings
+from openfe.protocols.openmm_utils import system_validation
+from openfe.utils import log_system_probe
 from openff.toolkit.topology import Molecule as OFFMolecule
 from openff.units import unit
-from openff.units.openmm import from_openmm, to_openmm
-from openmmtools import forces
 
 from openfe_gromacs.protocols.gromacs_md.md_settings import (
     EMOutputSettings,
@@ -47,89 +38,11 @@ from openfe_gromacs.protocols.gromacs_md.md_settings import (
     NVTOutputSettings,
     NVTSimulationSettings,
     OpenFFPartialChargeSettings,
-    OpenMMSolvationSettings,
+    SolvationSettings,
 )
+from openfe_gromacs.protocols.gromacs_utils import create_systems, write_mdp
 
 logger = logging.getLogger(__name__)
-
-# Settings that are not exposed to the user
-PRE_DEFINED_SETTINGS = {
-    "tinit": 0 * unit.picosecond,
-    "init_step": 0,
-    "simulation_part": 0,
-    "comm_mode": "Linear",
-    "nstcomm": 100,
-    "comm_grps": "system",
-    "pbc": "xyz",
-    "verlet_buffer_tolerance": 0.005 * unit.kilojoule / (unit.mole * unit.picosecond),
-    "verlet_buffer_pressure_tolerance": 0.5 * unit.bar,
-    "coulomb_modifier": "Potential-shift",
-    "epsilon_r": 1,
-    "epsilon_rf": 0,
-    "fourierspacing": 0.12 * unit.nanometer,
-    "lj_pme_comb_rule": "Geometric",
-    "ewald_geometry": "3d",
-    "epsilon_surface": 0,
-    "lincs_warnangle": 30 * unit.degree,
-    "continuation": "no",
-    "morse": "no",
-}
-
-PRE_DEFINED_SETTINGS_EM = {
-    "emtol": 10.0 * unit.kilojoule / (unit.mole * unit.nanometer),
-    "emstep": 0.01 * unit.nanometer,
-}
-
-PRE_DEFINED_SETTINGS_MD = {
-    "nsttcouple": -1,
-    "tc_grps": "system",
-    "tau_t": 2.0 * unit.picosecond,
-    "pcoupltype": "isotropic",
-    "nstpcouple": -1,
-    "tau_p": 5 * unit.picosecond,
-    "compressibility": 4.5e-05 / unit.bar,
-}
-
-
-def _dict2mdp(settings_dict: dict, shared_basepath):
-    """
-    Write out a Gromacs .mdp file given a settings dictionary
-    :param settings_dict: dict
-          Dictionary of settings
-    :param shared_basepath: Pathlike
-          Where to save the .mdp files
-    """
-    filename = shared_basepath / settings_dict["mdp_file"]
-    # Remove non-mdp settings from the dictionary
-    non_mdps = [
-        "forcefield_cache",
-        "mdp_file",
-        "tpr_file",
-        "trr_file",
-        "xtc_file",
-        "gro_file",
-        "edr_file",
-        "log_file",
-        "cpt_file",
-    ]
-    for setting in non_mdps:
-        settings_dict.pop(setting)
-    with open(filename, "w") as f:
-        for key, value in settings_dict.items():
-            # First convert units to units in the mdp file, then remove units
-            if isinstance(value, pint.Quantity):
-                if value.is_compatible_with(unit.nanometer):
-                    value = value.to(unit.nanometer)
-                if value.is_compatible_with(unit.picosecond):
-                    value = value.to(unit.picosecond)
-                if value.is_compatible_with(unit.kelvin):
-                    value = value.to(unit.kelvin)
-                if value.is_compatible_with(unit.bar):
-                    value = value.to(unit.bar)
-                value = value.magnitude
-            # Write out all the setting, value pairs
-            f.write(f"{key} = {value}\n")
-    return filename
 
 
 class GromacsMDProtocolResult(gufe.ProtocolResult):
@@ -256,6 +169,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         - "edr_em"
         - "log_em"
         - "cpt_em"
+        - "grompp_mdp_em"
 
         Returns
         -------
@@ -271,6 +185,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
             "edr_em",
             "log_em",
             "cpt_em",
+            "grompp_mdp_em",
         ]
         dict_npt = {}
         for file in file_keys:
@@ -319,6 +234,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         - "edr_nvt"
         - "log_nvt"
         - "cpt_nvt"
+        - "grompp_mdp_nvt"
 
         Returns
         -------
@@ -334,6 +250,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
             "edr_nvt",
             "log_nvt",
             "cpt_nvt",
+            "grompp_mdp_nvt",
         ]
         dict_npt = {}
         for file in file_keys:
@@ -382,6 +299,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
         - "edr_npt"
         - "log_npt"
         - "cpt_npt"
+        - "grompp_mdp_npt"
 
         Returns
         -------
@@ -397,6 +315,7 @@ class GromacsMDProtocolResult(gufe.ProtocolResult):
             "edr_npt",
             "log_npt",
             "cpt_npt",
+            "grompp_mdp_em",
         ]
         dict_npt = {}
         for file in file_keys:
@@ -472,7 +391,7 @@ class GromacsMDProtocol(gufe.Protocol):
                 pressure=1 * unit.bar,
             ),
             partial_charge_settings=OpenFFPartialChargeSettings(),
-            solvation_settings=OpenMMSolvationSettings(),
+            solvation_settings=SolvationSettings(),
             integrator_settings=IntegratorSettings(),
             simulation_settings_em=EMSimulationSettings(
                 integrator="steep",
@@ -491,6 +410,7 @@ class GromacsMDProtocol(gufe.Protocol):
             engine_settings=GromacsEngineSettings(),
             output_settings_em=EMOutputSettings(
                 mdp_file="em.mdp",
+                grompp_mdp_file="mdout_em.mdp",
                 tpr_file="em.tpr",
                 gro_file="em.gro",
                 trr_file="em.trr",
@@ -501,6 +421,7 @@ class GromacsMDProtocol(gufe.Protocol):
             ),
             output_settings_nvt=NVTOutputSettings(
                 mdp_file="nvt.mdp",
+                grompp_mdp_file="mdout_nvt.mdp",
                 tpr_file="nvt.tpr",
                 gro_file="nvt.gro",
                 trr_file="nvt.trr",
@@ -511,6 +432,7 @@ class GromacsMDProtocol(gufe.Protocol):
             ),
             output_settings_npt=NPTOutputSettings(
                 mdp_file="npt.mdp",
+                grompp_mdp_file="mdout_npt.mdp",
                 tpr_file="npt.tpr",
                 gro_file="npt.gro",
                 trr_file="npt.trr",
@@ -652,32 +574,6 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
             generation=generation,
         )
 
-    @staticmethod
-    def _assign_partial_charges(
-        charge_settings: OpenFFPartialChargeSettings,
-        smc_components: dict[SmallMoleculeComponent, OFFMolecule],
-    ) -> None:
-        """
-        Assign partial charges to SMCs.
-
-        Parameters
-        ----------
-        charge_settings : OpenFFPartialChargeSettings
-          Settings for controlling how the partial charges are assigned.
-        smc_components : dict[SmallMoleculeComponent, openff.toolkit.Molecule]
-          Dictionary of OpenFF Molecules to add, keyed by
-          SmallMoleculeComponent.
-        """
-        for mol in smc_components.values():
-            charge_generation.assign_offmol_partial_charges(
-                offmol=mol,
-                overwrite=False,
-                method=charge_settings.partial_charge_method,
-                toolkit_backend=charge_settings.off_toolkit_backend,
-                generate_n_conformers=charge_settings.number_of_conformers,
-                nagl_model=charge_settings.nagl_model,
-            )
-
     def _handle_settings(self) -> dict[str, gufe.settings.SettingsBaseModel]:
         """
         Extract the relevant settings for an MD simulation.
@@ -716,161 +612,6 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         settings["top"] = prot_settings.top
 
         return settings
-
-    def _write_mdp_files(self, settings: dict, shared_basepath):
-        """
-        Writes out the .mdp files for running a Gromacs MD simulation.
-
-        Parameters
-        ----------
-        settings: dict
-          Dictionary of all the settings
-        shared_basepath : Pathlike, optional
-          Where to run the calculation, defaults to current working directory
-
-        Returns
-        -------
-        mdps: dict
-          Dictionary of file paths to mdp files.
-        """
-
-        mdps = {}
-        if settings["sim_settings_em"].nsteps > 0:
-            settings_dict = (
-                settings["sim_settings_em"].dict()
-                | settings["output_settings_em"].dict()
-                | PRE_DEFINED_SETTINGS
-                | PRE_DEFINED_SETTINGS_EM
-            )
-            mdp = _dict2mdp(settings_dict, shared_basepath)
-            mdps["em"] = mdp
-        if settings["sim_settings_nvt"].nsteps > 0:
-            settings_dict = (
-                settings["sim_settings_nvt"].dict()
-                | settings["output_settings_nvt"].dict()
-                | PRE_DEFINED_SETTINGS
-                | PRE_DEFINED_SETTINGS_MD
-            )
-            mdp = _dict2mdp(settings_dict, shared_basepath)
-            mdps["nvt"] = mdp
-        if settings["sim_settings_npt"].nsteps > 0:
-            settings_dict = (
-                settings["sim_settings_npt"].dict()
-                | settings["output_settings_npt"].dict()
-                | PRE_DEFINED_SETTINGS
-                | PRE_DEFINED_SETTINGS_MD
-            )
-            mdp = _dict2mdp(settings_dict, shared_basepath)
-            mdps["npt"] = mdp
-
-        return mdps
-
-    def _create_interchange(self, settings, components, shared_basepath):
-        """
-        Creates the Interchange object for the system.
-
-        Parameters
-        ----------
-        settings: dict
-          Dictionary of all the settings
-        components: dict
-          Dictionary of the components of the settings, solvent, protein, and
-          small molecules
-        shared_basepath : Pathlike, optional
-          Where to run the calculation, defaults to current working directory
-
-        Returns
-        -------
-        stateA_interchange: Interchange object
-          The interchange object of the system.
-        """
-        # Set the environment variable for using the experimental interchange
-        # functionality `from_openmm` and raise a warning
-        os.environ["INTERCHANGE_EXPERIMENTAL"] = "1"
-        war = (
-            "Environment variable INTERCHANGE_EXPERIMENTAL=1 is set for using "
-            "the interchange functionality 'from_openmm' which is not well "
-            "tested yet."
-        )
-        warnings.warn(war)
-        # Create the stateA system
-        # Create a dictionary of OFFMol for each SMC for bookkeeping
-        smc_components: dict[SmallMoleculeComponent, OFFMolecule]
-
-        # ToDo: Make this more general, check if there is a smc_component,
-        #       allow ProteinComponents, ...
-        smc_components = {i: i.to_openff() for i in components["small_mols"]}
-
-        # a. assign partial charges to smcs
-        self._assign_partial_charges(settings["charge_settings"], smc_components)
-
-        # b. get a system generator
-        if settings["output_settings_em"].forcefield_cache is not None:
-            ffcache = shared_basepath / settings["output_settings_em"].forcefield_cache
-        else:
-            ffcache = None
-
-        # Note: we block out the oechem backend for all systemgenerator
-        # linked operations to avoid any smiles operations that can
-        # go wrong when doing rdkit->OEchem roundtripping
-        with without_oechem_backend():
-            system_generator = system_creation.get_system_generator(
-                forcefield_settings=settings["forcefield_settings"],
-                integrator_settings=settings["integrator_settings"],
-                thermo_settings=settings["thermo_settings"],
-                cache=ffcache,
-                has_solvent=components["solvent_comp"] is not None,
-            )
-
-            # Force creation of smc templates so we can solvate later
-            for mol in smc_components.values():
-                system_generator.create_system(
-                    mol.to_topology().to_openmm(), molecules=[mol]
-                )
-
-            # c. get OpenMM Modeller + a resids dictionary for each component
-            stateA_modeller, comp_resids = system_creation.get_omm_modeller(
-                protein_comp=components["protein_comp"],
-                solvent_comp=components["solvent_comp"],
-                small_mols=smc_components,
-                omm_forcefield=system_generator.forcefield,
-                solvent_settings=settings["solvation_settings"],
-            )
-
-            # d. get topology & positions
-            # Note: roundtrip positions to remove vec3 issues
-            stateA_topology = stateA_modeller.getTopology()
-            stateA_positions = to_openmm(from_openmm(stateA_modeller.getPositions()))
-
-            # e. create the stateA System
-            stateA_system = system_generator.create_system(
-                stateA_topology,
-                molecules=[s.to_openff() for s in components["small_mols"]],
-            )
-
-            # 3. Create the Interchange object
-            barostat_idx, barostat = forces.find_forces(
-                stateA_system, ".*Barostat.*", only_one=True
-            )
-            stateA_system.removeForce(barostat_idx)
-
-            stateA_interchange = Interchange.from_openmm(
-                topology=stateA_topology,
-                system=stateA_system,
-                positions=stateA_positions,
-            )
-
-            for molecule_index, molecule in enumerate(
-                stateA_interchange.topology.molecules
-            ):
-                for atom in molecule.atoms:
-                    atom.metadata["residue_number"] = molecule_index + 1
-                if len([*smc_components.values()]) > 0:
-                    if molecule.n_atoms == [*smc_components.values()][0].n_atoms:
-                        for atom in molecule.atoms:
-                            atom.metadata["residue_name"] = "UNK"
-
-        return stateA_interchange
 
     def run(
         self, *, dry=False, verbose=True, scratch_basepath=None, shared_basepath=None
@@ -924,18 +665,38 @@ class GromacsMDSetupUnit(gufe.ProtocolUnit):
         solvent_comp, protein_comp, small_mols = system_validation.get_components(
             stateA
         )
-        components = {
-            "solvent_comp": solvent_comp,
-            "protein_comp": protein_comp,
-            "small_mols": small_mols,
-        }
 
         # 1. Write out .mdp files
-        mdps = self._write_mdp_files(settings, shared_basepath)
+        mdps = write_mdp.write_mdp_files(settings, shared_basepath)
 
-        # 2. Create the Interchange object
-        stateA_interchange = self._create_interchange(
-            settings, components, shared_basepath
+        # 2. Create the OpenMM system
+
+        # Create a dictionary of OFFMol for each SMC for bookkeeping
+        smc_components: dict[gufe.SmallMoleculeComponent, OFFMolecule]
+        smc_components = {i: i.to_openff() for i in small_mols}
+
+        (
+            stateA_system,
+            stateA_topology,
+            stateA_positions,
+        ) = create_systems.create_openmm_system(
+            solvent_comp,
+            protein_comp,
+            smc_components,
+            settings["charge_settings"],
+            settings["forcefield_settings"],
+            settings["integrator_settings"],
+            settings["thermo_settings"],
+            settings["solvation_settings"],
+            settings["output_settings_em"],
+            shared_basepath,
+        )
+        # 3. Create the Interchange object
+        stateA_interchange = create_systems.create_interchange(
+            stateA_system,
+            stateA_topology,
+            stateA_positions,
+            smc_components,
         )
 
         # 4. Save .gro and .top file of the entire system
@@ -984,6 +745,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
         cpt: str,
         log: str,
         edr: str,
+        out_mdp: str,
         engine_settings: GromacsEngineSettings,
         shared_basebath: pathlib.Path,
     ):
@@ -992,19 +754,20 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
 
         Parameters
         ----------
-        :param mdp: pathlib.Path
+        mdp: pathlib.Path
           Path to the mdp file
-        :param in_gro: pathlib.Path
-        :param top: pathlib.Path
-        :param tpr: pathlib.Path
-        :param out_gro: str
-        :param xtc: str
-        :param trr: str
-        :param cpt: str
-        :param log: str
-        :param edr: str
-        :param engine_settings: GromacsEngineSettings
-        :param shared_basebath: Pathlike, optional
+        in_gro: pathlib.Path
+        top: pathlib.Path
+        tpr: pathlib.Path
+        out_gro: str
+        xtc: str
+        trr: str
+        cpt: str
+        log: str
+        edr: str
+        out_mdp: str
+        engine_settings: GromacsEngineSettings
+        shared_basebath: Pathlike, optional
           Where to run the calculation, defaults to current working directory
         """
         assert os.path.exists(in_gro)
@@ -1022,6 +785,8 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 top,
                 "-o",
                 tpr,
+                "-po",
+                shared_basebath / out_mdp,
             ],
             stdin=subprocess.PIPE,
         )
@@ -1143,6 +908,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 output_settings_em.cpt_file,
                 output_settings_em.log_file,
                 output_settings_em.edr_file,
+                output_settings_em.grompp_mdp_file,
                 engine_settings,
                 ctx.shared,
             )
@@ -1153,6 +919,9 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             output_dict["edr_em"] = shared_basepath / output_settings_em.edr_file
             output_dict["log_em"] = shared_basepath / output_settings_em.log_file
             output_dict["cpt_em"] = shared_basepath / output_settings_em.cpt_file
+            output_dict["grompp_mdp_em"] = (
+                shared_basepath / output_settings_em.grompp_mdp_file
+            )
 
         # ToDo: Should we disallow running MD without EM?
         # Run NVT
@@ -1178,6 +947,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 output_settings_nvt.cpt_file,
                 output_settings_nvt.log_file,
                 output_settings_nvt.edr_file,
+                output_settings_nvt.grompp_mdp_file,
                 engine_settings,
                 ctx.shared,
             )
@@ -1188,6 +958,9 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             output_dict["edr_nvt"] = shared_basepath / output_settings_nvt.edr_file
             output_dict["log_nvt"] = shared_basepath / output_settings_nvt.log_file
             output_dict["cpt_nvt"] = shared_basepath / output_settings_nvt.cpt_file
+            output_dict["grompp_mdp_nvt"] = (
+                shared_basepath / output_settings_nvt.grompp_mdp_file
+            )
 
         # Run NPT MD simulation
         if sim_settings_npt.nsteps > 0:
@@ -1216,6 +989,7 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
                 output_settings_npt.cpt_file,
                 output_settings_npt.log_file,
                 output_settings_npt.edr_file,
+                output_settings_npt.grompp_mdp_file,
                 engine_settings,
                 ctx.shared,
             )
@@ -1226,5 +1000,8 @@ class GromacsMDRunUnit(gufe.ProtocolUnit):
             output_dict["edr_npt"] = shared_basepath / output_settings_npt.edr_file
             output_dict["log_npt"] = shared_basepath / output_settings_npt.log_file
             output_dict["cpt_npt"] = shared_basepath / output_settings_npt.cpt_file
+            output_dict["grompp_mdp_nvt"] = (
+                shared_basepath / output_settings_nvt.grompp_mdp_file
+            )
 
         return output_dict
