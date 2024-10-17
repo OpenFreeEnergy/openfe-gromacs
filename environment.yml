@@ -1,6 +1,6 @@
 name: openfe_gromacs
 channels:
-  - conda-forge/label/openff-interchange_rc 
+  - conda-forge/label/openff-interchange_rc
   - conda-forge
 dependencies:
   - openfe
