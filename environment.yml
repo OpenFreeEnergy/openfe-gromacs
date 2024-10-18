@@ -1,5 +1,6 @@
 name: openfe_gromacs
 channels:
+  - conda-forge/label/openff-interchange_rc
   - conda-forge
 dependencies:
   - openfe
@@ -9,5 +10,4 @@ dependencies:
   - pytest
   - pytest-xdist
   - pytest-cov
-  - pip:
-    - git+https://github.com/openforcefield/openff-interchange.git
+  - openff-interchange =0.4
