@@ -1,4 +1,4 @@
-# This code is part of OpenFE and is licensed under the MIT license.
+g This code is part of OpenFE and is licensed under the MIT license.
 # For details, see https://github.com/OpenFreeEnergy/openfe
 
 """Gromacs MD Protocol --- :mod:`openfe_gromacs.protocols.gromacs_md.md_methods`
@@ -366,6 +366,7 @@ class GromacsMDProtocol(gufe.Protocol):
     """
 
     result_cls = GromacsMDProtocolResult
+    _settings_cls = GromacsMDProtocolSettings
     _settings: GromacsMDProtocolSettings
 
     @classmethod
