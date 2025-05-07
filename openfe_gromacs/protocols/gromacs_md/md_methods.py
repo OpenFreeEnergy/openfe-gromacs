@@ -366,6 +366,7 @@ class GromacsMDProtocol(gufe.Protocol):
     """
 
     result_cls = GromacsMDProtocolResult
+    _settings_cls = GromacsMDProtocolSettings
     _settings: GromacsMDProtocolSettings
 
     @classmethod

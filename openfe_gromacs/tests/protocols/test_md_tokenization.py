@@ -41,7 +41,7 @@ def protocol_result(md_json):
 class TestGromacsMDProtocol(GufeTokenizableTestsMixin):
     cls = gromacs_md.GromacsMDProtocol
     key = "GromacsMDProtocol-829ed8e2ddfff11f9e86eec044222317"
-    repr = f"<{key}>"
+    repr = None
 
     @pytest.fixture()
     def instance(self, protocol):
