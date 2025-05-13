@@ -30,4 +30,3 @@ dependencies:
 
   - pip:
     - git+https://github.com/openforcefield/openff-interchange@from-openmm-virtual-sites
-
