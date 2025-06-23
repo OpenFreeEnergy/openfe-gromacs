@@ -58,7 +58,7 @@ class SimulationSettings(SettingsBaseModel):
     If set to zero the neighbor list is only constructed once and never updated.
     Default 10.
     """
-    rlist: FloatQuantity["nanometer"] = 1 * unit.nanometer
+    rlist: FloatQuantity["nanometer"] = 1.0 * unit.nanometer
     """
     Cut-off distance for the short-range neighbor list. With dynamics, this is
     by default set by the verlet-buffer-tolerance and
@@ -146,9 +146,7 @@ class SimulationSettings(SettingsBaseModel):
     """
 
     # # # Bonds # # #
-    constraints: Literal["none", "h-bonds", "all-bonds", "h-angles", "all-angles"] = (
-        "h-bonds"
-    )
+    constraints: Literal["none", "h-bonds", "all-bonds", "h-angles", "all-angles"] = "h-bonds"
     """
     Controls which bonds in the topology will be converted to rigid holonomic
     constraints. Note that typical rigid water models do not have bonds, but
@@ -450,7 +448,12 @@ class MDSimulationSettings(SimulationSettings):
 
     # # # Temperature coupling # # #
     tcoupl: Literal[
-        "no", "berendsen", "nose-hoover", "andersen", "andersen-massive", "v-rescale"
+        "no",
+        "berendsen",
+        "nose-hoover",
+        "andersen",
+        "andersen-massive",
+        "v-rescale"
     ] = "no"
     """
     Temperature coupling options. Note that tcoupl will be ignored when the
