@@ -58,7 +58,7 @@ class SimulationSettings(SettingsBaseModel):
     If set to zero the neighbor list is only constructed once and never updated.
     Default 10.
     """
-    rlist: FloatQuantity["nanometer"] = 1 * unit.nanometer
+    rlist: FloatQuantity["nanometer"] = 1.0 * unit.nanometer
     """
     Cut-off distance for the short-range neighbor list. With dynamics, this is
     by default set by the verlet-buffer-tolerance and
