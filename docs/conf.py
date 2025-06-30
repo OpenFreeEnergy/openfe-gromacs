@@ -109,13 +109,12 @@ exclude_patterns = [
 ]
 
 autodoc_mock_imports = [
-    "MDAnalysis",
     "matplotlib",
     "mdtraj",
     "openmmforcefields",
     "openmmtools",
-    "openfe_analysis",
     "pymbar",
+    "mpi4py",
 ]
 
 # Extensions for the myst parser
