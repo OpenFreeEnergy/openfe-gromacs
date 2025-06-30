@@ -16,7 +16,7 @@ from openfe.protocols.openmm_utils.omm_settings import (
     OpenMMSolvationSettings,
     Settings,
 )
-from openff.models.types import FloatQuantity
+from gufe.vendor.openff.models.types import FloatQuantity
 from openff.units import unit
 from pydantic.v1 import validator
 
