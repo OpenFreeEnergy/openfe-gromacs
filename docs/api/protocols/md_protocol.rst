@@ -9,7 +9,7 @@ A Protocol for running MD simulation using GROMACS.
 Protocol API Specification
 --------------------------
 
-.. module:: openfe_gromacs.protocols.gromacs_md.md_methods
+.. module:: openfe_gromacs.protocols.gromacs_md
 
 .. autosummary::
    :nosignatures:
