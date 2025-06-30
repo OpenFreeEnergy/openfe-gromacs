@@ -71,8 +71,8 @@ intersphinx_mapping = {
     "openeye": ("https://docs.eyesopen.com/toolkits/python/", None),
     "mdtraj": ("https://www.mdtraj.org/1.9.5/", None),
     "openff.units": ("https://docs.openforcefield.org/projects/units/en/stable", None),
-    "gufe": ("https://gufe.readthedocs.io/en/latest/", None),
-    "openfe": ("https://openfe.readthedocs.io/en/latest/", None),
+    "gufe": ("https://gufe.openfree.energy/en/latest/", None),
+    "openfe": ("https://docs.openfree.energy/en/latest/", None),
 }
 
 autoclass_content = "both"
@@ -109,10 +109,12 @@ exclude_patterns = [
 ]
 
 autodoc_mock_imports = [
+    "MDAnalysis",
     "matplotlib",
     "mdtraj",
     "openmmforcefields",
     "openmmtools",
+    "openfe_analysis",
     "pymbar",
 ]
 
