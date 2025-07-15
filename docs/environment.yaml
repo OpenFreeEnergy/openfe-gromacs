@@ -8,17 +8,14 @@ dependencies:
 - gufe>=1.5
 - packaging
 - plugcli
-- python=3.10
+- python=3.11
 - sphinx <7.3
 - sphinx-click
 - gitpython
 - libsass
-- nbsphinx
-- nbsphinx-link
-- myst-parser
+- sphinx-design
+- sphinx-toolbox
 - pip:
-  - sphinx-design
-  - sphinx-toolbox
   - git+https://github.com/OpenFreeEnergy/ofe-sphinx-theme@a45f3edd5bc3e973c1a01b577c71efa1b62a65d6
 
 # These are added automatically by RTD, so we include them here
