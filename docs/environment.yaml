@@ -13,6 +13,8 @@ dependencies:
 - sphinx-click
 - gitpython
 - libsass
+- nbsphinx
+- nbsphinx-link
 - sphinx-design
 - sphinx-toolbox
 - myst-parser
