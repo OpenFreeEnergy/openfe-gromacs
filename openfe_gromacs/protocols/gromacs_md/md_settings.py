@@ -10,13 +10,13 @@ This module implements the settings necessary to run MD simulations using
 from typing import Literal, Optional
 
 from gufe.settings import OpenMMSystemGeneratorFFSettings, SettingsBaseModel
+from gufe.vendor.openff.models.types import FloatQuantity
 from openfe.protocols.openmm_utils.omm_settings import (
     IntegratorSettings,
     OpenFFPartialChargeSettings,
     OpenMMSolvationSettings,
     Settings,
 )
-from openff.models.types import FloatQuantity
 from openff.units import unit
 from pydantic.v1 import validator
 
