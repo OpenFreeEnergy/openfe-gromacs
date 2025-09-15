@@ -132,7 +132,7 @@ def test_unit_tagging_setup_unit(solvent_protocol_dag, tmpdir):
     assert len(repeats) == 1
 
 
-def test_dry_run_ffcache_none(benzene_system, monkeypatch, tmp_path_factory):
+def test_dry_run_ffcache_none(benzene_system, tmp_path_factory):
     settings = GromacsMDProtocol.default_settings()
     settings.output_settings_em.forcefield_cache = None
     settings.simulation_settings_em.nsteps = 10
@@ -164,9 +164,7 @@ def test_dry_run_ffcache_none(benzene_system, monkeypatch, tmp_path_factory):
     )
 
 
-def test_dry_many_molecules_solvent(
-    benzene_many_solv_system, monkeypatch, tmp_path_factory
-):
+def test_dry_many_molecules_solvent(benzene_many_solv_system, tmp_path_factory):
     """
     A basic test flushing "will it work if you pass multiple molecules"
     """
@@ -197,6 +195,46 @@ def test_dry_many_molecules_solvent(
             keep_shared=False,
             n_retries=3,
         )
+
+
+def test_gather(benzene_system, tmp_path_factory):
+    # check .gather behaves as expected: That gather correctly creates the
+    # results object
+    # This is running a full (short) simulation of benzene in water which is ok
+    # since this is a cheap simulation.
+    settings = GromacsMDProtocol.default_settings()
+    settings.output_settings_em.forcefield_cache = None
+    settings.simulation_settings_em.nsteps = 10
+    settings.simulation_settings_nvt.nsteps = 10
+    settings.simulation_settings_npt.nsteps = 1
+    settings.simulation_settings_em.rcoulomb = 1.0 * off_unit.nanometer
+    settings.simulation_settings_nvt.rcoulomb = 1.0 * off_unit.nanometer
+    settings.simulation_settings_npt.rcoulomb = 1.0 * off_unit.nanometer
+    protocol = GromacsMDProtocol(
+        settings=settings,
+    )
+
+    # create DAG from protocol and take first (and only) work unit from within
+    dag = protocol.create(
+        stateA=benzene_system,
+        stateB=benzene_system,
+        mapping=None,
+    )
+
+    shared_temp = tmp_path_factory.mktemp("shared")
+    scratch_temp = tmp_path_factory.mktemp("scratch")
+    dagres = gufe.protocols.execute_DAG(
+        dag,
+        shared_basedir=shared_temp,
+        scratch_basedir=scratch_temp,
+        keep_shared=False,
+        n_retries=3,
+    )
+    prot = GromacsMDProtocol(settings=settings)
+
+    res = prot.gather([dagres])
+
+    assert isinstance(res, GromacsMDProtocolResult)
 
 
 class TestProtocolResult:
