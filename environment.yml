@@ -3,7 +3,7 @@ channels:
   - conda-forge/label/openff-interchange_rc
   - conda-forge
 dependencies:
-  - openfe
+  - openfe == 1.6.1
   - compilers
   - mpi4py
   - gromacs
