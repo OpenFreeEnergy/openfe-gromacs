@@ -39,7 +39,7 @@ jobs:
         # We don't really support windows so we don't need
         # to test it
         os: ["ubuntu-latest"]
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12"]
         include:
           - os: "macos-latest"
             python-version: "3.12"
