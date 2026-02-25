@@ -3,7 +3,7 @@ channels:
   - conda-forge/label/openff-interchange_rc
   - conda-forge
 dependencies:
-  - openfe == 1.6.1
+  - openfe ==1.6.1  # until https://github.com/OpenFreeEnergy/openfe-gromacs/issues/83 is resolved
   - compilers
   - mpi4py
   - gromacs
