@@ -1,4 +1,4 @@
-name: CI
+name: "CI"
 
 on:
   push:
@@ -38,8 +38,11 @@ jobs:
       matrix:
         # We don't really support windows so we don't need
         # to test it
-        os: [macOS-latest, ubuntu-latest]
-        python-version: ["3.10", "3.11", "3.12"]
+        os: ["ubuntu-latest"]
+        python-version: ["3.11", "3.12"]
+        include:
+          - os: "macos-latest"
+            python-version: "3.12"
 
     steps:
       - uses: actions/checkout@v4
