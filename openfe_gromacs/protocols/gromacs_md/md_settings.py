@@ -7,6 +7,7 @@ This module implements the settings necessary to run MD simulations using
 :class:`openfe_gromacs.protocols.gromacs_md.md_methods.py`
 
 """
+
 from typing import Literal, Optional
 
 from gufe.settings import OpenMMSystemGeneratorFFSettings, SettingsBaseModel
