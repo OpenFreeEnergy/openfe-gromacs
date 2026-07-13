@@ -1,6 +1,5 @@
 name: docs
 channels:
-- https://conda.anaconda.org/jaimergp/label/unsupported-cudatoolkit-shim
 - https://conda.anaconda.org/conda-forge
 dependencies:
 - autodoc-pydantic
@@ -8,7 +7,7 @@ dependencies:
 - gufe>=1.5
 - packaging
 - plugcli
-- python==3.11
+- python==3.12
 - sphinx <7.3
 - sphinx-click
 - gitpython
