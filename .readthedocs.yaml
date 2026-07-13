@@ -1,19 +1,17 @@
 version: 2
 
 build:
-  os: "ubuntu-lts-latest"
+  os: "ubuntu-24.04"
   tools:
-    python: "miniforge3-latest"
+    python: "3.12"
 
-sphinx:
-   configuration: docs/conf.py
-   fail_on_warning: true
-
-conda:
-  environment: docs/environment.yaml
-
-python:
-  # Install our python package before building the docs
+jobs:
+  create_environments:
+    - asdf plugin add pixi
+    - asdf install pixi latest
+    - asdf global pixi latest
   install:
-    - method: pip
-      path: .
+    - pixi install -e docs
+  build:
+    html:
+      - pixi run -e docs sphinx-build -T -b html docs $READTHEDOCS_OUTPUT/html
