@@ -35,6 +35,9 @@ test = [
   "pytest-runner"
 ]
 
+[dependency-groups]
+docs = [ "ofe-sphinx-theme @ git+https://github.com/OpenFreeEnergy/ofe-sphinx-theme@v0.2.1" ]
+
 [tool.setuptools]
 # This subkey is a beta stage development and keys may change in the future, see https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html for more details
 #
@@ -112,3 +115,39 @@ profile = "black"
 
 [tool.black]
 line-length = 88
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = [ "linux-64", "osx-arm64" ]
+
+[tool.pixi.pypi-dependencies]
+openfe_gromacs = { path = ".", editable = true }
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+test = { features = ["test"], solve-group = "default" }
+docs = { features = ["docs"], no-default-feature = true }
+
+[tool.pixi.tasks]
+
+[tool.pixi.feature.docs]
+channels = ["https://conda.anaconda.org/conda-forge"]
+
+[tool.pixi.feature.docs.dependencies]
+autodoc-pydantic = "*"
+openfe = "==1.6.1" # until https://github.com/OpenFreeEnergy/openfe-gromacs/issues/83 is resolved
+packaging = "*"
+plugcli = "*"
+python = "==3.12"
+sphinx = "*"
+sphinx-click = "*"
+gitpython = "*"
+libsass = "*"
+nbsphinx = "*"
+nbsphinx-link = "*"
+sphinx-design = "*"
+sphinx-toolbox = "*"
+myst-parser = "*"
+mock = "*"
+pillow = "*"
+sphinx_rtd_theme = "*"
