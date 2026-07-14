@@ -135,7 +135,7 @@ channels = ["https://conda.anaconda.org/conda-forge"]
 
 [tool.pixi.feature.docs.dependencies]
 autodoc-pydantic = "*"
-openfe = "~=1.6.1" # until https://github.com/OpenFreeEnergy/openfe-gromacs/issues/83 is resolved
+openfe = "==1.6.1" # until https://github.com/OpenFreeEnergy/openfe-gromacs/issues/83 is resolved
 packaging = "*"
 plugcli = "*"
 python = "==3.12"
