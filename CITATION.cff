@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+
+- family-names: "Baumann"
+  given-names: "Hannah M."
+  orcid: "https://orcid.org/0000-0002-1736-7744"
+- family-names: "Alibay"
+  given-names: "Irfan"
+  orcid: "https://orcid.org/0000-0001-5787-9130"
+- family-names: "Henry"
+  given-names: "Michael M."
+  orcid: "https://orcid.org/0000-0002-3870-9993"
+- family-names: "Travitz"
+  given-names: "Alyssa"
+  orcid: "https://orcid.org/0000-0001-5953-8807"
+
+
+title: "openfe-gromacs"
+version: 0.0.1-alpha
+date-released: 2026-09-23
+url: "https://openfe-gromacs.readthedocs.io/"
+repository-code: "https://github.com/OpenFreeEnergy/openfe-gromacs"
+# doi: ""
